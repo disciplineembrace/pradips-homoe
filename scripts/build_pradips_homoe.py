@@ -453,6 +453,20 @@ else:
     print(f"  WARNING: No Phatak JSON found at {PHATAK_JSON}")
 
 
+# =====================================================================
+# LOAD REAL PHATAK MATERIA MEDICA (parsed from PDF)
+# =====================================================================
+PHATAK_MM_JSON = Path("/home/z/my-project/scripts/phatak_mm_remedies.json")
+if PHATAK_MM_JSON.exists():
+    PHATAK_MM_REAL = json.loads(PHATAK_MM_JSON.read_text(encoding="utf-8"))
+    print(f"  Loaded {len(PHATAK_MM_REAL)} real Phatak MM remedies from PDF")
+    # Replace placeholder Phatak remedies with real ones
+    REMEDIES = [r for r in REMEDIES if r.get("author") != "Phatak"] + PHATAK_MM_REAL
+    print(f"  Total remedies in library: {len(REMEDIES)}")
+else:
+    print(f"  WARNING: No Phatak MM JSON found at {PHATAK_MM_JSON}")
+
+
 # Build a unique sorted list of chapters per book type for navigation
 MM_CHAPTERS = sorted({r["chapter"] for r in REMEDIES})
 REP_CHAPTERS = sorted({r["path"] for r in RUBRICS})
@@ -1655,10 +1669,16 @@ function openRef(type, id){
     const paras = data.full.split(/\n\n+/).filter(p=>p.trim());
     document.getElementById('readerBody').innerHTML = paras.map(p=>{
       const t = escapeHTML(p);
-      // If paragraph starts with "Sectionname.--" make it a bold sub-heading
-      const secMatch = t.match(/^([A-Z][a-z]+)\.(?:––|—|--|—)\s*(.*)/);
+      // Boericke-style: "Sectionname.-- text"
+      let secMatch = t.match(/^([A-Z][a-z]+)\.(?:––|—|--|—)\s*(.*)/);
       if(secMatch){
         return `<p><b style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--brass);">${secMatch[1]}.</b> ${secMatch[2]}</p>`;
+      }
+      // Phatak-style: "SECTIONNAME: text" (all caps section + colon)
+      secMatch = t.match(/^([A-Z][A-Z &]{2,20}):\s*(.*)/);
+      if(secMatch){
+        const secTitle = secMatch[1].split(' ').map(w=>w.charAt(0)+w.slice(1).toLowerCase()).join(' ');
+        return `<p><b style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--brass);">${secTitle}.</b> ${secMatch[2]}</p>`;
       }
       return `<p>${t}</p>`;
     }).join('');
