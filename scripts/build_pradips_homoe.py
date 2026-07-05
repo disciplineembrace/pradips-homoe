@@ -439,6 +439,19 @@ print(f"  Real Boericke remedies loaded: {len(REAL_BOERICKE)}")
 REMEDIES = REAL_BOERICKE + PLACEHOLDER_REMEDIES
 print(f"  Total remedies in library: {len(REMEDIES)}")
 
+# =====================================================================
+# LOAD REAL PHATAK RUBRICS (parsed from PDF)
+# =====================================================================
+PHATAK_JSON = Path("/home/z/my-project/scripts/phatak_rubrics_clean.json")
+if PHATAK_JSON.exists():
+    PHATAK_REAL = json.loads(PHATAK_JSON.read_text(encoding="utf-8"))
+    print(f"  Loaded {len(PHATAK_REAL)} real Phatak rubrics from PDF")
+    # Replace placeholder Phatak rubrics with real ones
+    RUBRICS = [r for r in RUBRICS if r.get("author") != "Phatak"] + PHATAK_REAL
+    print(f"  Total rubrics in library: {len(RUBRICS)}")
+else:
+    print(f"  WARNING: No Phatak JSON found at {PHATAK_JSON}")
+
 
 # Build a unique sorted list of chapters per book type for navigation
 MM_CHAPTERS = sorted({r["chapter"] for r in REMEDIES})
@@ -1658,8 +1671,12 @@ function openRef(type, id){
       ${data.dose ? `<b>Dose</b><p>${escapeHTML(data.dose)}</p>` : ''}
     `;
   } else {
+    // For rubrics, if title already starts with path (e.g. "HEART — sub-rubric"), don't repeat the path
+    const titleDisplay = data.title.startsWith(data.path + ' \u2014')
+      ? escapeHTML(data.title.slice(data.path.length + 3))
+      : escapeHTML(data.title);
     document.getElementById('readerBody').innerHTML = `
-      <p><b>${escapeHTML(data.path)}</b> &mdash; ${escapeHTML(data.title)}</p>
+      <p><b>${escapeHTML(data.path)}</b> &mdash; ${titleDisplay}</p>
       <p>Associated remedies:</p>
       <p>${data.remedies.map(rm=>{
         const rd = REMEDIES.find(x=>x.name===rm);
