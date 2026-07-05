@@ -1,0 +1,12 @@
+{
+  "name": "pradips-homoe",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Personal Digital Homeopathic Library with Postgres sync",
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

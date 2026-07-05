@@ -362,6 +362,7 @@ footer.note-strip a{color:var(--brass-light);}
       <button data-view="history">History</button>
       <button data-view="settings">Settings</button>
     </nav>
+    <span id="syncIndicator" style="display:none;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:#7C8F6E;cursor:help;margin-right:10px;" onclick="switchView('settings')"></span>
     <div class="rail-spacer"></div>
     <div class="rail-search">
       <span style="opacity:.6">&#8981;</span>
@@ -707,7 +708,22 @@ footer.note-strip a{color:var(--brass-light);}
         </div>
       </div>
 
-      <div class="settings-panel">
+            <div class="settings-panel">
+        <h3>☁ Cloud Sync</h3>
+        <div class="settings-row">
+          <label>Sync notes, favorites, history across devices</label>
+          <span id="cloudStatus" style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:#7C8F6E;text-transform:uppercase;">Not connected</span>
+        </div>
+        <div class="btn-row" id="cloudActionsRow">
+          <button onclick="showCloudLoginModal()">☁ Enable Cloud Sync</button>
+        </div>
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:#7C8F6E;text-transform:uppercase;letter-spacing:0.04em;margin-top:14px;line-height:1.5;">
+          Your passcode is the only credential — no email needed. Pick something memorable.
+          Lose the passcode = lose cloud access (local data still safe on each device).
+        </p>
+      </div>
+
+<div class="settings-panel">
         <h3>Data &amp; Privacy</h3>
         <div class="settings-row">
           <label>Notes, favorites, bookmarks, history are stored locally in your browser only.</label>
@@ -1649,6 +1665,20 @@ function renderSettings(){
   document.querySelectorAll('.view').forEach(v=> v.style.animation = settings.anim ? '' : 'none');
   // Apply wake lock if requested
   if(settings.wakeLock) requestWakeLock(); else releaseWakeLock();
+  // Update cloud status
+  const cs = document.getElementById('cloudStatus');
+  const ar = document.getElementById('cloudActionsRow');
+  if (cs && ar) {
+    if (isCloudEnabled()) {
+      cs.textContent = 'Connected as ' + cloudAuth.name;
+      cs.style.color = '#1E3A2B';
+      ar.innerHTML = '<button onclick="cloudSyncPull()">↻ Sync now</button><button onclick="cloudLogout()">Logout</button>';
+    } else {
+      cs.textContent = 'Not connected';
+      cs.style.color = '#7C8F6E';
+      ar.innerHTML = '<button onclick="showCloudLoginModal()">☁ Enable Cloud Sync</button>';
+    }
+  }
 }
 function syncSettingsUI(){
   if(document.getElementById('setFontSize'))
@@ -1796,6 +1826,318 @@ if('serviceWorker' in navigator){
   const swUrl = URL.createObjectURL(swBlob);
   navigator.serviceWorker.register(swUrl).catch(()=>{ /* offline not available */ });
 }
+
+
+/* ============================================================
+   CLOUD SYNC (Postgres via Vercel API)
+   ============================================================ */
+let cloudAuth = { token: null, userId: null, name: null };
+let syncEnabled = false;
+let syncDebounce = null;
+let lastSyncAt = 0;
+const SYNC_INTERVAL_MS = 5000;  // auto-sync every 5s when changes happen
+
+function getSyncAuthKey() { return 'pradip-homoe-cloud-auth'; }
+
+function loadCloudAuth() {
+  try {
+    const raw = localStorage.getItem(getSyncAuthKey());
+    if (raw) {
+      const d = JSON.parse(raw);
+      cloudAuth = d;
+      syncEnabled = !!d.token;
+    }
+  } catch(e) {}
+}
+
+function saveCloudAuth() {
+  localStorage.setItem(getSyncAuthKey(), JSON.stringify(cloudAuth));
+}
+
+function clearCloudAuth() {
+  cloudAuth = { token: null, userId: null, name: null };
+  syncEnabled = false;
+  localStorage.removeItem(getSyncAuthKey());
+}
+
+function isCloudEnabled() { return syncEnabled && !!cloudAuth.token; }
+
+async function cloudRegister(passcode, name) {
+  const apiBase = (window.CLOUD_API_BASE) || '/api';
+  const res = await fetch(apiBase + '/auth?action=register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passcode, name: name || 'Pradip' })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error || 'Registration failed');
+  }
+  const data = await res.json();
+  cloudAuth = { token: data.token, userId: data.userId, name: data.name };
+  syncEnabled = true;
+  saveCloudAuth();
+  return data;
+}
+
+async function cloudLogin(passcode) {
+  const apiBase = (window.CLOUD_API_BASE) || '/api';
+  const res = await fetch(apiBase + '/auth?action=login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passcode })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error || 'Login failed');
+  }
+  const data = await res.json();
+  cloudAuth = { token: data.token, userId: data.userId, name: data.name };
+  syncEnabled = true;
+  saveCloudAuth();
+  return data;
+}
+
+function buildCloudState() {
+  return {
+    notes: notesData.map(n => ({
+      id: n.id, refId: n.refId, refTitle: n.refTitle, refType: n.refType || 'remedy',
+      category: n.category || 'Clinical', text: n.text, date: n.date
+    })),
+    favorites: [...favorites].map(id => {
+      const r = REMEDIES.find(x=>x.id===id);
+      const ru = RUBRICS.find(x=>x.id===id);
+      return { refId: id, refType: r ? 'remedy' : (ru ? 'rubric' : 'remedy') };
+    }),
+    bookmarks: [...bookmarks],
+    history: history.map(h => ({ id: h.id, type: h.type, ts: h.ts })),
+    readerMarks: readerMarks,
+    settings: settings,
+    readingStats: Object.entries(readingStats.byRef||{}).map(([refId, sec]) => ({
+      refId, date: todayKey(), seconds: sec
+    })),
+    searchHistory: searchHistory
+  };
+}
+
+async function cloudSyncPush() {
+  if (!isCloudEnabled()) return;
+  try {
+    const apiBase = (window.CLOUD_API_BASE) || '/api';
+    const res = await fetch(apiBase + '/state', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + cloudAuth.token
+      },
+      body: JSON.stringify(buildCloudState())
+    });
+    if (res.ok) {
+      lastSyncAt = Date.now();
+      updateSyncIndicator('synced');
+      return true;
+    } else if (res.status === 401) {
+      // Token invalid — log out
+      clearCloudAuth();
+      updateSyncIndicator('error');
+      toast('Cloud session expired — please login again');
+    } else {
+      updateSyncIndicator('error');
+    }
+  } catch(e) {
+    updateSyncIndicator('offline');
+  }
+  return false;
+}
+
+async function cloudSyncPull() {
+  if (!isCloudEnabled()) return false;
+  try {
+    const apiBase = (window.CLOUD_API_BASE) || '/api';
+    const res = await fetch(apiBase + '/state', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + cloudAuth.token }
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearCloudAuth();
+        toast('Cloud session expired');
+      }
+      return false;
+    }
+    const data = await res.json();
+    const state = data.state;
+    if (!state) return false;
+
+    // Merge cloud state into local state. Strategy: cloud is source of truth.
+    // But we keep local notes that are NEWER than the cloud's "syncedAt" (i.e., created offline).
+    // For simplicity: replace local with cloud.
+    if (Array.isArray(state.notes)) {
+      notesData = state.notes.map(n => ({
+        id: n.id, refId: n.refId, refTitle: n.refTitle, refType: n.refType,
+        category: n.category, text: n.text, date: n.date
+      }));
+    }
+    if (Array.isArray(state.favorites)) {
+      favorites = new Set(state.favorites.map(f => f.refId));
+    }
+    if (Array.isArray(state.bookmarks)) {
+      bookmarks = new Set(state.bookmarks);
+    }
+    if (Array.isArray(state.history)) {
+      history = state.history.map(h => ({ id: h.id, type: h.type, ts: h.ts })).slice(0, 50);
+    }
+    if (state.readerMarks && typeof state.readerMarks === 'object') {
+      readerMarks = state.readerMarks;
+    }
+    if (state.settings && typeof state.settings === 'object') {
+      settings = Object.assign(settings, state.settings);
+    }
+    if (Array.isArray(state.searchHistory)) {
+      searchHistory = state.searchHistory.slice(0, 50);
+    }
+    saveState();
+    renderHome();
+    if (document.querySelector('.view.active')?.id === 'view-notes') renderNotesView();
+    if (document.querySelector('.view.active')?.id === 'view-favorites') renderFavorites();
+    if (document.querySelector('.view.active')?.id === 'view-history') renderHistory();
+    if (document.querySelector('.view.active')?.id === 'view-settings') renderSettings();
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function scheduleSyncPush() {
+  if (!isCloudEnabled()) return;
+  clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(() => {
+    cloudSyncPush();
+  }, 2000);
+  updateSyncIndicator('pending');
+}
+
+function updateSyncIndicator(status) {
+  const el = document.getElementById('syncIndicator');
+  if (!el) return;
+  const map = {
+    synced: { text: '☁', color: '#7C8F6E', title: 'Synced to cloud' },
+    pending: { text: '◌', color: '#B08D3F', title: 'Syncing…' },
+    offline: { text: '⊘', color: '#999', title: 'Offline — will sync later' },
+    error: { text: '⚠', color: '#6E2A3A', title: 'Sync error' },
+    none: { text: '', color: 'transparent', title: '' }
+  };
+  const s = map[status] || map.none;
+  el.textContent = s.text;
+  el.style.color = s.color;
+  el.title = s.title;
+  el.style.display = status === 'none' ? 'none' : 'inline';
+}
+
+// Hook into existing saveState so we auto-sync on changes
+const _originalSaveState = saveState;
+saveState = function() {
+  _originalSaveState();
+  if (isCloudEnabled()) scheduleSyncPush();
+};
+
+async function cloudInitialSync() {
+  if (!isCloudEnabled()) {
+    updateSyncIndicator('none');
+    return;
+  }
+  updateSyncIndicator('pending');
+  const pulled = await cloudSyncPull();
+  if (pulled) {
+    updateSyncIndicator('synced');
+    // Push any local changes that happened before pull
+    await cloudSyncPush();
+  } else {
+    updateSyncIndicator('error');
+  }
+  // Set up periodic sync (every 30s) to pull changes from other devices
+  setInterval(() => {
+    if (isCloudEnabled()) cloudSyncPull();
+  }, 30000);
+}
+
+// Wrap loadState to also load cloud auth and trigger initial sync
+const _originalLoadState = loadState;
+loadState = async function() {
+  _originalLoadState();
+  loadCloudAuth();
+  await cloudInitialSync();
+};
+
+function showCloudLoginModal() {
+  const existing = document.getElementById('cloudModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'cloudModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#F3EBDA;border:1px solid #E8DCC3;border-radius:8px;padding:30px;max-width:400px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+      <h2 style="font-family:Fraunces,serif;font-style:italic;color:#1E3A2B;margin:0 0 8px;">☁ Cloud Sync</h2>
+      <p style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#7C8F6E;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 20px;">Sync notes, favorites & history across devices</p>
+      <label style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#7C8F6E;text-transform:uppercase;display:block;margin-bottom:6px;">Passcode</label>
+      <input id="cloudPasscode" type="password" placeholder="Choose a passcode (4+ chars)" style="width:100%;padding:10px;border:1px solid #E8DCC3;border-radius:4px;font-family:Source Serif 4,serif;font-size:0.9rem;margin-bottom:14px;box-sizing:border-box;" />
+      <label style="font-family:IBM Plex Mono,monospace;font-size:0.7rem;color:#7C8F6E;text-transform:uppercase;display:block;margin-bottom:6px;">Name (optional)</label>
+      <input id="cloudName" type="text" placeholder="Pradip" style="width:100%;padding:10px;border:1px solid #E8DCC3;border-radius:4px;font-family:Source Serif 4,serif;font-size:0.9rem;margin-bottom:20px;box-sizing:border-box;" />
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="cloudRegisterBtn" style="flex:1;padding:10px;background:#1E3A2B;color:#F3EBDA;border:none;border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">New account</button>
+        <button id="cloudLoginBtn" style="flex:1;padding:10px;background:transparent;color:#1E3A2B;border:1px solid #1E3A2B;border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Existing account</button>
+      </div>
+      <button id="cloudCloseBtn" style="margin-top:14px;width:100%;padding:8px;background:transparent;color:#7C8F6E;border:none;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.7rem;text-transform:uppercase;">Cancel</button>
+      <p id="cloudError" style="color:#6E2A3A;font-family:IBM Plex Mono,monospace;font-size:0.7rem;margin-top:10px;min-height:14px;"></p>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const close = () => modal.remove();
+  modal.querySelector('#cloudCloseBtn').onclick = close;
+  modal.querySelector('#cloudRegisterBtn').onclick = async () => {
+    const passcode = modal.querySelector('#cloudPasscode').value.trim();
+    const name = modal.querySelector('#cloudName').value.trim();
+    if (!passcode || passcode.length < 4) {
+      modal.querySelector('#cloudError').textContent = 'Passcode must be at least 4 chars';
+      return;
+    }
+    try {
+      await cloudRegister(passcode, name);
+      close();
+      toast('Cloud sync enabled — welcome, ' + cloudAuth.name);
+      await cloudInitialSync();
+      renderSettings();
+    } catch(e) {
+      modal.querySelector('#cloudError').textContent = e.message;
+    }
+  };
+  modal.querySelector('#cloudLoginBtn').onclick = async () => {
+    const passcode = modal.querySelector('#cloudPasscode').value.trim();
+    if (!passcode) {
+      modal.querySelector('#cloudError').textContent = 'Passcode required';
+      return;
+    }
+    try {
+      await cloudLogin(passcode);
+      close();
+      toast('Logged in — syncing from cloud');
+      await cloudInitialSync();
+      renderSettings();
+    } catch(e) {
+      modal.querySelector('#cloudError').textContent = e.message;
+    }
+  };
+}
+
+function cloudLogout() {
+  if (!confirm('Logout from cloud sync? Your local data will remain on this device.')) return;
+  clearCloudAuth();
+  updateSyncIndicator('none');
+  toast('Cloud sync disabled');
+  renderSettings();
+}
+
 
 /* ============ INIT ============ */
 loadState();
