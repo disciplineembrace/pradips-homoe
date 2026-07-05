@@ -7,15 +7,24 @@ Home dashboard, Materia Medica, Repertory, Universal Search,
 Favorites, Notes, History, Settings, Reader (themes + controls + highlights +
 cross-reference), PWA, reading stats, daily quote.
 
-All remedy text is paraphrased / written from scratch in plain clinical
-language to stay clear of any copyrighted edition. Replace with your own
-licensed book text for production use.
+Boericke entries are sourced from the user's uploaded PDF (parse_boericke.py).
+Phatak and Murphy entries remain as paraphrased placeholders until those
+PDFs are uploaded too.
 """
 import json
 from pathlib import Path
 
 OUT = Path("/home/z/my-project/download/pradips-homoe.html")
 OUT.parent.mkdir(parents=True, exist_ok=True)
+
+# Load real Boericke data parsed from PDF
+BOERICKE_JSON = Path("/home/z/my-project/scripts/boericke_remedies.json")
+if BOERICKE_JSON.exists():
+    BOERICKE_REAL = json.loads(BOERICKE_JSON.read_text(encoding="utf-8"))
+    print(f"Loaded {len(BOERICKE_REAL)} real Boericke remedies from PDF")
+else:
+    BOERICKE_REAL = []
+    print(f"WARNING: No Boericke JSON found at {BOERICKE_JSON}")
 
 # =====================================================================
 # DATA — REMEDIES (paraphrased keynotes, copyright-safe placeholders)
@@ -397,6 +406,39 @@ QUOTES = [
     {"text":"The gentlest cure is the one that touches the deepest susceptibility.","author":"C. M. Boger, paraphrased"},
     {"text":"Treat the patient in front of you, not the case in the book.","author":"Eugene Beauharnais Nash, paraphrased"},
 ]
+
+# =====================================================================
+# COMBINE: Real Boericke + placeholder Phatak + placeholder Murphy
+# =====================================================================
+# Filter out placeholder Boericke entries from REMEDIES (keep Phatak & Murphy placeholders)
+PLACEHOLDER_REMEDIES = [r for r in REMEDIES if r.get("author") != "Boericke"]
+print(f"  Placeholder Phatak+Murphy remedies kept: {len(PLACEHOLDER_REMEDIES)}")
+
+# Real Boericke entries: clean them up (drop the 'sections' sub-dict to save space, keep 'dose')
+REAL_BOERICKE = []
+for r in BOERICKE_REAL:
+    if len(r.get("full", "")) < 80:  # skip stub entries
+        continue
+    REAL_BOERICKE.append({
+        "id": r["id"],
+        "name": r["name"],
+        "common": r.get("common", ""),
+        "author": "Boericke",
+        "letter": r["letter"],
+        "chapter": r["chapter"],
+        "organ": r.get("organ", "—"),
+        "modalities": r.get("modalities", "—"),
+        "constitution": r.get("constitution", "—"),
+        "relationships": r.get("relationships", "—"),
+        "dose": r.get("dose", ""),
+        "keynote": r["keynote"],
+        "full": r["full"]
+    })
+print(f"  Real Boericke remedies loaded: {len(REAL_BOERICKE)}")
+
+REMEDIES = REAL_BOERICKE + PLACEHOLDER_REMEDIES
+print(f"  Total remedies in library: {len(REMEDIES)}")
+
 
 # Build a unique sorted list of chapters per book type for navigation
 MM_CHAPTERS = sorted({r["chapter"] for r in REMEDIES})
@@ -1596,13 +1638,24 @@ function openRef(type, id){
   document.getElementById('readerTitle').textContent = data.name || data.title;
 
   if(type==='remedy'){
-    document.getElementById('readerBody').innerHTML = `<p>${escapeHTML(data.full)}</p>`;
+    // Render full text — split by double newline to make paragraphs
+    const paras = data.full.split(/\n\n+/).filter(p=>p.trim());
+    document.getElementById('readerBody').innerHTML = paras.map(p=>{
+      const t = escapeHTML(p);
+      // If paragraph starts with "Sectionname.--" make it a bold sub-heading
+      const secMatch = t.match(/^([A-Z][a-z]+)\.(?:––|—|--|—)\s*(.*)/);
+      if(secMatch){
+        return `<p><b style="font-family:'IBM Plex Mono',monospace;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--brass);">${secMatch[1]}.</b> ${secMatch[2]}</p>`;
+      }
+      return `<p>${t}</p>`;
+    }).join('');
     document.getElementById('readerMetaBlock').innerHTML = `
       <b>Keynote</b><p>${escapeHTML(data.keynote)}</p>
       <b>Organ / System</b><p>${escapeHTML(data.organ)}</p>
       <b>Modalities</b><p>${escapeHTML(data.modalities)}</p>
       <b>Constitution</b><p>${escapeHTML(data.constitution)}</p>
       <b>Relationships</b><p>${escapeHTML(data.relationships)}</p>
+      ${data.dose ? `<b>Dose</b><p>${escapeHTML(data.dose)}</p>` : ''}
     `;
   } else {
     document.getElementById('readerBody').innerHTML = `
