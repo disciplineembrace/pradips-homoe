@@ -84,44 +84,67 @@ def get_common_name(full, end_pos):
 
 def heal_heading(heading, common):
     """Try to heal a truncated heading by checking the common-name line.
-    Often the common-name line contains the Latin binomial fully spelled out.
-    E.g. heading='ABIES CANADENSI' + common='Pinus canadensis' → 'Abies canadensis'
-    The common-name line may use a SYNONYM genus (Pinus vs Abies), so we
-    can't always match on genus. Instead, we match the LAST word.
+
+    Two issues to fix:
+    1. Trailing 'S' missing (e.g. ACONITUM NAPELLU → ACONITUM NAPELLUS) — common in Boericke PDF
+    2. LEADING 'S' missing (e.g. ULPHUR → SULPHUR, TAPHYSAGRIA → STAPHYSAGRIA) — happens when
+       the drop-cap "S" at the start of an S-section remedy is rendered as a graphic
+       that PyMuPDF can't extract.
+
+    For issue #2: if the common-name line starts with a lowercase letter, it's also
+    missing its "S". We prepend "S" to common-name. AND, if the heading's first
+    letter (prepended with "S") matches the healed common-name's first 2 letters,
+    we also prepend "S" to the heading.
+
+    E.g.:
+      Heading='ULPHUR' + Common='ublimated Sulphur'
+        → heal common: 'Sublimated Sulphur' (first 2 chars 'Su')
+        → 'S' + 'U' = 'SU' matches 'Su' → prepend 'S' to heading → 'SULPHUR'
+      Heading='AETHIOPS MINERALI' + Common='ulphur and Quicksilver'
+        → heal common: 'Sulphur and Quicksilver' (first 2 chars 'Su')
+        → 'S' + 'A' = 'SA' does NOT match 'Su' → DON'T prepend 'S' to heading
+        → heading becomes 'Aethiops Mineralis' via trailing-S healing
     """
+    # PRIORITY 1: Handle leading-S truncation via common-name line
+    if common and common[0].islower():
+        healed_common = 'S' + common  # capitalize: 'ublimated' → 'Sublimated'
+        # Check if heading is ALSO missing its leading S
+        if heading and len(heading) >= 2:
+            # Healed common's first 2 letters (case-insensitive)
+            common_first2 = healed_common[:2].upper()
+            # If we prepend 'S' to heading, what would the first 2 letters be?
+            heading_with_s = ('S' + heading).upper()
+            if heading_with_s[:2] == common_first2:
+                # Heading is also missing its S
+                heading = 'S' + heading
+        common = healed_common
+        return heading, common
+
+    # PRIORITY 2: Trailing-S healing for multi-word binomials (the original heal logic)
     if common:
         # Try Latin binomial pattern: "Genus species"
         m = re.match(r'^([A-Z][a-z]+)\s+([a-z\-]+)', common)
         if m:
             genus = m.group(1)
             species = m.group(2)
-            # Case A: heading starts with the uppercase of common's genus
-            # (e.g. heading=ACONITUM NAPELLU + common=Aconitum napellus)
             if heading.upper().startswith(genus.upper()):
-                return f"{genus} {species}"
-            # Case B: heading's last word matches the species prefix
-            # (e.g. heading=ABIES CANADENSI + common=Pinus canadensis)
-            # We check if the heading's last word matches the species's stem
+                return f"{genus} {species}", common
+            # Check if heading's last word matches species prefix
             words = heading.split()
             if len(words) >= 2:
-                # If the heading's last word, when uppercased, is a prefix of species uppercased
                 if words[-1].upper() == species.upper()[:len(words[-1])]:
-                    # Use the heading's genus (not the common's genus)
-                    # Preserve heading's capitalization style (Title Case for genus)
                     heading_genus = words[0].title()
-                    return f"{heading_genus} {species}"
-        # Try just species name (single word, lowercase, like "jequirity")
-        # — not useful for healing
-    # PRIORITY 2: Multi-word heading where the LAST word looks truncated.
+                    return f"{heading_genus} {species}", common
+
+    # PRIORITY 3: Multi-word heading where the LAST word looks truncated.
     words = heading.split()
     if len(words) >= 2 and len(words[-1]) >= 4:
         last = words[-1]
-        if last[-1] == 'U':  # NAPELLU → NAPELLUS
-            return heading + 'S'
-        if last[-1] == 'I' and last[-2] in 'AEIOUY':  # VERNALI → VERNALIS
-            return heading + 'S'
-    # Single-word headings: leave alone
-    return heading
+        if last[-1] == 'U':
+            return heading + 'S', common
+        if last[-1] == 'I' and last[-2] in 'AEIOUY':
+            return heading + 'S', common
+    return heading, common
 
 def split_sections(body):
     """Split body text into sections. Returns (intro, sections_dict)."""
@@ -182,7 +205,7 @@ def main():
     remedies = []
     for i, (start, end, heading) in enumerate(candidates):
         common = get_common_name(full, end)
-        healed = heal_heading(heading, common)
+        healed, common = heal_heading(heading, common)
         # Normalize to Title Case (each word starts uppercase, rest lowercase)
         # EXCEPT keep hyphenated suffixes lowercase
         def title_case(name):
