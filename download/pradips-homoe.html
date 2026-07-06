@@ -878,37 +878,28 @@ async function loadData() {
   _dataLoading = true;
   
   try {
-    // Show loading indicator
     const loader = document.getElementById('dataLoader');
     if (loader) loader.style.display = 'flex';
+    const progressBar = document.getElementById('loaderProgress');
     
-    // Load remedies first (needed for everything)
+    // Fetch remedies
     const remediesRes = await fetch('remedies.json');
     REMEDIES = await remediesRes.json();
-    
-    // Update loading progress
-    const progressBar = document.getElementById('loaderProgress');
     if (progressBar) progressBar.style.width = '50%';
     
-    // Load rubrics (needed for Repertory and Search)
+    // Fetch rubrics
     const rubricsRes = await fetch('rubrics.json');
     RUBRICS = await rubricsRes.json();
-    
     if (progressBar) progressBar.style.width = '100%';
     
     _dataLoaded = true;
-    buildSearchPool();
     _dataLoading = false;
     
-    // Hide loader
     if (loader) {
       setTimeout(() => { loader.style.display = 'none'; }, 300);
     }
     
-    // Notify callbacks
-    _dataCallbacks.forEach(cb => cb());
-    
-    // Re-render current view with data
+    buildSearchPool();
     const activeView = document.querySelector('.view.active')?.id?.replace('view-', '');
     if (activeView) switchView(activeView);
     
@@ -918,7 +909,7 @@ async function loadData() {
     _dataLoading = false;
     const loader = document.getElementById('dataLoader');
     if (loader) {
-      loader.innerHTML = '<div style="color:#6E2A3A;padding:20px;text-align:center;">Failed to load data. Please refresh the page.</div>';
+      loader.innerHTML = '<div style="color:#6E2A3A;padding:20px;text-align:center;">Failed to load. Please refresh.</div>';
     }
     return false;
   }
@@ -937,6 +928,145 @@ let _searchPool = null;
 let _searchPoolBuilt = false;
 
 // buildSearchPool replaced by optimized version below
+
+
+/* ============ INDEXEDDB CACHING ============ */
+let _db = null;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('pradip-homoe', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('data')) {
+        db.createObjectStore('data', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function getCachedData(key) {
+  try {
+    if (!_db) _db = await openDB();
+    return new Promise((resolve) => {
+      const tx = _db.transaction(['data'], 'readonly');
+      const store = tx.objectStore('data');
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result ? req.result.value : null);
+      req.onerror = () => resolve(null);
+    });
+  } catch(e) { return null; }
+}
+
+async function setCachedData(key, value) {
+  try {
+    if (!_db) _db = await openDB();
+    return new Promise((resolve) => {
+      const tx = _db.transaction(['data'], 'readwrite');
+      const store = tx.objectStore('data');
+      store.put({ key, value, timestamp: Date.now() });
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  } catch(e) { return false; }
+}
+
+// Check if cached data is fresh (24 hours)
+async function getFreshCachedData(key) {
+  const cached = await getCachedData(key);
+  if (cached && cached.timestamp && (Date.now() - cached.timestamp < 86400000)) {
+    return cached.value;
+  }
+  return null;
+}
+
+
+/* ============ PAGINATION ============ */
+let _currentPage = 1;
+const _pageSize = 50;
+
+function paginate(items, page) {
+  const start = (page - 1) * _pageSize;
+  return items.slice(start, start + _pageSize);
+}
+
+function renderPagination(container, totalItems, currentPage, onPageChange) {
+  const totalPages = Math.ceil(totalItems / _pageSize);
+  if (totalPages <= 1) return;
+  
+  const pag = document.createElement('div');
+  pag.className = 'pagination';
+  pag.style.cssText = 'display:flex;gap:4px;justify-content:center;padding:20px;flex-wrap:wrap;';
+  
+  // Prev button
+  if (currentPage > 1) {
+    const prev = document.createElement('button');
+    prev.textContent = '← Prev';
+    prev.style.cssText = 'padding:8px 12px;border:1px solid #1E3A2B;background:transparent;color:#1E3A2B;border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.7rem;';
+    prev.onclick = () => onPageChange(currentPage - 1);
+    pag.appendChild(prev);
+  }
+  
+  // Page numbers
+  const maxShow = 7;
+  let start = Math.max(1, currentPage - 3);
+  let end = Math.min(totalPages, start + maxShow - 1);
+  if (end - start < maxShow - 1) start = Math.max(1, end - maxShow + 1);
+  
+  if (start > 1) {
+    const first = document.createElement('button');
+    first.textContent = '1';
+    first.style.cssText = 'padding:8px 12px;border:1px solid #E8DCC3;background:white;color:#1E3A2B;border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.7rem;';
+    first.onclick = () => onPageChange(1);
+    pag.appendChild(first);
+    if (start > 2) {
+      const dots = document.createElement('span');
+      dots.textContent = '...';
+      dots.style.cssText = 'padding:8px 4px;color:#7C8F6E;';
+      pag.appendChild(dots);
+    }
+  }
+  
+  for (let i = start; i <= end; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.style.cssText = `padding:8px 12px;border:1px solid ${i===currentPage?'#1E3A2B':'#E8DCC3'};background:${i===currentPage?'#1E3A2B':'white'};color:${i===currentPage?'#F3EBDA':'#1E3A2B'};border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.7rem;`;
+    btn.onclick = () => onPageChange(i);
+    pag.appendChild(btn);
+  }
+  
+  if (end < totalPages) {
+    if (end < totalPages - 1) {
+      const dots = document.createElement('span');
+      dots.textContent = '...';
+      dots.style.cssText = 'padding:8px 4px;color:#7C8F6E;';
+      pag.appendChild(dots);
+    }
+    const last = document.createElement('button');
+    last.textContent = totalPages;
+    last.style.cssText = 'padding:8px 12px;border:1px solid #E8DCC3;background:white;color:#1E3A2B;border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.7rem;';
+    last.onclick = () => onPageChange(totalPages);
+    pag.appendChild(last);
+  }
+  
+  // Next button
+  if (currentPage < totalPages) {
+    const next = document.createElement('button');
+    next.textContent = 'Next →';
+    next.style.cssText = 'padding:8px 12px;border:1px solid #1E3A2B;background:transparent;color:#1E3A2B;border-radius:4px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:0.7rem;';
+    next.onclick = () => onPageChange(currentPage + 1);
+    pag.appendChild(next);
+  }
+  
+  // Page info
+  const info = document.createElement('span');
+  info.style.cssText = 'padding:8px 12px;color:#7C8F6E;font-family:IBM Plex Mono,monospace;font-size:0.65rem;';
+  info.textContent = `${(currentPage-1)*_pageSize+1}-${Math.min(currentPage*_pageSize,totalItems)} of ${totalItems}`;
+  pag.appendChild(info);
+  
+  container.appendChild(pag);
+}
 
 /* ============ STATE ============ */
 let favorites = new Set();      // ids
@@ -2358,6 +2488,14 @@ renderRepList = function() {
 
 // 13. INITIALIZATION — start preloading immediately
 preloadAssets();
+
+
+// Register Service Worker for offline caching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW registration failed:', e));
+  });
+}
 
 /* ============ INIT ============ */
 loadState();
