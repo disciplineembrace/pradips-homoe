@@ -1073,7 +1073,7 @@ function renderHome(){
   // Stats
   const totalReadingMin = Math.floor((readingStats.totalTime||0)/60);
   document.getElementById('statRow').innerHTML = `
-    <div class="stat"><div class="num">18</div><div class="lbl">Books</div></div>
+    <div class="stat"><div class="num">13</div><div class="lbl">Books</div></div>
     <div class="stat"><div class="num">${REMEDIES.length+RUBRICS.length}</div><div class="lbl">Entries</div></div>
     <div class="stat"><div class="num">${bookmarks.size}</div><div class="lbl">Bookmarks</div></div>
     <div class="stat"><div class="num">${notesData.length}</div><div class="lbl">Notes</div></div>
@@ -1087,6 +1087,9 @@ function renderHome(){
   let html = '';
   ['materia','repertory'].forEach(view=>{
     AUTHORS.forEach(a=>{
+      // Only show Repertory for authors that have repertory data
+      const HAS_REPERTORY = ['Boericke','Phatak','Kent','Murphy'];
+      if(view==='repertory' && !HAS_REPERTORY.includes(a)) return;
       const cls = a==='Phatak'?'phatak':a==='Murphy'?'murphy':a==='Kent'?'kent':'';
       const isMM = view==='materia';
       html += `<div class="drawer ${cls}" onclick="openBrowse('${view}','${a}')">
