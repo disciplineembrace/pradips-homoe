@@ -69,3 +69,59 @@ Stage Summary:
 - **User action required**: Open site in incognito/private window OR hard refresh (Ctrl+Shift+R) to bypass browser cache. May need to clear site data via DevTools → Application → Storage if old service worker is still cached.
 - **Access codes**: User = 100727, Admin = 180802, Admin email = sagathiyapradip2002@gmail.com
 - **Known data issue (not blocking)**: ROH section shows 0 entries because remedies.json has no Sehgal-author entries. The source PDF exists but needs to be parsed and merged separately.
+
+---
+Task ID: 3
+Agent: Super Z (main)
+Task: User reported "Predictive Homeopathy, therapeutic section is absent data". Investigate and fix both sections.
+
+Work Log:
+- Audited both sections:
+  - **Therapeutics**: Had nav button only — NO view HTML, NO render function, NO data file. Clicking it did nothing.
+  - **Predictive**: Had view HTML (#view-predictive with phContentArea div), had module (predictive_module.js), had data (predictive_chapters.json with 2 books / 23 chapters). BUT `PredictiveModule.init()` was NEVER called — so phContentArea stayed empty.
+- Root causes:
+  1. Therapeutics section was never built (just a placeholder nav button)
+  2. PredictiveModule.init() was missing from the init sequence at bottom of index.html
+
+- **Therapeutics data extraction**: 
+  - Found "Homoeopathic Formulas _By Dr. Manoj.pdf" in /home/z/my-project/upload/ (588 pages, by Dr. Saif-ud-Din Saif, 1400 formulas)
+  - Wrote `/home/z/my-project/scripts/parse_therapeutics.py` to extract disease → subcategory → remedies(potency) structure
+  - Iterated parser 3 times to handle edge cases: parenthetical clarifiers, inline remedy lists, multi-line subcategory names
+  - Final output: `/home/z/my-project/vercel-deploy/data/therapeutics.json` — 408 diseases, 1,271 subcategories, 3,955 remedy entries (541 KB)
+
+- **Therapeutics UI**:
+  - Added `view-therapeutics` section to index.html with: search box, A-Z filter strip, list area
+  - Created `/home/z/my-project/vercel-deploy/therapeutics_module.js` with:
+    - `init()` — loads therapeutics.json
+    - `render()` — shows A-Z + filtered disease list (100 at a time for perf)
+    - `setLetter(L)` — A-Z filter
+    - `search(v)` — full-text search across disease names, subcategories, remedies
+    - `clearSearch()` — reset filters
+    - `open(id)` — disease detail view with all subcategories expanded
+    - `back()` — return to list
+    - `quickTherRemedy(name)` — click a remedy to jump to its Materia Medica entry
+  - Updated `switchView()` to call `TherapeuticsModule.render()` when entering therapeutics view
+  - Added `therapeutics_module.js?v=1` script tag and `TherapeuticsModule.init()` call to init sequence
+
+- **Predictive fix**:
+  - Added `if(window.PredictiveModule){...init()...}` to init sequence at bottom of index.html
+  - Updated `switchView()` to call `PredictiveModule.grid()` when entering predictive view (ensures render even on first visit)
+  - Bumped cache-bust on predictive_chapters.json fetch (?v=8 → ?v=2)
+
+- Deployed via Vercel REST API — 24 files uploaded, deployment READY
+- Verified production URL serves new files (MD5 match, therapeutics_module.js returns 200, therapeutics.json returns 200)
+
+- **Final live test results**:
+  - ✅ Therapeutics: 408 diseases loaded, 22 letters in A-Z filter, 100 cards shown
+  - ✅ Therapeutics search "fever": 12 results
+  - ✅ Therapeutics detail view: opens FEVER with 2 subcategories, Back button works
+  - ✅ Predictive: 6 books shown (2 real + 4 placeholder)
+  - ✅ Predictive Book 1 ("Theory of Suppression"): 12 chapter links, 89,587 chars of content rendered
+  - ✅ No JS console errors
+
+Stage Summary:
+- **Both sections now fully functional on production** at https://pradips-homoe.vercel.app/
+- Therapeutics: 408 diseases with formulas from Encyclopedia of Homoeopathic Formulas — searchable, A-Z filterable, clickable cross-references to Materia Medica
+- Predictive: 2 books (Theory of Suppression, Theory of Acutes) with 23 chapters total — full text readable
+- User needs to hard-refresh (Ctrl+Shift+R) to bypass browser cache and load new module
+- Access codes: User = 100727, Admin = 180802

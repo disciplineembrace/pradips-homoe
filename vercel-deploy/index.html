@@ -665,6 +665,19 @@ body {
       <div id="repList"></div>
     </section>
 
+    <!-- ============ THERAPEUTICS ============ -->
+    <section class="view" id="view-therapeutics">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
+      <h1 class="page-title">Therapeutics</h1>
+      <p class="page-sub" id="therSub">Clinical formulas &mdash; Encyclopedia of Homoeopathic Formulas by Dr. Saif-ud-Din Saif</p>
+      <div class="in-book-search">
+        <input id="therSearch" placeholder="Search diseases & formulas..." oninput="runTherSearch()" />
+        <button onclick="clearTherSearch()">Clear</button>
+      </div>
+      <div id="therAZ" style="display:flex;flex-wrap:wrap;gap:6px;padding:12px 20px;border-bottom:1px solid var(--parchment-dark);"></div>
+      <div id="therList" style="padding:16px 20px;"></div>
+    </section>
+
     
     <!-- ============ IRAP (Repertory Analysis) ============ -->
     <section class="view" id="view-irap">
@@ -1301,7 +1314,9 @@ function switchView(name){
   window.scrollTo({top:0, behavior:'smooth'});
   if(name==='materia') renderMateria();
   if(name==='repertory') renderRepertory();
+  if(name==='therapeutics' && window.TherapeuticsModule) TherapeuticsModule.render();
   if(name==='search') renderSearchView();
+  if(name==='predictive' && window.PredictiveModule) PredictiveModule.grid();
   if(name==='favorites') renderFavorites();
   if(name==='notes') renderNotesView();
   if(name==='history') renderHistory();
@@ -2939,9 +2954,12 @@ window.addEventListener('beforeunload', ()=>{ stopReaderTimer(); });
 <script src="predictive_module.js?v=10"></script>
 <script src="security_module.js?v=10"></script>
 <script src="account_module.js?v=10"></script>
+<script src="therapeutics_module.js?v=1"></script>
 <script>
 if(window.SecurityModule){function is(){if(typeof switchView==="function")SecurityModule.init();else setTimeout(is,50);}is();}
 if(window.AccountModule){function ia(){if(typeof switchView==="function")AccountModule.init();else setTimeout(ia,50);}ia();}
+if(window.PredictiveModule){function ip(){if(typeof switchView==="function")PredictiveModule.init();else setTimeout(ip,50);}ip();}
+if(window.TherapeuticsModule){function it(){if(typeof switchView==="function")TherapeuticsModule.init();else setTimeout(it,50);}it();}
 </script>
 </body>
 </html>
