@@ -994,7 +994,7 @@ body {
   </main>
 
   <footer class="note-strip">
-    Sample library shell with paraphrased placeholder entries &mdash; replace with your own licensed book text for production use. All notes and favorites are stored privately on this device.
+    Pradip's Homoe — Personal Digital Homeopathic Library. All notes and favorites are stored privately on this device.
   </footer>
 </div>
 <div class="toast" id="toast"></div>
@@ -1004,7 +1004,14 @@ body {
 
 <script>
 // Force unregister old service workers
-if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister();});});caches.keys().then(function(k){k.forEach(function(c){caches.delete(c);});});}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(r){
+    r.forEach(function(reg){reg.unregister();});
+  });
+  caches.keys().then(function(k){
+    k.forEach(function(c){caches.delete(c);});
+  });
+}
 
 
 /* ============ DATA (injected by Python) ============ */
@@ -2545,11 +2552,7 @@ preloadAssets();
 
 
 // Register Service Worker for offline caching
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW registration failed:', e));
-  });
-}
+// SW registration removed
 
 
 /* ============ IRAP (Repertory Analysis Platform) ============ */
