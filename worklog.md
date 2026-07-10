@@ -125,3 +125,43 @@ Stage Summary:
 - Predictive: 2 books (Theory of Suppression, Theory of Acutes) with 23 chapters total — full text readable
 - User needs to hard-refresh (Ctrl+Shift+R) to bypass browser cache and load new module
 - Access codes: User = 100727, Admin = 180802
+
+---
+Task ID: 4
+Agent: Super Z (main)
+Task: User requested a separate/dedicated admin link with admin panel (different from main site).
+
+Work Log:
+- Built standalone `/admin.html` — a complete admin console separate from the main site
+- Vercel `cleanUrls:true` config serves it at `/admin` (no .html extension needed)
+- Old method (`#secure-admin-unlock` hash on main site) still works as fallback
+- Admin panel features:
+  - **Login screen**: Username/email + 6-digit code, with branding, hint about IP lockout
+  - **Overview dashboard**: 4 stat cards (Total Users / Active / Audit Events / Protection), system status table (protection enabled, session expiry, protected sections, security question, code status)
+  - **Users section**: Table of all registered users with username, name, role tag, status, last login, "Reset Code" action button per user
+  - **Security Codes section**: Three forms — Change User Code, Change Admin Code, Change Security Question
+  - **Audit Logs section**: Recent security events (login attempts, failures, locks) with timestamp, event type, IP
+  - **Settings section**: Admin profile info, session info, logout button
+- Sidebar navigation with 5 sections, user info at bottom with logout
+- Auto-session-resume: If admin reopens /admin while session cookie is still valid, skips login and shows dashboard
+- Defense-in-depth: After account login succeeds, also calls `/api/security?action=verify_admin` with same code so security-admin endpoints (admin_status, admin_logs, admin_change_*) work too
+- Added `X-Robots-Tag: noindex, nofollow, noarchive` + `Cache-Control: no-cache, no-store, must-revalidate` headers for both `/admin` and `/admin.html` paths in vercel.json
+- Deployed via Vercel REST API — 25 files, deployment READY
+- Verified production:
+  - `https://pradips-homoe.vercel.app/admin` returns 200 with noindex headers ✅
+  - `https://pradips-homoe.vercel.app/admin.html` 308-redirects to `/admin` ✅
+  - Login as `sagathiyapradip2002@gmail.com` / `180802` succeeds ✅
+  - Dashboard shows: 2 users (1 admin), Protection: ON, 10 protected sections ✅
+  - Security question loaded: "What's your favourite food?" ✅
+  - Users table shows both accounts with role tags ✅
+  - Logout returns to login screen ✅
+  - No JS errors in console ✅
+
+Stage Summary:
+- **New dedicated admin URL**: https://pradips-homoe.vercel.app/admin
+- **Login**: sagathiyapradip2002@gmail.com / 180802
+- **Full admin capabilities**: User management, security code changes, audit log viewing, system status
+- **Hidden from search engines** via X-Robots-Tag header
+- **No cache** to prevent stale admin data
+- Main site at https://pradips-homoe.vercel.app/ still works as before for normal users (code 100727)
+- The old `#secure-admin-unlock` hash method still works as a fallback
