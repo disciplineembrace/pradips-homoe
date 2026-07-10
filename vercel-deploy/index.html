@@ -29,7 +29,8 @@
   --card-shadow:0 2px 0 rgba(43,36,32,0.08),0 8px 20px -8px rgba(43,36,32,0.25);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{scroll-behavior:smooth;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{overflow-x:hidden;}
 body{margin:0;background:var(--parchment);color:var(--ink);
   font-family:'Source Serif 4',serif;-webkit-font-smoothing:antialiased;}
 .app{min-height:100vh;display:flex;flex-direction:column;}
@@ -438,6 +439,75 @@ body {
   visibility: hidden;
 }
 
+
+/* ===== IRAP (Integrated Repertory Analysis Platform) ===== */
+.irap-layout{display:grid;grid-template-columns:300px 1fr 350px;gap:12px;margin-top:16px;min-height:600px;}
+.irap-panel{background:white;border:1px solid var(--parchment-dark);border-radius:6px;display:flex;flex-direction:column;max-height:75vh;}
+.irap-panel-header{background:var(--bottle);color:var(--brass-light);padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;border-radius:6px 6px 0 0;display:flex;justify-content:space-between;align-items:center;}
+.irap-panel-body{overflow-y:auto;flex:1;padding:12px;-webkit-overflow-scrolling:touch;}
+.irap-search-box{width:100%;padding:10px;border:1px solid var(--parchment-dark);border-radius:4px;font-family:'Source Serif 4',serif;font-size:0.9rem;margin-bottom:8px;}
+.irap-rubric-result{padding:8px 10px;border:1px solid var(--parchment-dark);border-radius:4px;margin-bottom:6px;cursor:pointer;background:#fffdf8;transition:background 0.15s;}
+.irap-rubric-result:hover{background:var(--parchment);}
+.irap-rubric-result .rr-path{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--sage);text-transform:uppercase;}
+.irap-rubric-result .rr-title{font-size:0.88rem;font-weight:500;margin:2px 0;}
+.irap-rubric-result .rr-source{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--brass);}
+.irap-rubric-result .rr-remedies{font-size:0.78rem;color:#5c5348;margin-top:4px;}
+.irap-clipboard-item{padding:10px;border:1px solid var(--bottle);border-left:4px solid var(--bottle);border-radius:4px;margin-bottom:8px;background:#fffdf8;}
+.irap-clipboard-item .ci-title{font-size:0.88rem;font-weight:500;}
+.irap-clipboard-item .ci-path{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--sage);}
+.irap-clipboard-item .ci-controls{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center;}
+.irap-clipboard-item select,.irap-clipboard-item button{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;padding:4px 8px;border:1px solid var(--parchment-dark);border-radius:3px;background:white;cursor:pointer;}
+.irap-clipboard-item .ci-remove{color:var(--burgundy);border-color:var(--burgundy);}
+.irap-clipboard-item.mental{border-left-color:var(--bottle);}
+.irap-clipboard-item.general{border-left-color:var(--brass);}
+.irap-clipboard-item.particular{border-left-color:var(--sage);}
+.irap-btn{background:var(--bottle);color:var(--parchment);border:none;padding:10px 20px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05px;width:100%;margin-top:8px;}
+.irap-btn:hover{background:var(--bottle-dark);}
+.irap-btn:disabled{background:#999;cursor:not-allowed;}
+.irap-remedy-row{padding:10px;border:1px solid var(--parchment-dark);border-radius:4px;margin-bottom:6px;cursor:pointer;background:#fffdf8;}
+.irap-remedy-row:hover{border-color:var(--brass);}
+.irap-remedy-row .rr-name{font-family:'Fraunces',serif;font-weight:600;font-size:0.95rem;}
+.irap-remedy-row .rr-score{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--brass);font-weight:500;}
+.irap-remedy-row .rr-bar{height:6px;background:var(--parchment-dark);border-radius:3px;margin-top:4px;overflow:hidden;}
+.irap-remedy-row .rr-bar-fill{height:100%;background:linear-gradient(90deg,var(--brass),var(--brass-light));border-radius:3px;}
+.irap-remedy-row .rr-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.irap-remedy-row .rr-tag{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;padding:2px 6px;border-radius:3px;text-transform:uppercase;}
+.irap-remedy-row .rr-tag.keynote{background:var(--brass);color:white;}
+.irap-remedy-row .rr-tag.multisource{background:var(--bottle);color:white;}
+.irap-remedy-row .rr-tag.mm{background:var(--sage);color:white;}
+.irap-analysis-summary{padding:12px;background:#fffdf8;border:1px solid var(--parchment-dark);border-radius:4px;margin-bottom:12px;font-size:0.85rem;line-height:1.6;}
+.irap-empty{text-align:center;padding:30px 20px;color:var(--sage);font-family:'IBM Plex Mono',monospace;font-size:0.75rem;text-transform:uppercase;}
+.irap-intensity-sel{display:flex;gap:4px;}
+.irap-intensity-sel button{padding:4px 8px;border:1px solid var(--parchment-dark);border-radius:3px;background:white;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;text-transform:uppercase;}
+.irap-intensity-sel button.active{background:var(--bottle);color:var(--parchment);}
+.irap-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.irap-modal-content{background:var(--parchment);border-radius:8px;padding:24px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+.irap-modal-content h3{font-family:'Fraunces',serif;font-style:italic;color:var(--bottle);margin:0 0 12px;}
+.irap-detail-view{padding:16px;background:white;border:1px solid var(--parchment-dark);border-radius:6px;margin-top:8px;}
+.irap-detail-view h4{font-family:'Fraunces',serif;color:var(--bottle);margin:0 0 8px;}
+.irap-detail-view p{font-size:0.88rem;line-height:1.7;}
+.irap-detail-view .meta{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--sage);text-transform:uppercase;margin-bottom:8px;}
+@media(max-width:1024px){.irap-layout{grid-template-columns:1fr;}.irap-panel{max-height:400px;}}
+
+
+/* BACK BUTTON */
+.btn-back{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:600;color:var(--bottle);background:none;border:none;cursor:pointer;padding:4px 0;margin:0 0 10px 0;}
+.btn-back:hover{opacity:0.65;}
+.btn-back svg{width:14px;height:14px;}
+/* SYNTHESIS */
+.syn-chapter{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:5px;cursor:pointer;font-size:0.85rem;color:var(--bottle);}
+.syn-chapter:hover{background:var(--parchment);}
+.syn-chapter.active{background:var(--bottle);color:#fff;}
+.syn-rubric-card{background:#fff;border:1px solid var(--parchment-dark);border-radius:6px;padding:10px 14px;margin-bottom:8px;}
+.syn-remedies{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.syn-remedy{font-size:0.75rem;font-family:'IBM Plex Mono',monospace;padding:2px 6px;border:1px solid;border-radius:3px;background:#fafafa;}
+.syn-add-btn{background:none;border:1px solid var(--brass);color:var(--brass);font-size:0.72rem;padding:4px 12px;border-radius:4px;cursor:pointer;}
+.syn-empty{text-align:center;padding:40px;color:var(--sage);}
+.syn-btn{background:var(--bottle);color:#fff;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;}
+.syn-rep-table{width:100%;border-collapse:collapse;font-size:0.82rem;margin-top:12px;}
+.syn-rep-table th{background:var(--bottle);color:#fff;padding:6px;text-align:left;}
+.syn-rep-table td{border:1px solid #e0d8c8;padding:4px 8px;}
+@media(max-width:768px){.syn-layout{grid-template-columns:1fr !important;}}
 </style>
 </head>
 <body>
@@ -461,6 +531,11 @@ body {
       <button data-view="home" class="active">Home</button>
       <button data-view="materia">Materia Medica</button>
       <button data-view="repertory">Repertory</button>
+      <button data-view="therapeutics">Therapeutics</button>
+      <button data-view="irap">Analysis</button>
+      <button data-view="roh">ROH</button>
+      <button data-view="synthesis">Synthesis</button>
+      <button data-view="predictive">Predictive Homoeopathy</button>
       <button data-view="search">Search</button>
       <button data-view="favorites">Favorites</button>
       <button data-view="notes">Notes</button>
@@ -521,6 +596,7 @@ body {
 
     <!-- ============ SEARCH ============ -->
     <section class="view" id="view-search">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Universal Search</h1>
       <p class="page-sub">One box, every author, every remedy and rubric</p>
       <div class="search-hero">
@@ -559,6 +635,7 @@ body {
 
     <!-- ============ MATERIA MEDICA ============ -->
     <section class="view" id="view-materia">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Materia Medica</h1>
       <p class="page-sub" id="materiaSub">Browsing remedies A&ndash;Z</p>
       <div class="author-tabs" id="materiaAuthorTabs"></div>
@@ -574,6 +651,7 @@ body {
 
     <!-- ============ REPERTORY ============ -->
     <section class="view" id="view-repertory">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Repertory</h1>
       <p class="page-sub" id="repSub">Browsing rubrics</p>
       <div class="author-tabs" id="repAuthorTabs"></div>
@@ -587,7 +665,86 @@ body {
       <div id="repList"></div>
     </section>
 
-    <!-- ============ READER ============ -->
+    
+    <!-- ============ IRAP (Repertory Analysis) ============ -->
+    <section class="view" id="view-irap">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
+      <h1 class="page-title">Repertory Analysis</h1>
+      <p class="page-sub">Integrated Homeopathic Repertory Analysis Platform</p>
+      <div class="irap-layout">
+        <!-- LEFT: Search -->
+        <div class="irap-panel">
+          <div class="irap-panel-header"><span>Search Rubrics</span></div>
+          <div class="irap-panel-body">
+            <input class="irap-search-box" id="irapSearch" placeholder="Search symptoms..." oninput="irapSearchRubrics()" />
+            <div class="filter-chips" id="irapSourceChips" style="margin-bottom:8px;">
+              <span class="chip active" onclick="irapToggleSource('all',this)">All</span>
+              <span class="chip" onclick="irapToggleSource('Murphy',this)">Murphy</span>
+              <span class="chip" onclick="irapToggleSource('Phatak',this)">Phatak</span>
+              <span class="chip" onclick="irapToggleSource('Kent',this)">Kent</span>
+            </div>
+            <div id="irapResults"></div>
+          </div>
+        </div>
+        
+        <!-- MIDDLE: Clipboard -->
+        <div class="irap-panel">
+          <div class="irap-panel-header">
+            <span>Selected Rubrics</span>
+            <span id="irapClipboardCount">0</span>
+          </div>
+          <div class="irap-panel-body" id="irapClipboard">
+            <div class="irap-empty">Add rubrics from search results</div>
+          </div>
+          <div style="padding:12px;border-top:1px solid var(--parchment-dark);">
+            <button class="irap-btn" onclick="irapAnalyze()">Analyze Remedies</button>
+            <button class="irap-btn" style="background:transparent;color:var(--bottle);border:1px solid var(--bottle);margin-top:4px;" onclick="irapClearClipboard()">Clear All</button>
+          </div>
+        </div>
+        
+        <!-- RIGHT: Results -->
+        <div class="irap-panel">
+          <div class="irap-panel-header"><span>Analysis Results</span></div>
+          <div class="irap-panel-body" id="irapResults2">
+            <div class="irap-empty">Run analysis to see remedy rankings</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ROH -->
+    <section class="view" id="view-roh">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
+      <h1 class="page-title">Rediscovery of Homoeopathy</h1>
+      <p class="page-sub" id="rohSub">Dr. M.L. Sehgal's ROH Series</p>
+      <div class="in-book-search"><input id="rohSearch" placeholder="Search ROH..." /><button onclick="runRohSearch()">Filter</button><button onclick="clearRohSearch()">Clear</button></div>
+      <div id="rohSeriesFilter" style="display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;"></div>
+      <div class="specimen-grid" id="rohGrid"></div>
+    </section>
+    <!-- SYNTHESIS -->
+    <section class="view" id="view-synthesis">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
+      <h1 class="page-title">Synthesis Repertory</h1>
+      <p class="page-sub">Repertory with repertorization</p>
+      <div style="display:flex;gap:6px;margin:14px 0;">
+        <button class="chip-mini" style="cursor:pointer;padding:6px 12px;border:1px solid var(--brass);background:var(--brass);color:#fff;" onclick="SynthesisModule.setView('browse')">Browse</button>
+        <button class="chip-mini" style="cursor:pointer;padding:6px 12px;border:1px solid var(--brass);color:var(--brass);" onclick="SynthesisModule.setView('clipboard')">Clipboard</button>
+        <button class="chip-mini" style="cursor:pointer;padding:6px 12px;border:1px solid var(--brass);color:var(--brass);" onclick="SynthesisModule.setView('import')">Import</button>
+      </div>
+      <div class="in-book-search"><input id="synSearch" placeholder="Search rubrics..." oninput="SynthesisModule.search(this.value)" /></div>
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:20px;" class="syn-layout">
+        <div id="synChapters" style="background:#fff;border:1px solid var(--parchment-dark);border-radius:8px;padding:8px;max-height:500px;overflow-y:auto;"></div>
+        <div id="synGrid"></div>
+      </div>
+    </section>
+    <!-- PREDICTIVE -->
+    <section class="view" id="view-predictive">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
+      <div id="phContentArea"></div>
+    </section>
+
+<!-- ============ READER ============ -->
     <section class="view" id="view-reader">
       <div class="reader-progress-strip"><div class="fill" id="readerProgressFill" style="width:0%"></div></div>
       <div class="reader-toolbar">
@@ -643,6 +800,7 @@ body {
 
     <!-- ============ FAVORITES ============ -->
     <section class="view" id="view-favorites">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Favorites</h1>
       <p class="page-sub">Everything you've starred, stored privately on this device</p>
       <div class="fav-section">
@@ -665,6 +823,7 @@ body {
 
     <!-- ============ NOTES ============ -->
     <section class="view" id="view-notes">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Notes</h1>
       <p class="page-sub">Personal clinical, study, remedy and rubric notes</p>
       <div class="search-notes">
@@ -682,6 +841,7 @@ body {
 
     <!-- ============ HISTORY ============ -->
     <section class="view" id="view-history">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Reading History</h1>
       <p class="page-sub">Continue reading, recently viewed remedies, rubrics & searches</p>
       <div class="fav-section">
@@ -706,6 +866,7 @@ body {
 
     <!-- ============ SETTINGS ============ -->
     <section class="view" id="view-settings">
+      <button class="btn-back" onclick="goBackBrowser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>Back</button>
       <h1 class="page-title">Settings</h1>
       <p class="page-sub">Customize your reading experience & data</p>
 
@@ -842,7 +1003,8 @@ body {
 
 
 <script>
-
+// Force unregister old service workers
+if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister();});});caches.keys().then(function(k){k.forEach(function(c){caches.delete(c);});});}
 
 
 /* ============ DATA (injected by Python) ============ */
@@ -872,64 +1034,43 @@ const _dataCallbacks = [];
 
 async function loadData() {
   if (_dataLoaded) return;
-  if (_dataLoading) {
-    return new Promise(resolve => _dataCallbacks.push(resolve));
-  }
+  if (_dataLoading) { return new Promise(resolve => _dataCallbacks.push(resolve)); }
   _dataLoading = true;
-  
   try {
-    // Show loading indicator
-    const loader = document.getElementById('dataLoader');
-    if (loader) loader.style.display = 'flex';
-    
-    // Load remedies first (needed for everything)
-    const remediesRes = await fetch('remedies.json');
-    REMEDIES = await remediesRes.json();
-    
-    // Update loading progress
+    const loaderEl = document.getElementById('dataLoader');
+    if (loaderEl) loaderEl.style.display = 'flex';
     const progressBar = document.getElementById('loaderProgress');
-    if (progressBar) progressBar.style.width = '50%';
-    
-    // Load rubrics (needed for Repertory and Search)
-    const rubricsRes = await fetch('rubrics.json');
-    RUBRICS = await rubricsRes.json();
-    
-    if (progressBar) progressBar.style.width = '100%';
-    
+    const remediesRes = await fetch('remedies.json?v=20260710cc');
+    if (progressBar) progressBar.style.width = '30%';
+    REMEDIES = await remediesRes.json();
+    if (progressBar) progressBar.style.width = '60%';
     _dataLoaded = true;
-    buildSearchPool();
     _dataLoading = false;
-    
-    // Hide loader
-    if (loader) {
-      setTimeout(() => { loader.style.display = 'none'; }, 300);
-    }
-    
-    // Notify callbacks
-    _dataCallbacks.forEach(cb => cb());
-    
-    // Re-render current view with data
+    if (loaderEl) { setTimeout(() => { loaderEl.style.display = 'none'; }, 300); }
+    buildSearchPool();
     const activeView = document.querySelector('.view.active')?.id?.replace('view-', '');
     if (activeView) switchView(activeView);
-    
+    _dataCallbacks.forEach(cb => cb());
+    _dataCallbacks.length = 0;
+    // Load rubrics in background
+    try {
+      const rubricsRes = await fetch('rubrics.json?v=20260710cc');
+      RUBRICS = await rubricsRes.json();
+      if (progressBar) progressBar.style.width = '100%';
+    } catch(e2) { console.warn('Rubrics failed:', e2); }
     return true;
   } catch(e) {
     console.error('Data loading failed:', e);
-    _dataLoading = false;
-    const loader = document.getElementById('dataLoader');
-    if (loader) {
-      loader.innerHTML = '<div style="color:#6E2A3A;padding:20px;text-align:center;">Failed to load data. Please refresh the page.</div>';
+    const loaderErr = document.getElementById('dataLoader');
+    if (loaderErr) {
+      loaderErr.innerHTML = '<div style="color:#6E2A3A;padding:20px;text-align:center;"><h3>Loading Error</h3><button onclick="location.reload()" style="background:#1d3a2b;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;margin-top:12px;">Retry</button></div>';
     }
+    _dataLoading = false;
     return false;
   }
 }
 
-// Wrap the original loadState to also load data
-const _originalLoadState = loadState;
-loadState = async function() {
-  _originalLoadState();
-  await loadData();
-};
+// loadData called directly at init
 
 
 /* ============ SEARCH INDEX (built once) ============ */
@@ -1166,6 +1307,66 @@ function goBack(){
   else if(currentRef && currentRef.type==='rubric') switchView('repertory');
   else switchView('home');
 }
+
+
+function goBackBrowser(){try{if(window.history.length>1)window.history.back();else switchView('home');}catch(e){switchView('home');}}
+let rohSearchTerm="",rohActiveSeries="all";
+function renderROH(){
+  var g=document.getElementById("rohGrid");if(!g)return;
+  var a=REMEDIES.filter(function(r){return r.author==="Sehgal"});
+  if(rohSearchTerm)a=a.filter(function(r){return (r.name+" "+(r.keynote||"")).toLowerCase().indexOf(rohSearchTerm)>=0});
+  var sc={};a.forEach(function(r){var s=r.series||"O";sc[s]=(sc[s]||0)+1});
+  var as=Object.keys(sc).sort();
+  var filterDiv=document.getElementById("rohSeriesFilter");
+  filterDiv.innerHTML="";
+  // All button
+  var allBtn=document.createElement("button");
+  allBtn.className="chip-mini";
+  allBtn.style.cssText="cursor:pointer;padding:6px 12px;border:1px solid var(--brass);"+(rohActiveSeries==="all"?"background:var(--brass);color:#fff;":"color:var(--brass);");
+  allBtn.textContent="All ("+a.length+")";
+  allBtn.onclick=function(){setRohSeries("all")};
+  filterDiv.appendChild(allBtn);
+  // Series buttons
+  as.forEach(function(s){
+    var ac=rohActiveSeries===s;
+    var btn=document.createElement("button");
+    btn.className="chip-mini";
+    btn.style.cssText="cursor:pointer;padding:6px 12px;border:1px solid var(--brass);"+(ac?"background:var(--brass);color:#fff;":"color:var(--brass);");
+    btn.textContent=s+" ("+sc[s]+")";
+    btn.onclick=function(){setRohSeries(s)};
+    filterDiv.appendChild(btn);
+  });
+  var it=rohActiveSeries==="all"?a:a.filter(function(r){return r.series===rohActiveSeries});
+  document.getElementById("rohSub").textContent="Dr. Sehgal ROH — "+(rohActiveSeries==="all"?"All":rohActiveSeries)+" — "+it.length+" entries";
+  batchRender(g,it.slice(0,200),function(r){
+    var d=document.createElement("div");
+    d.className="specimen";
+    d.onclick=function(){openRef("remedy",r.id)};
+    var tab=document.createElement("div");
+    tab.className="tab";
+    var sp=document.createElement("span");
+    sp.textContent=r.series||"ROH";
+    tab.appendChild(sp);
+    d.appendChild(tab);
+    var punch=document.createElement("div");
+    punch.className="punch";
+    d.appendChild(punch);
+    var body=document.createElement("div");
+    body.className="body";
+    var h4=document.createElement("h4");
+    h4.textContent=r.name;
+    body.appendChild(h4);
+    var kn=document.createElement("div");
+    kn.className="keynote";
+    kn.textContent=(r.keynote||"").substring(0,200);
+    body.appendChild(kn);
+    d.appendChild(body);
+    return d;
+  },20);
+}
+function setRohSeries(s){rohActiveSeries=s;renderROH()}
+function runRohSearch(){rohSearchTerm=document.getElementById("rohSearch").value.trim().toLowerCase();rohActiveSeries="all";renderROH()}
+function clearRohSearch(){document.getElementById("rohSearch").value="";rohSearchTerm="";rohActiveSeries="all";renderROH()}
 
 /* ============ HELPERS ============ */
 function findById(id){
@@ -2119,164 +2320,8 @@ function triggerInstall(){
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(()=>{ deferredPrompt = null; document.getElementById('installBtn').style.display='none'; });
 }
-if('serviceWorker' in navigator){
-  const swCode = `
-    const CACHE='pradip-homoe-v2';
-    self.addEventListener('install', e=>{ self.skipWaiting(); });
-    self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
-    self.addEventListener('fetch', e=>{
-      e.respondWith(
-        caches.match(e.request).then(r=> r || fetch(e.request).then(resp=>{
-          if(resp && resp.status===200 && e.request.method==='GET'){
-            const clone = resp.clone();
-            caches.open(CACHE).then(c=>c.put(e.request, clone));
-          }
-          return resp;
-        }).catch(()=>caches.match(e.request)))
-      );
-    });
-  `;
-  const swBlob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(swBlob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{ /* offline not available */ });
-}
 
-
-/* ============================================================
-   PERFORMANCE OPTIMIZATIONS
-   ============================================================ */
-
-// 1. VIRTUAL SCROLL — only render visible items (no lag on 77K items)
-function attachVirtualScroll(container, items, renderFn, itemHeight) {
-  if (!container || !items.length) return;
-  const VIEWPORT = container.clientHeight || 600;
-  const BUFFER = 5; // extra items above/below viewport
-  const visibleCount = Math.ceil(VIEWPORT / itemHeight) + BUFFER * 2;
-  let scrollTop = 0;
-  let renderTimer = null;
-
-  function render() {
-    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - BUFFER);
-    const endIndex = Math.min(items.length, startIndex + visibleCount);
-    const visibleItems = items.slice(startIndex, endIndex);
-
-    // Use DocumentFragment for batch insertion
-    const fragment = document.createDocumentFragment();
-    visibleItems.forEach((item, i) => {
-      const el = renderFn(item, startIndex + i);
-      if (el) {
-        el.style.position = 'absolute';
-        el.style.top = ((startIndex + i) * itemHeight) + 'px';
-        el.style.width = '100%';
-        el.style.boxSizing = 'border-box';
-        fragment.appendChild(el);
-      }
-    });
-
-    container.innerHTML = '';
-    container.appendChild(fragment);
-    container.style.height = (items.length * itemHeight) + 'px';
-    container.style.position = 'relative';
-    container.style.overflowY = 'auto';
-  }
-
-  // Throttled scroll handler with passive listener
-  container.addEventListener('scroll', () => {
-    scrollTop = container.scrollTop;
-    if (renderTimer) cancelAnimationFrame(renderTimer);
-    renderTimer = requestAnimationFrame(render);
-  }, { passive: true, capture: false });
-
-  render(); // initial render
-  return { render, update: (newItems) => { items = newItems; render(); } };
-}
-
-// 2. BATCH RENDER — render items in chunks using requestAnimationFrame
-function batchRender(container, items, renderFn, chunkSize) {
-  chunkSize = chunkSize || 20;
-  container.innerHTML = '';
-  let index = 0;
-
-  function renderChunk() {
-    const fragment = document.createDocumentFragment();
-    const end = Math.min(index + chunkSize, items.length);
-    for (let i = index; i < end; i++) {
-      const el = renderFn(items[i], i);
-      if (el) fragment.appendChild(el);
-    }
-    container.appendChild(fragment);
-    index = end;
-    if (index < items.length) {
-      requestAnimationFrame(renderChunk);
-    }
-  }
-  renderChunk();
-}
-
-// 3. DEBOUNCE — prevent excessive function calls
-function debounce(fn, delay) {
-  let timer = null;
-  return function(...args) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-
-// 4. THROTTLE — limit function execution rate
-function throttle(fn, limit) {
-  let inThrottle = false;
-  return function(...args) {
-    if (!inThrottle) {
-      fn.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-}
-
-// 5. FAST CLICK — eliminate 300ms tap delay on mobile
-document.addEventListener('DOMContentLoaded', () => {
-  // Add touch-action: manipulation to all clickable elements
-  document.querySelectorAll('button, a, .specimen, .drawer, .rubric-item, .chip').forEach(el => {
-    el.style.touchAction = 'manipulation';
-  });
-});
-
-// 6. PRELOAD — hint browser to prefetch data files
-function preloadAssets() {
-  // Preload remedies.json (needed first)
-  const link1 = document.createElement('link');
-  link1.rel = 'preload';
-  link1.as = 'fetch';
-  link1.href = 'remedies.json';
-  document.head.appendChild(link1);
-
-  // Preload rubrics.json (needed for repertory)
-  const link2 = document.createElement('link');
-  link2.rel = 'preload';
-  link2.as = 'fetch';
-  link2.href = 'rubrics.json';
-  document.head.appendChild(link2);
-}
-
-// 7. LAZY IMAGE LOADING — use Intersection Observer
-function setupLazyImages() {
-  if (!('IntersectionObserver' in window)) return;
-  const imgObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        if (img.dataset.src) {
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          imgObserver.unobserve(img);
-        }
-      }
-    });
-  }, { rootMargin: '50px' });
-
-  document.querySelectorAll('img[data-src]').forEach(img => imgObserver.observe(img));
-}
+// 8. MEMORY MANAGEMENT
 
 // 8. MEMORY MANAGEMENT — clean up when switching views
 function cleanupView(viewName) {
@@ -2506,14 +2551,360 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+
+/* ============ IRAP (Repertory Analysis Platform) ============ */
+let _irapClipboard = []; // {id, path, title, author, remedies, intensity, category}
+let _irapActiveSource = 'all';
+let _irapSearchIndex = null;
+
+// Build rubric search index for IRAP
+function irapBuildIndex(){
+  if(_irapSearchIndex) return;
+  _irapSearchIndex = [];
+  RUBRICS.forEach(r => {
+    _irapSearchIndex.push({
+      id: r.id, path: r.path, title: r.title, author: r.author,
+      remedies: r.remedies,
+      text: (r.title + ' ' + r.path + ' ' + r.remedies.join(' ')).toLowerCase()
+    });
+  });
+}
+
+function irapToggleSource(src, el){
+  _irapActiveSource = src;
+  document.querySelectorAll('#irapSourceChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  irapSearchRubrics();
+}
+
+function irapSearchRubrics(){
+  irapBuildIndex();
+  const q = document.getElementById('irapSearch').value.trim().toLowerCase();
+  let pool = _irapSearchIndex;
+  if(_irapActiveSource !== 'all'){
+    pool = pool.filter(p => p.author === _irapActiveSource);
+  }
+  let results = pool;
+  if(q.length > 0){
+    const words = q.split(/\s+/).filter(Boolean);
+    results = pool.filter(p => words.some(w => p.text.includes(w)));
+  }
+  results = results.slice(0, 50);
+  
+  const wrap = document.getElementById('irapResults');
+  if(results.length === 0){
+    wrap.innerHTML = '<div class="irap-empty">No rubrics found</div>';
+    return;
+  }
+  
+  batchRender(wrap, results, (r) => {
+    const div = document.createElement('div');
+    div.className = 'irap-rubric-result';
+    const inClipboard = _irapClipboard.find(c => c.id === r.id);
+    div.innerHTML = `
+      <div class="rr-path">${escapeHTML(r.path)}</div>
+      <div class="rr-title">${escapeHTML(r.title)}</div>
+      <div class="rr-source">${r.author} &middot; ${r.remedies.length} remedies</div>
+      <div class="rr-remedies">${r.remedies.slice(0,8).join(', ')}${r.remedies.length>8?'...':''}</div>
+      ${inClipboard ? '<div style="color:var(--bottle);font-size:0.65rem;margin-top:4px;">✓ Added</div>' : ''}
+    `;
+    div.onclick = () => irapAddRubric(r);
+    return div;
+  }, 25);
+}
+
+function irapAddRubric(r){
+  if(_irapClipboard.find(c => c.id === r.id)){
+    toast('Already in clipboard');
+    return;
+  }
+  _irapClipboard.push({
+    id: r.id, path: r.path, title: r.title, author: r.author,
+    remedies: r.remedies, intensity: 'medium', category: 'general'
+  });
+  irapRenderClipboard();
+  irapSearchRubrics(); // refresh to show "Added" tag
+  toast('Rubric added');
+}
+
+function irapRemoveRubric(id){
+  _irapClipboard = _irapClipboard.filter(c => c.id !== id);
+  irapRenderClipboard();
+  irapSearchRubrics();
+}
+
+function irapSetIntensity(id, intensity){
+  const item = _irapClipboard.find(c => c.id === id);
+  if(item) item.intensity = intensity;
+  irapRenderClipboard();
+}
+
+function irapSetCategory(id, category){
+  const item = _irapClipboard.find(c => c.id === id);
+  if(item) item.category = category;
+  irapRenderClipboard();
+}
+
+function irapRenderClipboard(){
+  const wrap = document.getElementById('irapClipboard');
+  document.getElementById('irapClipboardCount').textContent = _irapClipboard.length;
+  
+  if(_irapClipboard.length === 0){
+    wrap.innerHTML = '<div class="irap-empty">Add rubrics from search results</div>';
+    return;
+  }
+  
+  batchRender(wrap, _irapClipboard, (item) => {
+    const div = document.createElement('div');
+    div.className = 'irap-clipboard-item ' + item.category;
+    const intensityMult = item.intensity === 'high' ? 2 : item.intensity === 'medium' ? 1.5 : 1;
+    div.innerHTML = `
+      <div class="ci-title">${escapeHTML(item.title)}</div>
+      <div class="ci-path">${escapeHTML(item.path)} &middot; ${item.author}</div>
+      <div class="ci-controls">
+        <div class="irap-intensity-sel">
+          <button class="${item.intensity==='low'?'active':''}" onclick="irapSetIntensity('${item.id}','low')">Low</button>
+          <button class="${item.intensity==='medium'?'active':''}" onclick="irapSetIntensity('${item.id}','medium')">Med</button>
+          <button class="${item.intensity==='high'?'active':''}" onclick="irapSetIntensity('${item.id}','high')">High</button>
+        </div>
+        <select onchange="irapSetCategory('${item.id}',this.value)">
+          <option value="mental" ${item.category==='mental'?'selected':''}>Mental</option>
+          <option value="general" ${item.category==='general'?'selected':''}>General</option>
+          <option value="particular" ${item.category==='particular'?'selected':''}>Particular</option>
+        </select>
+        <button class="ci-remove" onclick="irapRemoveRubric('${item.id}')">Remove</button>
+      </div>
+      <div style="font-size:0.72rem;color:#5c5348;margin-top:4px;">${item.remedies.length} remedies &middot; ×${intensityMult} intensity</div>
+    `;
+    return div;
+  }, 10);
+}
+
+function irapClearClipboard(){
+  _irapClipboard = [];
+  irapRenderClipboard();
+  document.getElementById('irapResults2').innerHTML = '<div class="irap-empty">Run analysis to see remedy rankings</div>';
+}
+
+// =====================================================================
+// SCORING ENGINE
+// =====================================================================
+function irapAnalyze(){
+  if(_irapClipboard.length === 0){
+    toast('Add rubrics first');
+    return;
+  }
+  
+  // Calculate remedy scores
+  const scores = {}; // remedyName -> {total, murphy, phatak, kent, rubricsCovered, sources, keynoteMatch, mmMatch}
+  
+  _irapClipboard.forEach(rubric => {
+    const intensityMult = rubric.intensity === 'high' ? 2 : rubric.intensity === 'medium' ? 1.5 : 1;
+    
+    rubric.remedies.forEach(remedyName => {
+      if(!scores[remedyName]) {
+        scores[remedyName] = {
+          name: remedyName, total: 0, murphy: 0, phatak: 0, kent: 0,
+          rubricsCovered: 0, sources: new Set(), keynoteMatch: false, mmMatch: false,
+          rubricDetails: []
+        };
+      }
+      const s = scores[remedyName];
+      
+      // Grade: assume grade 2 (medium) as default since we don't have grade data
+      // In real RadarOpus, bold caps = 3, bold = 2, italics = 1
+      const grade = 2; // default
+      const score = grade * intensityMult;
+      
+      s.total += score;
+      s.rubricsCovered += 1;
+      s.sources.add(rubric.author);
+      
+      if(rubric.author === 'Murphy') s.murphy += score;
+      if(rubric.author === 'Phatak') s.phatak += score;
+      if(rubric.author === 'Kent') s.kent += score;
+      
+      s.rubricDetails.push({rubric: rubric.title, source: rubric.author, score: score});
+    });
+  });
+  
+  // Convert to array and calculate bonuses
+  let ranked = Object.values(scores);
+  
+  ranked.forEach(s => {
+    // Source correlation bonus: appears in multiple repertories
+    if(s.sources.size >= 2) s.total += s.sources.size * 5;
+    if(s.sources.size >= 3) s.total += 10;
+    
+    // Coverage score: covers more of the selected rubrics
+    const coverage = s.rubricsCovered / _irapClipboard.length;
+    s.total += coverage * 20;
+    
+    // Keynote match: check if remedy exists in our MM data
+    const mmRemedy = REMEDIES.find(r => r.name === s.name || r.name.toLowerCase().includes(s.name.toLowerCase()));
+    if(mmRemedy){
+      s.mmMatch = true;
+      s.total += 15; // Materia Medica bonus
+      
+      // Keynote match: check if keynote contains words from selected rubrics
+      const rubricWords = _irapClipboard.map(c => c.title.toLowerCase().split(/\s+/)).flat();
+      const keynoteText = (mmRemedy.keynote + ' ' + mmRemedy.full).toLowerCase();
+      const matches = rubricWords.filter(w => w.length > 3 && keynoteText.includes(w));
+      if(matches.length > 0){
+        s.keynoteMatch = true;
+        s.total += matches.length * 3;
+        s.keynoteMatches = matches;
+      }
+      s.mmEntry = mmRemedy;
+    }
+    
+    // Confidence level
+    s.confidence = s.total > 50 ? 'High' : s.total > 25 ? 'Medium' : 'Low';
+    s.sourcesCount = s.sources.size;
+  });
+  
+  // Sort by total score
+  ranked.sort((a, b) => b.total - a.total);
+  ranked = ranked.slice(0, 20); // top 20
+  
+  irapRenderResults(ranked);
+}
+
+function irapRenderResults(ranked){
+  const wrap = document.getElementById('irapResults2');
+  
+  if(ranked.length === 0){
+    wrap.innerHTML = '<div class="irap-empty">No remedies found</div>';
+    return;
+  }
+  
+  // Summary
+  const maxScore = ranked[0].total;
+  const totalRubrics = _irapClipboard.length;
+  
+  let html = `<div class="irap-analysis-summary">
+    <b>Analysis Summary</b><br>
+    Rubrics analyzed: ${totalRubrics}<br>
+    Top remedy: ${ranked[0].name} (score: ${ranked[0].total})<br>
+    Confidence: ${ranked[0].confidence}<br>
+    Sources: ${[...ranked[0].sources].join(', ')}<br>
+    <small style="color:var(--sage);">This analysis is for educational purposes. Final remedy decision rests with the practitioner.</small>
+  </div>`;
+  
+  // Remedy ranking
+  html += '<div style="font-family:IBM Plex Mono,monospace;font-size:0.65rem;color:var(--brass);text-transform:uppercase;margin-bottom:8px;">Remedy Rankings</div>';
+  
+  ranked.forEach((r, i) => {
+    const barWidth = (r.total / maxScore * 100);
+    const tags = [];
+    if(r.sourcesCount >= 2) tags.push('<span class="rr-tag multisource">Multi-source</span>');
+    if(r.keynoteMatch) tags.push('<span class="rr-tag keynote">Keynote</span>');
+    if(r.mmMatch) tags.push('<span class="rr-tag mm">MM Verified</span>');
+    
+    html += `<div class="irap-remedy-row" onclick="irapShowRemedyDetail('${r.name.replace(/'/g,"\\'")}')">
+      <div style="display:flex;justify-content:space-between;">
+        <span class="rr-name">${i+1}. ${escapeHTML(r.name)}</span>
+        <span class="rr-score">${r.total}</span>
+      </div>
+      <div class="rr-bar"><div class="rr-bar-fill" style="width:${barWidth}%"></div></div>
+      <div style="font-size:0.7rem;color:#5c5348;margin-top:4px;">
+        Covered: ${r.rubricsCovered}/${totalRubrics} &middot; 
+        M:${r.murphy} P:${r.phatak} K:${r.kent} &middot; 
+        ${r.confidence}
+      </div>
+      <div class="rr-tags">${tags.join('')}</div>
+    </div>`;
+  });
+  
+  wrap.innerHTML = html;
+}
+
+function irapShowRemedyDetail(remedyName){
+  // Find in MM data
+  const mm = REMEDIES.find(r => r.name === remedyName || r.name.toLowerCase().includes(remedyName.toLowerCase()));
+  if(!mm){
+    toast('No Materia Medica entry found for ' + remedyName);
+    return;
+  }
+  
+  // Find rubrics containing this remedy
+  const matchingRubrics = _irapClipboard.filter(c => c.remedies.includes(remedyName));
+  
+  // Build detail modal
+  const paras = mm.full.split(/\n\n+/).filter(p => p.trim()).slice(0, 10);
+  const bodyHtml = paras.map(p => {
+    const t = escapeHTML(p);
+    const secMatch = t.match(/^([A-Z][A-Za-z\s\-]{2,30})[\.:\-]\s*(.*)/);
+    if(secMatch){
+      return `<p><b style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;text-transform:uppercase;color:var(--brass);">${secMatch[1]}.</b> ${secMatch[2]}</p>`;
+    }
+    return `<p>${t}</p>`;
+  }).join('');
+  
+  const rubricList = matchingRubrics.map(r => `<li>${escapeHTML(r.title)} (${r.author}) — intensity: ${r.intensity}</li>`).join('');
+  
+  // Show as detail in right panel
+  const wrap = document.getElementById('irapResults2');
+  wrap.innerHTML = `
+    <div class="irap-detail-view">
+      <div class="meta">${mm.author} &middot; ${mm.chapter}</div>
+      <h4>${escapeHTML(mm.name)}</h4>
+      ${mm.common ? '<div style="font-style:italic;color:#5c5348;font-size:0.85rem;">' + escapeHTML(mm.common) + '</div>' : ''}
+      <div style="margin:12px 0;">${bodyHtml}</div>
+      <div style="border-top:1px dashed var(--parchment-dark);padding-top:12px;margin-top:12px;">
+        <b style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--brass);">Covered Rubrics</b>
+        <ul style="font-size:0.82rem;margin-top:6px;padding-left:20px;">${rubricList || '<li>None</li>'}</ul>
+      </div>
+      <div style="border-top:1px dashed var(--parchment-dark);padding-top:12px;margin-top:12px;">
+        <b style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--brass);">Modalities</b>
+        <p style="font-size:0.85rem;">${escapeHTML(mm.modalities || '—')}</p>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="irap-btn" style="width:auto;" onclick="irapBackToResults()">← Back to Results</button>
+        <button class="irap-btn" style="width:auto;background:transparent;color:var(--bottle);border:1px solid var(--bottle);" onclick="openRef('remedy','${mm.id}')">Open in Reader</button>
+      </div>
+    </div>
+  `;
+}
+
+function irapBackToResults(){
+  // Re-run analysis to show results
+  irapAnalyze();
+}
+
+// AI Symptom Suggestion (keyword-based)
+function irapSuggestRubrics(symptomText){
+  irapBuildIndex();
+  const words = symptomText.toLowerCase().split(/[\s,;.]+/).filter(w => w.length > 2);
+  let matches = _irapSearchIndex.filter(p => {
+    return words.some(w => p.text.includes(w) || p.title.toLowerCase().includes(w) || p.path.toLowerCase().includes(w));
+  });
+  // Sort by number of word matches
+  matches.sort((a, b) => {
+    const aMatches = words.filter(w => b.text.includes(w)).length;
+    const bMatches = words.filter(w => a.text.includes(w)).length;
+    return bMatches - aMatches;
+  });
+  return matches.slice(0, 10);
+}
+
 /* ============ INIT ============ */
 loadState();
 renderHome();
+loadData();
 // Apply settings to reader immediately when it opens
 window.addEventListener('beforeunload', ()=>{ stopReaderTimer(); });
 
 
 
+</script>
+<script src="synthesis_module.js?v=8"></script>
+<script src="predictive_module.js?v=8"></script>
+<script src="security_module.js?v=8"></script>
+<script src="account_module.js?v=8"></script>
+<script>
+if(window.SecurityModule){function is(){if(typeof switchView==="function")SecurityModule.init();else setTimeout(is,50);}is();}
+if(window.AccountModule){function ia(){if(typeof switchView==="function")AccountModule.init();else setTimeout(ia,50);}ia();}
 </script>
 </body>
 </html>

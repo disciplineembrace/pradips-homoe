@@ -1,52 +1,25 @@
-// Service Worker — caches JSON data for offline use
-const CACHE_NAME = 'pradip-homoe-v3';
-const ASSETS = ['/', '/index.html', '/remedies.json', '/rubrics.json'];
+// KILL SWITCH SW v8 — clears ALL caches and unregisters
+const CACHE_NAME = 'pradip-homoe-v8-kill';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
+  // Clear all caches on install
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => 
-      Promise.all(keys.map(k => k !== CACHE_NAME && caches.delete(k)))
-    )
+    caches.keys().then(keys => {
+      // Delete ALL caches (not just non-matching ones)
+      return Promise.all(keys.map(k => caches.delete(k)));
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
+  // Unregister this SW after cleanup
+  self.registration.unregister();
 });
 
+// For ALL requests: just pass through to network (no caching at all)
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  
-  // Cache JSON data files (stale-while-revalidate)
-  if (url.pathname.endsWith('.json')) {
-    e.respondWith(
-      caches.open(CACHE_NAME).then(async cache => {
-        const cached = await cache.match(e.request);
-        const networkPromise = fetch(e.request).then(response => {
-          if (response.ok) cache.put(e.request, response.clone());
-          return response;
-        }).catch(() => cached);
-        return cached || networkPromise;
-      })
-    );
-    return;
-  }
-  
-  // Cache HTML (network-first for updates)
-  if (e.request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
-    e.respondWith(
-      fetch(e.request).then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return response;
-      }).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-  
-  // Default: try cache, fall back to network
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  // Don't intercept any requests — let browser handle everything normally
+  return;
 });
