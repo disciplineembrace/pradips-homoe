@@ -1047,7 +1047,7 @@ async function loadData() {
     const loaderEl = document.getElementById('dataLoader');
     if (loaderEl) loaderEl.style.display = 'flex';
     const progressBar = document.getElementById('loaderProgress');
-    const remediesRes = await fetch('remedies.json?v=20260711a');
+    const remediesRes = await fetch('remedies.json?v=20260711b');
     if (progressBar) progressBar.style.width = '30%';
     REMEDIES = await remediesRes.json();
     if (progressBar) progressBar.style.width = '60%';
@@ -1061,7 +1061,7 @@ async function loadData() {
     _dataCallbacks.length = 0;
     // Load rubrics in background
     try {
-      const rubricsRes = await fetch('rubrics.json?v=20260711a');
+      const rubricsRes = await fetch('rubrics.json?v=20260711b');
       RUBRICS = await rubricsRes.json();
       if (progressBar) progressBar.style.width = '100%';
     } catch(e2) { console.warn('Rubrics failed:', e2); }
@@ -1376,6 +1376,30 @@ function runRohSearch(){rohSearchTerm=document.getElementById("rohSearch").value
 function clearRohSearch(){document.getElementById("rohSearch").value="";rohSearchTerm="";rohActiveSeries="all";renderROH()}
 
 /* ============ HELPERS ============ */
+// batchRender — render items in chunks via requestAnimationFrame to keep UI responsive.
+// (Was previously defined in an earlier version of the file but got dropped during a refactor.
+//  Without this, renderMateria / renderRepertory / renderSearchView / renderROH / renderFavorites
+//  / renderHistory all throw ReferenceError and produce empty views.)
+function batchRender(container, items, renderFn, chunkSize){
+  chunkSize = chunkSize || 20;
+  if(!container) return;
+  container.innerHTML = '';
+  let index = 0;
+  function renderChunk(){
+    const fragment = document.createDocumentFragment();
+    const end = Math.min(index + chunkSize, items.length);
+    for(let i = index; i < end; i++){
+      const el = renderFn(items[i], i);
+      if(el) fragment.appendChild(el);
+    }
+    container.appendChild(fragment);
+    index = end;
+    if(index < items.length){
+      requestAnimationFrame(renderChunk);
+    }
+  }
+  renderChunk();
+}
 function findById(id){
   let r = REMEDIES.find(x=>x.id===id);
   if(r) return {type:'remedy', data:r};
@@ -2911,10 +2935,10 @@ window.addEventListener('beforeunload', ()=>{ stopReaderTimer(); });
 
 
 </script>
-<script src="synthesis_module.js?v=9"></script>
-<script src="predictive_module.js?v=9"></script>
-<script src="security_module.js?v=9"></script>
-<script src="account_module.js?v=9"></script>
+<script src="synthesis_module.js?v=10"></script>
+<script src="predictive_module.js?v=10"></script>
+<script src="security_module.js?v=10"></script>
+<script src="account_module.js?v=10"></script>
 <script>
 if(window.SecurityModule){function is(){if(typeof switchView==="function")SecurityModule.init();else setTimeout(is,50);}is();}
 if(window.AccountModule){function ia(){if(typeof switchView==="function")AccountModule.init();else setTimeout(ia,50);}ia();}
