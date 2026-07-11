@@ -5,8 +5,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-const DATA_DIR = path.join(process.cwd(), '..', 'data');
-// Fallback for production where cwd might be different
+// On Vercel, process.cwd() is the project root. In dev, it's /home/z/my-project.
+// data/ folder lives inside the project, so this works in both environments.
+const DATA_DIR = path.join(process.cwd(), 'data');
+// Fallback for dev environment where cwd might be different
 const DATA_DIR_ALT = '/home/z/my-project/data';
 
 let _remedies: any[] | null = null;
