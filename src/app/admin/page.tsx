@@ -23,7 +23,7 @@ export default function AdminHomePage() {
         setStats({
           totalUsers: users.length,
           activeUsers: users.filter((x: any) => x.status === 'active').length,
-          blockedUsers: users.filter((x: any) => x.status === 'blocked').length,
+          disabledUsers: users.filter((x: any) => x.status === 'disabled').length,
           admins: users.filter((x: any) => x.role === 'admin').length,
           lockedUsers: users.filter((x: any) => x.pinLockedUntil && new Date(x.pinLockedUntil) > new Date()).length,
           loginEvents: (l.loginLogs || []).length,
@@ -45,7 +45,7 @@ export default function AdminHomePage() {
   
   const statCards = stats ? [
     { label: 'Total Users', value: stats.totalUsers, sub: `${stats.admins} admins`, color: 'text-emerald-700' },
-    { label: 'Active', value: stats.activeUsers, sub: `${stats.blockedUsers} blocked`, color: 'text-emerald-700' },
+    { label: 'Active', value: stats.activeUsers, sub: `${stats.disabledUsers} disabled`, color: 'text-emerald-700' },
     { label: 'PIN Locked', value: stats.lockedUsers, sub: 'need unlock', color: 'text-amber-700' },
     { label: 'Failed Logins', value: stats.failedLogins, sub: 'recent', color: 'text-red-700' },
     { label: 'Failed PINs', value: stats.failedPins, sub: 'recent', color: 'text-red-700' },

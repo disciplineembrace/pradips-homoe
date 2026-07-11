@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
-  if (user.status === 'blocked') {
-    return NextResponse.json({ error: 'Account blocked' }, { status: 403 });
+  if (user.status === 'disabled') {
+    return NextResponse.json({ error: 'Account disabled' }, { status: 403 });
   }
   
   // Check lockout

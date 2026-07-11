@@ -34,14 +34,15 @@ export async function POST(req: NextRequest) {
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
   
-  const { loginId, email, fullName, password, pin, role, accessExpiresAt } = body;
-  
+  const { loginId, email, fullName, password, pin, role, status, accessExpiresAt } = body;
+
   // Validate
   if (!loginId || typeof loginId !== 'string') return NextResponse.json({ error: 'Login ID required' }, { status: 400 });
   if (!email || typeof email !== 'string' || !email.includes('@')) return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
   if (!isValidPassword(password)) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
   if (!isValidPin(pin)) return NextResponse.json({ error: 'PIN must be exactly 6 digits' }, { status: 400 });
-  if (role !== 'admin' && role !== 'user') return NextResponse.json({ error: 'Role must be admin or user' }, { status: 400 });
+  if (!['admin', 'staff', 'user'].includes(role)) return NextResponse.json({ error: 'Role must be admin, staff, or user' }, { status: 400 });
+  if (status && !['active', 'disabled'].includes(status)) return NextResponse.json({ error: 'Status must be active or disabled' }, { status: 400 });
   
   // Check uniqueness
   const existing = await db.user.findFirst({ where: { OR: [{ loginId: loginId.toLowerCase() }, { email: email.toLowerCase() }] } });
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
       email: email.toLowerCase(),
       fullName: fullName || null,
       passwordHash, pinHash, role,
+      status: status || 'active',
       accessExpiresAt: accessExpiresAt ? new Date(accessExpiresAt) : null,
     },
   });

@@ -16,7 +16,7 @@ export async function requireAuth() {
     };
   }
   const user = await db.user.findUnique({ where: { id: session.userId } });
-  if (!user || user.status === 'blocked') {
+  if (!user || user.status === 'disabled') {
     return {
       session: null,
       user: null,

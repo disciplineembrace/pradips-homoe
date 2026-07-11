@@ -3,6 +3,21 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
+function generateRandomPassword(length = 14): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+  let pwd = '';
+  const arr = new Uint32Array(length);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < length; i++) pwd += chars[arr[i] % chars.length];
+  return pwd;
+}
+
+function generateRandomPin(): string {
+  const arr = new Uint32Array(6);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, n => n % 10).join('');
+}
+
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -12,14 +27,15 @@ export default function EditUserPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  
-  // Form state
+
   const [form, setForm] = useState({
     fullName: '', email: '', role: 'user', status: 'active',
     accessExpiresAt: '', password: '',
   });
   const [newPin, setNewPin] = useState('');
-  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated || !d.pinVerified) { router.push('/login'); return; }
@@ -28,7 +44,7 @@ export default function EditUserPage() {
       loadUser();
     });
   }, [router]);
-  
+
   async function loadUser() {
     const r = await fetch(`/api/admin/users/${params.id}`);
     if (!r.ok) { setError('User not found'); setLoading(false); return; }
@@ -44,7 +60,7 @@ export default function EditUserPage() {
     });
     setLoading(false);
   }
-  
+
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true); setError(''); setMessage('');
@@ -65,7 +81,7 @@ export default function EditUserPage() {
     if (d.error) setError(d.error); else { setMessage('Profile updated'); setForm({ ...form, password: '' }); loadUser(); }
     setSaving(false);
   }
-  
+
   async function handleResetPin(e: React.FormEvent) {
     e.preventDefault();
     if (!/^\d{6}$/.test(newPin)) { setError('PIN must be 6 digits'); return; }
@@ -80,14 +96,14 @@ export default function EditUserPage() {
     if (d.error) setError(d.error); else { setMessage('PIN reset (also clears fail count + lock)'); setNewPin(''); loadUser(); }
     setSaving(false);
   }
-  
+
   async function handleUnlock() {
     if (!confirm(`Unlock PIN for ${user.loginId}?`)) return;
     const r = await fetch(`/api/admin/users/${params.id}/unlock`, { method: 'POST' });
     const d = await r.json();
     if (d.error) setError(d.error); else { setMessage('PIN unlocked'); loadUser(); }
   }
-  
+
   async function handleDelete() {
     if (!confirm(`DELETE ${user.loginId}? This cannot be undone.`)) return;
     const r = await fetch(`/api/admin/users/${params.id}`, { method: 'DELETE' });
@@ -95,14 +111,14 @@ export default function EditUserPage() {
     if (d.error) { setError(d.error); return; }
     router.push('/admin/users');
   }
-  
+
   if (!session) return <div className="min-h-screen bg-stone-900 text-stone-300 flex items-center justify-center">Loading...</div>;
   if (loading) return <div className="min-h-screen bg-stone-100 flex items-center justify-center">Loading user...</div>;
   if (error && !user) return <div className="min-h-screen bg-stone-100 flex items-center justify-center text-red-700">{error}</div>;
-  
+
   const isLocked = user.pinLockedUntil && new Date(user.pinLockedUntil) > new Date();
   const isSelf = session.user?.loginId === user.loginId;
-  
+
   return (
     <div className="min-h-screen bg-stone-100">
       <header className="bg-emerald-950 text-stone-100 shadow">
@@ -111,12 +127,12 @@ export default function EditUserPage() {
           <Link href="/admin/users" className="text-xs bg-stone-700 hover:bg-stone-600 px-3 py-1.5 rounded">← Back</Link>
         </div>
       </header>
-      
+
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         {message && <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded p-3 text-sm">{message}</div>}
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded p-3 text-sm">{error}</div>}
-        
-        {/* Profile section */}
+
+        {/* Profile info */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="font-serif text-xl text-emerald-900 mb-4">Profile</h2>
           <div className="grid grid-cols-2 gap-3 text-sm mb-4">
@@ -127,7 +143,7 @@ export default function EditUserPage() {
             <div><span className="text-stone-500">PIN fails:</span> <b className={user.pinFailCount > 0 ? 'text-amber-700' : ''}>{user.pinFailCount}/3</b></div>
             <div><span className="text-stone-500">PIN status:</span> {isLocked ? <b className="text-red-700">LOCKED</b> : <span className="text-emerald-700">OK</span>}</div>
           </div>
-          
+
           <form onSubmit={handleSaveProfile} className="space-y-3 pt-4 border-t">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
@@ -142,14 +158,15 @@ export default function EditUserPage() {
                 <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">Role</label>
                 <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="w-full px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700">
                   <option value="user">User</option>
+                  <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">Status</label>
+                <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">Account Status</label>
                 <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} disabled={isSelf} className="w-full px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700 disabled:opacity-50">
                   <option value="active">Active</option>
-                  <option value="blocked">Blocked</option>
+                  <option value="disabled">Disabled</option>
                 </select>
                 {isSelf && <p className="text-xs text-stone-500 mt-1">Can&apos;t change own status</p>}
               </div>
@@ -158,8 +175,15 @@ export default function EditUserPage() {
                 <input type="date" value={form.accessExpiresAt} onChange={e => setForm({ ...form, accessExpiresAt: e.target.value })} className="w-full px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">New Password (optional)</label>
-                <input type="text" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} minLength={6} placeholder="Leave blank to keep current" className="w-full px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700" />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-stone-600 uppercase">New Password (optional)</label>
+                  <button type="button" onClick={() => { const p = generateRandomPassword(); setForm({ ...form, password: p }); setShowPassword(true); }} className="text-xs bg-amber-700 hover:bg-amber-600 text-white px-2 py-0.5 rounded">🎲 Random</button>
+                </div>
+                <div className="flex gap-1">
+                  <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} minLength={6} placeholder="Leave blank to keep" className="flex-1 px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700 font-mono" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="px-2 py-2 bg-stone-200 hover:bg-stone-300 rounded text-xs">{showPassword ? '🙈' : '👁'}</button>
+                  {form.password && <button type="button" onClick={() => navigator.clipboard.writeText(form.password)} className="px-2 py-2 bg-stone-200 hover:bg-stone-300 rounded text-xs">📋</button>}
+                </div>
               </div>
             </div>
             <button type="submit" disabled={saving} className="bg-emerald-900 hover:bg-emerald-800 disabled:opacity-50 text-white px-6 py-2 rounded font-semibold">
@@ -167,12 +191,12 @@ export default function EditUserPage() {
             </button>
           </form>
         </div>
-        
+
         {/* PIN management */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="font-serif text-xl text-emerald-900 mb-2">PIN Management</h2>
           <p className="text-sm text-stone-600 mb-4">User cannot change, view, or reset their PIN. Only admin can do this.</p>
-          
+
           {isLocked && (
             <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 flex items-center justify-between">
               <div>
@@ -182,26 +206,32 @@ export default function EditUserPage() {
               <button onClick={handleUnlock} className="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded text-sm">Unlock Now</button>
             </div>
           )}
-          
-          <form onSubmit={handleResetPin} className="flex gap-2 items-end">
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">Set New 6-digit PIN</label>
+
+          <form onSubmit={handleResetPin} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-stone-600 uppercase">Set New 6-digit PIN</label>
+              <button type="button" onClick={() => { const p = generateRandomPin(); setNewPin(p); setShowPin(true); }} className="text-xs bg-amber-700 hover:bg-amber-600 text-white px-2 py-0.5 rounded">🎲 Random</button>
+            </div>
+            <div className="flex gap-2">
               <input
-                type="text"
+                type={showPin ? 'text' : 'password'}
                 value={newPin}
                 onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 pattern="\d{6}"
                 inputMode="numeric"
-                className="w-full px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700 font-mono text-lg tracking-widest"
+                maxLength={6}
+                className="flex-1 px-3 py-2 border-2 border-stone-200 rounded focus:outline-none focus:border-emerald-700 font-mono text-lg tracking-widest text-center"
                 placeholder="------"
               />
+              <button type="button" onClick={() => setShowPin(!showPin)} className="px-3 py-2 bg-stone-200 hover:bg-stone-300 rounded text-xs">{showPin ? '🙈' : '👁'}</button>
+              {newPin && <button type="button" onClick={() => navigator.clipboard.writeText(newPin)} className="px-3 py-2 bg-stone-200 hover:bg-stone-300 rounded text-xs">📋</button>}
             </div>
             <button type="submit" disabled={saving} className="bg-amber-700 hover:bg-amber-600 disabled:opacity-50 text-white px-4 py-2 rounded font-semibold">
               {saving ? 'Resetting...' : 'Reset PIN'}
             </button>
           </form>
         </div>
-        
+
         {/* Danger zone */}
         {!isSelf && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">

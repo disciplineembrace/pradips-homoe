@@ -17,8 +17,8 @@ model User {
   fullName        String?
   passwordHash    String   // bcrypt hash of password
   pinHash         String   // bcrypt hash of 6-digit PIN (never plain)
-  role            String   @default("user") // "admin" | "user"
-  status          String   @default("active") // "active" | "blocked"
+  role            String   @default("user") // "admin" | "staff" | "user"
+  status          String   @default("active") // "active" | "disabled"
   accessExpiresAt DateTime? // optional expiry date set by admin
   // PIN lockout tracking
   pinFailCount    Int      @default(0)

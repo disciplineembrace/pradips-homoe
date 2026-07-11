@@ -42,13 +42,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const updates: any = {};
   const auditActions: string[] = [];
   
-  if (body.status === 'active' || body.status === 'blocked') {
+  if (body.status === 'active' || body.status === 'disabled') {
     if (target.status !== body.status) {
       updates.status = body.status;
-      auditActions.push(body.status === 'blocked' ? 'user_block' : 'user_unblock');
+      auditActions.push(body.status === 'disabled' ? 'user_block' : 'user_unblock');
     }
   }
-  if (body.role === 'admin' || body.role === 'user') {
+  if (body.role === 'admin' || body.role === 'staff' || body.role === 'user') {
     if (target.role !== body.role) {
       updates.role = body.role;
       auditActions.push('role_change');
@@ -74,7 +74,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (adminCount <= 1) return NextResponse.json({ error: 'Cannot demote last admin' }, { status: 400 });
   }
   // Prevent self-block
-  if (target.id === admin!.id && updates.status === 'blocked') {
+  if (target.id === admin!.id && updates.status === 'disabled') {
     return NextResponse.json({ error: 'Cannot block your own account' }, { status: 400 });
   }
   

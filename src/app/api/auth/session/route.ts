@@ -11,7 +11,7 @@ export async function GET() {
   }
   // Fetch fresh user status
   const user = await db.user.findUnique({ where: { id: session.userId } });
-  if (!user || user.status === 'blocked') {
+  if (!user || user.status === 'disabled') {
     return NextResponse.json({ authenticated: false, pinVerified: false });
   }
   return NextResponse.json({
