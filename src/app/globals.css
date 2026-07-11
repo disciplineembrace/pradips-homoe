@@ -8,6 +8,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -41,6 +42,58 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+/*
+ * THEME: Warm Forest & Gold palette
+ * Extracted from reference image (VLM analysis) + user specifications.
+ *
+ *   emerald → deep forest green family
+ *   amber   → warm gold / brass family
+ *   stone   → warm cream / parchment / muted sage family
+ *
+ * All existing Tailwind utility classes (bg-emerald-950, text-amber-200, etc.)
+ * automatically inherit the new themed colors without any class-name changes
+ * in the page/component files.
+ */
+@theme {
+  /* === Emerald → Forest green palette === */
+  --color-emerald-50:  #EAEFE5;  /* very light sage wash */
+  --color-emerald-100: #C9D6C4;  /* light sage tint (badges) */
+  --color-emerald-200: #A3B89C;  /* light forest for soft borders */
+  --color-emerald-300: #7C8F6E;  /* muted sage (labels) */
+  --color-emerald-400: #5C7A55;  /* medium sage */
+  --color-emerald-500: #3D6452;  /* medium forest green */
+  --color-emerald-600: #345B45;  /* hover state for forest */
+  --color-emerald-700: #2A4D3A;  /* medium forest (borders/accents) */
+  --color-emerald-800: #213C2E;  /* slightly lighter forest (hover states) */
+  --color-emerald-900: #1A3A2A;  /* forest green (buttons/links) */
+  --color-emerald-950: #15291F;  /* deepest forest (header/footer) */
+
+  /* === Amber → Warm gold / brass palette === */
+  --color-amber-50:  #FAF3E0;  /* very light gold wash (alert backgrounds) */
+  --color-amber-100: #F2E6C5;  /* light gold tint (badges) */
+  --color-amber-200: #B08D3F;  /* warm gold (accent text) — user spec */
+  --color-amber-300: #BF9D4A;  /* soft warm gold */
+  --color-amber-400: #A88B3D;  /* medium gold */
+  --color-amber-500: #91702F;  /* deep gold */
+  --color-amber-600: #A07E36;  /* gold hover (lighter than 700) */
+  --color-amber-700: #8B6F2F;  /* deep warm gold (buttons) */
+  --color-amber-800: #6E5724;  /* very deep gold */
+  --color-amber-900: #523F1A;  /* darkest gold */
+  --color-amber-950: #36270F;  /* near-black gold */
+
+  /* === Stone → Warm cream / parchment / muted sage palette === */
+  --color-stone-50:  #F3EBDA;  /* warm cream page background */
+  --color-stone-100: #E8DCC3;  /* slightly darker cream */
+  --color-stone-200: #D9C9A8;  /* parchment border color */
+  --color-stone-300: #C5B491;  /* deeper parchment */
+  --color-stone-400: #9CA88C;  /* lighter sage */
+  --color-stone-500: #7C8F6E;  /* muted sage (labels/small text) */
+  --color-stone-600: #5A6B4D;  /* deeper sage for body */
+  --color-stone-700: #3D4536;  /* dark green-gray for body text */
+  --color-stone-800: #26302A;  /* very dark sage */
+  --color-stone-900: #1A2018;  /* deepest dark */
 }
 
 :root {

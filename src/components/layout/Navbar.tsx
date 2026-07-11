@@ -48,12 +48,12 @@ export function Navbar() {
   }
 
   return (
-    <header className="bg-emerald-950 text-stone-100 shadow-lg sticky top-0 z-50">
+    <header className="bg-emerald-950 text-stone-100 shadow-lg sticky top-0 z-50 border-b-2 border-amber-700/60">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="font-serif italic text-xl text-amber-200">Pradip&apos;s Homoe</span>
+            <span className="font-serif italic text-xl text-amber-200 tracking-wide">Pradip&apos;s Homoe</span>
             <span className="text-xs text-stone-400 hidden sm:inline">Personal Digital Library</span>
           </Link>
 

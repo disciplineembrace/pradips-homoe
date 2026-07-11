@@ -6,7 +6,8 @@ export default function AboutPage() {
     <div className="min-h-screen flex flex-col bg-stone-50">
       <Navbar />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-12">
-        <h1 className="font-serif text-4xl text-emerald-900 mb-4">About Pradip&apos;s Homoe</h1>
+        <h1 className="font-serif text-4xl text-emerald-900 mb-2">About Pradip&apos;s Homoe</h1>
+        <div className="w-16 h-0.5 bg-amber-700 mb-4" />
         <p className="text-stone-600 mb-8">A personal digital homoeopathy library built for practitioners, students, and serious learners.</p>
 
         <div className="prose prose-stone max-w-none space-y-6">
