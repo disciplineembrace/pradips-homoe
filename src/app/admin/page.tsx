@@ -10,7 +10,7 @@ export default function AdminHomePage() {
   
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated || !d.pinVerified) { router.push('/login'); return; }
+      if (!d.authenticated) { router.push('/login'); return; }
       if (d.user.role !== 'admin') { router.push('/dashboard'); return; }
       setSession(d);
       // Load stats
@@ -58,7 +58,7 @@ export default function AdminHomePage() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="font-serif italic text-xl text-amber-200">Pradip&apos;s Homoe — Admin</h1>
-            <p className="text-xs text-stone-400">{session.user?.fullName} · {session.user?.role}</p>
+            <p className="text-xs text-stone-400">{session?.name} · {session.user?.role}</p>
           </div>
           <div className="flex gap-2">
             <Link href="/dashboard" className="text-xs bg-stone-700 hover:bg-stone-600 px-3 py-1.5 rounded">View Site</Link>

@@ -13,7 +13,7 @@ export default function AccountsPage() {
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       setSession(d);
-      if (!d.authenticated || !d.pinVerified) {
+      if (!d.authenticated) {
         router.push('/login');
         return;
       }
@@ -54,7 +54,7 @@ export default function AccountsPage() {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="font-serif text-2xl text-emerald-900">{profile.fullName || profile.loginId}</h2>
+              <h2 className="font-serif text-2xl text-emerald-900">{profile.name}</h2>
               <p className="text-sm text-stone-500">{profile.email}</p>
             </div>
             <span className={`text-xs px-3 py-1 rounded-full font-semibold ${

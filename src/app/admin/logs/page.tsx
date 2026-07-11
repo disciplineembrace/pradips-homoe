@@ -12,7 +12,7 @@ export default function AdminLogsPage() {
   
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated || !d.pinVerified) { router.push('/login'); return; }
+      if (!d.authenticated) { router.push('/login'); return; }
       if (d.user.role !== 'admin') { router.push('/dashboard'); return; }
       setSession(d);
       loadLogs();
@@ -67,7 +67,7 @@ export default function AdminLogsPage() {
                     <div key={i} className={`text-xs font-mono p-2 rounded border-l-2 ${l.event.includes('fail') ? 'border-red-500 bg-red-50' : 'border-emerald-500 bg-emerald-50'}`}>
                       <span className="text-stone-500">{new Date(l.ts || l.createdAt).toLocaleString()}</span>{' '}
                       <span className={`font-semibold ${l.event.includes('fail') ? 'text-red-700' : 'text-emerald-700'}`}>{l.event}</span>{' '}
-                      <span className="text-stone-700">{l.loginId}</span>{' '}
+                      <span className="text-stone-700">{l.name}</span>{' '}
                       <span className="text-stone-400">{l.ip}</span>
                     </div>
                   ))}
@@ -93,7 +93,7 @@ export default function AdminLogsPage() {
                         l.event.includes('reset') || l.event.includes('unlock') ? 'text-blue-700' :
                         'text-emerald-700'
                       }`}>{l.event}</span>{' '}
-                      <span className="text-stone-700">{l.loginId}</span>
+                      <span className="text-stone-700">{l.name}</span>
                       {l.failCount !== null && l.failCount !== undefined && <span className="text-stone-400"> ({l.failCount}/3 fails)</span>}{' '}
                       <span className="text-stone-400">{l.ip}</span>
                     </div>
@@ -110,7 +110,7 @@ export default function AdminLogsPage() {
                     <div key={i} className="text-xs font-mono p-2 rounded border-l-2 border-blue-500 bg-blue-50">
                       <span className="text-stone-500">{new Date(l.ts || l.createdAt).toLocaleString()}</span>{' '}
                       <span className="font-semibold text-blue-700">{l.action}</span>{' '}
-                      <span className="text-stone-700">{l.user?.loginId || 'system'}</span>
+                      <span className="text-stone-700">{l.user?.name || l.name || "system"}</span>
                       {l.targetId && <span className="text-stone-400"> → {l.targetId.substring(0, 8)}...</span>}
                       {l.detail && <div className="text-stone-500 mt-1">{l.detail}</div>}
                     </div>

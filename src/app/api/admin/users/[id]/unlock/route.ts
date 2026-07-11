@@ -16,8 +16,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
   
   await adminUnlockPin(id);
-  await logAudit({ userId: admin!.id, action: 'pin_unlock', targetId: id, detail: `Unlocked PIN for ${target.loginId}`, ip });
-  await logPin({ userId: id, loginId: target.loginId, event: 'pin_unlocked', ip, userAgent: 'admin' });
+  await logAudit({ userId: admin!.id, action: 'pin_unlock', targetId: id, detail: `Unlocked PIN for ${target.name}`, ip });
+  await logPin({ userId: id, name: target.name, event: 'pin_unlocked', ip, userAgent: 'admin' });
   
   return NextResponse.json({ success: true });
 }

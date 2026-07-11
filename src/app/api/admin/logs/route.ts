@@ -14,9 +14,9 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(200, parseInt(url.searchParams.get('limit') || '50', 10));
   
   const [loginLogs, pinLogs, auditLogs] = await Promise.all([
-    (type === 'all' || type === 'login') ? db.loginLog.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { loginId: true, fullName: true } } } }) : Promise.resolve([]),
-    (type === 'all' || type === 'pin') ? db.pinLog.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { loginId: true, fullName: true } } } }) : Promise.resolve([]),
-    (type === 'all' || type === 'audit') ? db.auditLog.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { loginId: true, fullName: true } } } }) : Promise.resolve([]),
+    (type === 'all' || type === 'login') ? db.loginLog.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { name: true } } } }) : Promise.resolve([]),
+    (type === 'all' || type === 'pin') ? db.pinLog.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { name: true } } } }) : Promise.resolve([]),
+    (type === 'all' || type === 'audit') ? db.auditLog.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { name: true } } } }) : Promise.resolve([]),
   ]);
   
   return NextResponse.json({

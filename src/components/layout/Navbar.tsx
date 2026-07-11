@@ -60,20 +60,20 @@ export function Navbar() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
             {publicItems.map(it => navLink(it.href, it.label))}
-            {session?.authenticated && session?.pinVerified && protectedItems.map(it => navLink(it.href, it.label))}
-            {session?.authenticated && session?.pinVerified && session?.user?.role === 'admin' && adminItems.map(it => navLink(it.href, it.label))}
+            {session?.authenticated && protectedItems.map(it => navLink(it.href, it.label))}
+            {session?.authenticated && session?.role === 'admin' && adminItems.map(it => navLink(it.href, it.label))}
           </nav>
 
           {/* Auth button */}
           <div className="hidden md:flex items-center gap-2">
-            {session?.authenticated && session?.pinVerified ? (
+            {session?.authenticated ? (
               <>
                 <span className="text-xs text-stone-400 hidden lg:inline">
-                  {session.user?.fullName || session.user?.loginId}
+                  {session?.name}
                   <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${
-                    session.user?.role === 'admin' ? 'bg-amber-700' :
-                    session.user?.role === 'staff' ? 'bg-blue-700' : 'bg-stone-600'
-                  }`}>{session.user?.role}</span>
+                    session.role === 'admin' ? 'bg-amber-700' :
+                    session.role === 'staff' ? 'bg-blue-700' : 'bg-stone-600'
+                  }`}>{session.role}</span>
                 </span>
                 <button onClick={logout} className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded">Logout</button>
               </>
@@ -96,26 +96,26 @@ export function Navbar() {
             {publicItems.map(it => (
               <Link key={it.href} href={it.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded hover:bg-emerald-800">{it.label}</Link>
             ))}
-            {session?.authenticated && session?.pinVerified && (
+            {session?.authenticated && (
               <>
                 <div className="border-t border-emerald-800 my-2" />
                 {protectedItems.map(it => (
                   <Link key={it.href} href={it.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded hover:bg-emerald-800">{it.label}</Link>
                 ))}
-                {session?.user?.role === 'admin' && adminItems.map(it => (
+                {session?.role === 'admin' && adminItems.map(it => (
                   <Link key={it.href} href={it.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded hover:bg-emerald-800 text-amber-200">{it.label}</Link>
                 ))}
               </>
             )}
             <div className="border-t border-emerald-800 my-2" />
-            {session?.authenticated && session?.pinVerified ? (
+            {session?.authenticated ? (
               <>
                 <div className="px-3 py-1 text-xs text-stone-400">
-                  {session.user?.fullName || session.user?.loginId}
+                  {session?.name}
                   <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${
-                    session.user?.role === 'admin' ? 'bg-amber-700' :
-                    session.user?.role === 'staff' ? 'bg-blue-700' : 'bg-stone-600'
-                  }`}>{session.user?.role}</span>
+                    session.role === 'admin' ? 'bg-amber-700' :
+                    session.role === 'staff' ? 'bg-blue-700' : 'bg-stone-600'
+                  }`}>{session.role}</span>
                 </div>
                 <button onClick={() => { logout(); setMenuOpen(false); }} className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-red-900 text-red-200">Logout</button>
               </>

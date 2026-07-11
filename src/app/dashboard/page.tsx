@@ -13,7 +13,7 @@ type Remedy = {
 type Session = {
   authenticated: boolean;
   pinVerified: boolean;
-  user?: { loginId: string; fullName: string; role: string; status: string };
+  user?: { name: string; role: string; status: string };
 };
 
 export default function DashboardPage() {
@@ -30,7 +30,7 @@ export default function DashboardPage() {
   
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated || !d.pinVerified) {
+      if (!d.authenticated) {
         router.push('/login');
         return;
       }

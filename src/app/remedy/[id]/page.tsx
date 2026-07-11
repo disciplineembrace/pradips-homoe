@@ -19,7 +19,7 @@ export default function RemedyDetailPage() {
   
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated || !d.pinVerified) router.push('/login');
+      if (!d.authenticated) router.push('/login');
     });
     fetch(`/api/remedies/${params.id}`).then(r => {
       if (r.status === 401) { router.push('/login'); return null; }

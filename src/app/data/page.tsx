@@ -23,7 +23,7 @@ export default function DataPage() {
 
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated || !d.pinVerified) {
+      if (!d.authenticated) {
         router.push('/login');
         return;
       }

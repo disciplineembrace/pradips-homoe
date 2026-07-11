@@ -1,5 +1,5 @@
 /**
- * Helper: require authenticated + PIN-verified session.
+ * Helper: require authenticated session.
  * Returns { session, user, errorResponse }.
  */
 import { NextResponse } from 'next/server';
@@ -8,7 +8,7 @@ import { db } from './db';
 
 export async function requireAuth() {
   const session = await getSession();
-  if (!session || !session.pinVerified) {
+  if (!session) {
     return {
       session: null,
       user: null,

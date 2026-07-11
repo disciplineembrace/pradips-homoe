@@ -1,5 +1,5 @@
-// Prisma schema for Pradip's Homoe — secure auth system
-// Password + fixed 6-digit PIN (not OTP), admin-managed users
+// Prisma schema for Pradip's Homoe — PIN-only auth system
+// No passwords. Login is purely via unique 6-digit PIN.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,29 +11,25 @@ datasource db {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  loginId         String   @unique // email or username — admin sets this
-  email           String   @unique
-  fullName        String?
-  passwordHash    String   // bcrypt hash of password
-  pinHash         String   // bcrypt hash of 6-digit PIN (never plain)
-  role            String   @default("user") // "admin" | "staff" | "user"
-  status          String   @default("active") // "active" | "disabled"
-  accessExpiresAt DateTime? // optional expiry date set by admin
-  // PIN lockout tracking
-  pinFailCount    Int      @default(0)
-  pinLockedUntil  DateTime?
+  id         String   @id @default(cuid())
+  name       String                         // required — display name
+  email      String   @unique               // required — for user lookup at login
+  pinHash    String                         // bcrypt hash of 6-digit PIN (slow, for verification)
+  role       String   @default("user")      // "admin" | "staff" | "user"
+  status     String   @default("active")    // "active" | "disabled"
+  // PIN lockout tracking (5 wrong attempts → 15 min lock)
+  pinFailCount   Int      @default(0)
+  pinLockedUntil DateTime?
   // Login tracking
-  lastLoginAt     DateTime?
-  lastPinAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  lastLoginAt    DateTime?
+  lastPinAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  loginLogs       LoginLog[]
-  pinLogs         PinLog[]
-  auditLogs       AuditLog[]
+  loginLogs LoginLog[]
+  pinLogs   PinLog[]
+  auditLogs AuditLog[]
 
-  @@index([loginId])
   @@index([email])
   @@index([role])
   @@index([status])
@@ -42,13 +38,13 @@ model User {
 model LoginLog {
   id        String   @id @default(cuid())
   userId    String?
-  loginId   String   // the login ID attempted (even if user not found)
-  event     String   // "login_success" | "login_fail" | "logout"
+  name      String                         // name attempted (for log even if user not found)
+  event     String                         // "login_success" | "login_fail" | "logout"
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([createdAt])
@@ -58,14 +54,14 @@ model LoginLog {
 model PinLog {
   id        String   @id @default(cuid())
   userId    String?
-  loginId   String
+  name      String
   event     String   // "pin_success" | "pin_fail" | "pin_locked" | "pin_reset" | "pin_unlocked"
   failCount Int?
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([createdAt])
@@ -74,14 +70,14 @@ model PinLog {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String?  // actor (admin who performed the action)
-  action    String   // "user_create" | "user_delete" | "user_block" | "user_unblock" | "role_change" | "pin_reset" | "pin_unlock" | "expiry_set"
+  userId    String?  // actor (admin)
+  action    String   // "user_create" | "user_delete" | "user_disable" | "user_enable" | "role_change" | "pin_reset" | "pin_unlock"
   targetId  String?  // user the action was performed on
   detail    String?
   ip        String?
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([targetId])
