@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -61,44 +63,36 @@ export default function DashboardPage() {
     router.push('/login');
   }
   
-  if (!session) return <div className="min-h-screen flex items-center justify-center bg-stone-900 text-stone-300">Loading...</div>;
-  
+  if (!session) return (
+    <div className="min-h-screen flex flex-col bg-stone-100">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center text-stone-500">Loading...</div>
+      <Footer />
+    </div>
+  );
+
   const pageSize = 50;
   const totalPages = Math.ceil(total / pageSize);
   const authors = ['Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur'];
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  
+
   return (
-    <div className="min-h-screen bg-stone-100">
-      {/* Header */}
-      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-serif italic text-xl text-amber-200">Pradip&apos;s Homoe</h1>
-            <p className="text-xs text-stone-400">Welcome, {session.user?.fullName || session.user?.loginId}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {session.user?.role === 'admin' && (
-              <Link href="/admin" className="text-xs bg-amber-700 hover:bg-amber-600 px-3 py-1.5 rounded">Admin Panel</Link>
-            )}
-            <button onClick={logout} className="text-xs bg-stone-700 hover:bg-stone-600 px-3 py-1.5 rounded">Logout</button>
-          </div>
-        </div>
+    <div className="min-h-screen flex flex-col bg-stone-100">
+      <Navbar />
+      <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
         {/* View tabs */}
-        <div className="max-w-7xl mx-auto px-4 flex gap-1 pb-2 overflow-x-auto">
+        <div className="flex gap-1 mb-4 border-b border-stone-300">
           {(['materia', 'therapeutics', 'predictive'] as const).map(v => (
             <button
               key={v}
               onClick={() => { setView(v); setPage(1); setQ(''); setLetter(''); setAuthor(''); }}
-              className={`px-3 py-1.5 text-xs rounded-t ${view === v ? 'bg-stone-100 text-emerald-900 font-semibold' : 'text-stone-300 hover:bg-emerald-900'}`}
+              className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${view === v ? 'border-emerald-700 text-emerald-900' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
             >
               {v === 'materia' ? 'Materia Medica' : v === 'therapeutics' ? 'Therapeutics' : 'Predictive'}
             </button>
           ))}
         </div>
-      </header>
-      
-      <main className="max-w-7xl mx-auto px-4 py-6">
+
         {view === 'materia' && (
           <>
             {/* Filters */}
@@ -162,6 +156,7 @@ export default function DashboardPage() {
         {view === 'therapeutics' && <TherapeuticsPanel />}
         {view === 'predictive' && <PredictivePanel />}
       </main>
+      <Footer />
     </div>
   );
 }

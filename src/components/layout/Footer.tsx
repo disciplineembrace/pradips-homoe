@@ -1,0 +1,38 @@
+'use client';
+import Link from 'next/link';
+
+export function Footer() {
+  return (
+    <footer className="bg-emerald-950 text-stone-300 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 className="font-serif italic text-lg text-amber-200 mb-2">Pradip&apos;s Homoe</h3>
+            <p className="text-xs text-stone-400">Personal Digital Homoeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2 text-amber-200">Quick Links</h4>
+            <ul className="space-y-1 text-sm">
+              <li><Link href="/" className="hover:text-amber-200">Home</Link></li>
+              <li><Link href="/about" className="hover:text-amber-200">About</Link></li>
+              <li><Link href="/contact" className="hover:text-amber-200">Contact</Link></li>
+              <li><Link href="/login" className="hover:text-amber-200">Login</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2 text-amber-200">Library Stats</h4>
+            <ul className="space-y-1 text-xs text-stone-400">
+              <li>3,471 remedies</li>
+              <li>79,706 rubrics</li>
+              <li>408 therapeutic formulas</li>
+              <li>23 predictive chapters</li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-emerald-800 mt-6 pt-4 text-center text-xs text-stone-500">
+          © 2026 Pradip&apos;s Homoe · All access is logged · Unauthorized access prohibited
+        </div>
+      </div>
+    </footer>
+  );
+}
