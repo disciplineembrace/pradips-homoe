@@ -41,7 +41,7 @@ export default function AdminHomePage() {
     router.push('/login');
   }
   
-  if (!session) return <div className="min-h-screen bg-stone-900 text-stone-300 flex items-center justify-center">Loading...</div>;
+  if (!session) return <div className="min-h-screen bg-emerald-950 text-stone-300 flex items-center justify-center">Loading...</div>;
   
   const statCards = stats ? [
     { label: 'Total Users', value: stats.totalUsers, sub: `${stats.admins} admins`, color: 'text-emerald-700' },
@@ -54,14 +54,14 @@ export default function AdminHomePage() {
   
   return (
     <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 shadow">
+      <header className="bg-emerald-950 text-stone-100 shadow border-b-2 border-amber-700/60">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="font-serif italic text-xl text-amber-200">Pradip&apos;s Homoe — Admin</h1>
+            <h1 className="font-serif italic text-xl text-amber-200 tracking-wide">Pradip&apos;s Homoe — Admin</h1>
             <p className="text-xs text-stone-400">{session?.name} · {session.user?.role}</p>
           </div>
           <div className="flex gap-2">
-            <Link href="/dashboard" className="text-xs bg-stone-700 hover:bg-stone-600 px-3 py-1.5 rounded">View Site</Link>
+            <Link href="/dashboard" className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded">View Site</Link>
             <button onClick={logout} className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded">Logout</button>
           </div>
         </div>
@@ -73,7 +73,8 @@ export default function AdminHomePage() {
       </header>
       
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <h2 className="font-serif text-2xl text-emerald-900 mb-4">Overview</h2>
+        <h2 className="font-serif text-2xl text-emerald-900 mb-2">Overview</h2>
+        <div className="w-16 h-0.5 bg-amber-700 mb-4" />
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           {statCards.map((s, i) => (

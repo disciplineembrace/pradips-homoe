@@ -6,7 +6,8 @@ export default function ContactPage() {
     <div className="min-h-screen flex flex-col bg-stone-50">
       <Navbar />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-12">
-        <h1 className="font-serif text-4xl text-emerald-900 mb-4">Contact</h1>
+        <h1 className="font-serif text-4xl text-emerald-900 mb-2">Contact</h1>
+        <div className="w-16 h-0.5 bg-amber-700 mb-4" />
         <p className="text-stone-600 mb-8">Need access to the library? Have questions? Reach out using the details below.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

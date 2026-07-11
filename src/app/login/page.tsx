@@ -98,7 +98,7 @@ export default function LoginPage() {
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl p-8 shadow-xl border border-stone-200">
+          <div className="bg-white rounded-2xl p-8 shadow-xl border border-stone-200 border-t-4 border-t-amber-700">
             <div className="text-center mb-8">
               <h1 className="font-serif italic text-3xl text-emerald-900 mb-1">Pradip&apos;s Homoe</h1>
               <p className="text-xs uppercase tracking-widest text-stone-500 mt-2">Sign In</p>

@@ -29,13 +29,13 @@ export default function AdminLogsPage() {
   
   useEffect(() => { if (session) loadLogs(); }, [type, session]);
   
-  if (!session) return <div className="min-h-screen bg-stone-900 text-stone-300 flex items-center justify-center">Loading...</div>;
+  if (!session) return <div className="min-h-screen bg-emerald-950 text-stone-300 flex items-center justify-center">Loading...</div>;
   
   return (
     <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 shadow">
+      <header className="bg-emerald-950 text-stone-100 shadow border-b-2 border-amber-700/60">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="font-serif italic text-xl text-amber-200">Admin — Logs</h1>
+          <h1 className="font-serif italic text-xl text-amber-200 tracking-wide">Admin — Logs</h1>
           <button onClick={() => { fetch('/api/auth/logout', { method: 'POST' }).then(() => router.push('/login')); }} className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded">Logout</button>
         </div>
         <div className="max-w-5xl mx-auto px-4 flex gap-1 pb-2">

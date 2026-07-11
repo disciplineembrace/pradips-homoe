@@ -31,26 +31,26 @@ export default function RemedyDetailPage() {
     });
   }, [router, params.id]);
   
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-stone-900 text-stone-300">Loading remedy...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-900 text-stone-300 flex-col gap-4">
+    <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
       <p>{error}</p>
-      <Link href="/dashboard" className="bg-amber-700 px-4 py-2 rounded">← Back to Dashboard</Link>
+      <Link href="/dashboard" className="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded">← Back to Dashboard</Link>
     </div>
   );
   if (!remedy) return null;
   
   return (
     <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow">
+      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm bg-stone-700 hover:bg-stone-600 px-3 py-1.5 rounded">← Back</Link>
-          <h1 className="font-serif italic text-amber-200">Pradip&apos;s Homoe</h1>
+          <Link href="/dashboard" className="text-sm bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded">← Back</Link>
+          <h1 className="font-serif italic text-amber-200 tracking-wide">Pradip&apos;s Homoe</h1>
           <span className="text-xs text-stone-400">{remedy.author}</span>
         </div>
       </header>
       <article className="max-w-4xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
           <div className="border-b border-stone-200 pb-4 mb-6">
             <h1 className="font-serif text-3xl text-emerald-900">{remedy.name}</h1>
             {remedy.common && <p className="text-sm italic text-stone-500 mt-1">{remedy.common}</p>}
