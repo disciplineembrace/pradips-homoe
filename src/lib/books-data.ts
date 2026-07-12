@@ -32,7 +32,14 @@ export async function getBook(id: string): Promise<any> {
 }
 
 export async function getAllBooks(): Promise<any[]> {
-  const bookIds = ['farokh-master', 'banerjea-synoptic-memorizer', 'patil-textbook-mm'];
+  const bookIds = [
+    'farokh-master',
+    'banerjea-synoptic-memorizer',
+    'patil-textbook-mm',
+    'sehgal-roh-series',
+    'khaneja-illustrated-guide',
+    'sommer-quick-easy',
+  ];
   const books = [];
   for (const id of bookIds) {
     const book = await getBook(id);
