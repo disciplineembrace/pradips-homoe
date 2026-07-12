@@ -109,7 +109,7 @@ export default function BooksPage() {
                     <p className="text-xs text-stone-600 line-clamp-3 mb-3 leading-relaxed">{b.description}</p>
                   )}
                   <div className="flex items-center justify-between text-[0.65rem] uppercase tracking-wider">
-                    <span className="text-[#C8A24A] font-semibold">{b.chapters.length} chapters</span>
+                    <span className="text-[#C8A24A] font-semibold">{(b.chapters || []).length} chapters</span>
                     <span className="text-[#173B2D] font-semibold">Read →</span>
                   </div>
                 </Link>
