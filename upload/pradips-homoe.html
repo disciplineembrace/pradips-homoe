@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pradip's Homoe — Personal Digital Homeopathic Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,400..700,0..1&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --parchment:#F3EBDA;
+  --parchment-dark:#E8DCC3;
+  --ink:#2B2420;
+  --bottle:#1E3A2B;
+  --bottle-dark:#152A1F;
+  --brass:#B08D3F;
+  --brass-light:#D4B36A;
+  --sage:#7C8F6E;
+  --burgundy:#6E2A3A;
+  --card-shadow: 0 2px 0 rgba(43,36,32,0.08), 0 8px 20px -8px rgba(43,36,32,0.25);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--parchment);
+  color:var(--ink);
+  font-family:'Source Serif 4', serif;
+  -webkit-font-smoothing:antialiased;
+}
+.app{min-height:100vh;display:flex;flex-direction:column;}
+
+/* ===== HEADER / BRASS RAIL ===== */
+header.rail{
+  background:var(--bottle);
+  color:var(--parchment);
+  padding:14px 22px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  border-bottom:3px solid var(--brass);
+  position:sticky;top:0;z-index:50;
+  flex-wrap:wrap;
+}
+.wordmark{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-style:italic;
+  font-size:1.35rem;
+  letter-spacing:0.02em;
+  color:var(--brass-light);
+  white-space:nowrap;
+  margin-right:6px;
+}
+.wordmark small{
+  display:block;
+  font-family:'IBM Plex Mono', monospace;
+  font-style:normal;
+  font-size:0.55rem;
+  letter-spacing:0.15em;
+  color:var(--sage);
+  text-transform:uppercase;
+  margin-top:2px;
+}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;}
+nav.tabs button{
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--parchment-dark);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.72rem;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  padding:8px 12px;
+  border-radius:3px;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+nav.tabs button:hover{background:rgba(255,255,255,0.06);}
+nav.tabs button.active{
+  background:var(--brass);
+  color:var(--bottle-dark);
+  font-weight:500;
+}
+.rail-spacer{flex:1;}
+.rail-search{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:20px;
+  padding:6px 14px;
+  min-width:180px;
+}
+.rail-search input{
+  background:transparent;border:none;outline:none;color:var(--parchment);
+  font-family:'Source Serif 4', serif;font-size:0.85rem;width:100%;
+}
+.rail-search input::placeholder{color:rgba(243,235,218,0.5);}
+
+/* ===== MAIN ===== */
+main{flex:1;max-width:1100px;margin:0 auto;padding:34px 24px 60px;width:100%;}
+.view{display:none;animation:fade .25s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+h1.page-title{
+  font-family:'Fraunces', serif;
+  font-weight:500;
+  font-size:2rem;
+  margin:0 0 4px;
+}
+.page-sub{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.72rem;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--sage);
+  margin:0 0 28px;
+}
+
+/* ===== HOME: DASHBOARD ===== */
+.stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:36px;}
+.stat{
+  background:white;border:1px solid var(--parchment-dark);
+  border-radius:6px;padding:14px 18px;min-width:120px;
+  box-shadow:var(--card-shadow);
+}
+.stat .num{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:600;color:var(--bottle);}
+.stat .lbl{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--sage);}
+
+.section-label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--brass);
+  margin:0 0 12px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-label::after{content:"";flex:1;height:1px;background:var(--parchment-dark);}
+
+/* CABINET / DRAWERS */
+.cabinet{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:14px;margin-bottom:40px;
+}
+.drawer{
+  background:linear-gradient(180deg,#fffdf8,var(--parchment));
+  border:1px solid var(--parchment-dark);
+  border-left:5px solid var(--bottle);
+  border-radius:4px;
+  padding:16px 18px;
+  cursor:pointer;
+  box-shadow:var(--card-shadow);
+  transition:transform .15s ease, box-shadow .15s ease;
+  position:relative;
+}
+.drawer:hover{transform:translateY(-2px);box-shadow:0 4px 0 rgba(43,36,32,0.1),0 14px 26px -10px rgba(43,36,32,0.3);}
+.drawer .plate{
+  font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:6px;
+}
+.drawer h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.1rem;margin:0 0 4px;}
+.drawer p{margin:0;font-size:0.82rem;color:#5c5348;}
+.drawer.murphy{border-left-color:var(--burgundy);}
+.drawer.murphy .plate{color:var(--burgundy);}
+.drawer.phatak{border-left-color:var(--sage);}
+.drawer.phatak .plate{color:var(--sage);}
+
+.two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;}
+@media(max-width:800px){.two-col{grid-template-columns:1fr;}}
+
+.list-simple{list-style:none;padding:0;margin:0;}
+.list-simple li{
+  padding:10px 4px;border-bottom:1px dashed var(--parchment-dark);
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  cursor:pointer;font-size:0.92rem;
+}
+.list-simple li:hover{color:var(--bottle);}
+.list-simple li .tag{
+  font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--sage);
+  text-transform:uppercase;white-space:nowrap;
+}
+
+/* ===== SEARCH VIEW ===== */
+.search-hero{margin-bottom:24px;}
+.search-hero input{
+  width:100%;padding:16px 20px;font-size:1.1rem;
+  font-family:'Source Serif 4',serif;
+  border:2px solid var(--bottle);border-radius:8px;
+  background:white;color:var(--ink);outline:none;
+}
+.search-hero input:focus{border-color:var(--brass);}
+.filter-chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.chip{
+  font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;
+  letter-spacing:0.05em;padding:6px 12px;border-radius:14px;
+  border:1px solid var(--parchment-dark);background:white;cursor:pointer;color:#5c5348;
+}
+.chip.active{background:var(--bottle);color:var(--parchment);border-color:var(--bottle);}
+.result-count{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--sage);margin:18px 0 10px;}
+.result-card{
+  background:white;border:1px solid var(--parchment-dark);border-radius:6px;
+  padding:14px 18px;margin-bottom:10px;cursor:pointer;box-shadow:var(--card-shadow);
+}
+.result-card:hover{border-color:var(--brass);}
+.result-card .rtitle{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;}
+.result-card .rmeta{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;color:var(--sage);margin:2px 0 8px;}
+.result-card .rsnippet{font-size:0.88rem;color:#4a4238;}
+mark{background:var(--brass-light);color:var(--ink);padding:0 2px;border-radius:2px;}
+
+/* ===== BROWSE (MM / REPERTORY) ===== */
+.author-tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+.author-tabs button{
+  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;
+  padding:8px 16px;border-radius:20px;border:1px solid var(--bottle);background:transparent;color:var(--bottle);cursor:pointer;
+}
+.author-tabs button.active{background:var(--bottle);color:var(--parchment);}
+.az-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;}
+.az-grid span{
+  font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--sage);
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--parchment-dark);border-radius:3px;
+}
+
+/* SPECIMEN CARD */
+.specimen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.specimen{
+  background:#fffdf8;border:1px solid var(--parchment-dark);border-radius:4px;
+  padding:0;cursor:pointer;box-shadow:var(--card-shadow);overflow:hidden;
+  position:relative;transition:transform .15s ease;
+}
+.specimen:hover{transform:translateY(-3px);}
+.specimen .tab{
+  background:var(--bottle);color:var(--brass-light);
+  font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;
+  padding:5px 12px;display:flex;justify-content:space-between;align-items:center;
+}
+.specimen .tab .fav-star{cursor:pointer;color:var(--parchment-dark);}
+.specimen .tab .fav-star.on{color:var(--brass-light);}
+.specimen .body{padding:14px 16px;}
+.specimen h4{font-family:'Fraunces',serif;font-weight:600;font-style:italic;font-size:1.08rem;margin:0 0 6px;}
+.specimen .keynote{font-size:0.85rem;color:#4a4238;line-height:1.5;}
+.specimen .punch{
+  position:absolute;top:34px;right:8px;width:10px;height:10px;border-radius:50%;
+  background:var(--parchment);border:1px solid var(--parchment-dark);
+}
+
+/* RUBRIC LIST */
+.rubric-item{
+  background:white;border:1px solid var(--parchment-dark);border-left:4px solid var(--sage);
+  border-radius:4px;padding:12px 16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--card-shadow);
+}
+.rubric-item .rpath{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--sage);text-transform:uppercase;letter-spacing:0.03em;}
+.rubric-item h4{font-family:'Fraunces',serif;font-weight:500;margin:4px 0 6px;}
+.rubric-item .remedies{font-size:0.82rem;color:#5c5348;}
+.rubric-item .remedies b{color:var(--bottle);font-weight:600;}
+
+/* ===== READER VIEW ===== */
+.reader-toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;
+  background:white;border:1px solid var(--parchment-dark);border-radius:6px;padding:10px 14px;
+}
+.reader-toolbar button{
+  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;
+  border:1px solid var(--parchment-dark);background:transparent;border-radius:4px;padding:6px 10px;cursor:pointer;color:var(--ink);
+}
+.reader-toolbar button.on{background:var(--brass);border-color:var(--brass);color:white;}
+.reader-toolbar .spacer{flex:1;}
+.reader-toolbar .back{color:var(--bottle);font-weight:600;border:none;background:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;}
+
+.reader-page{
+  border-radius:8px;padding:40px 44px;min-height:300px;
+  transition:background .2s ease, color .2s ease;
+  box-shadow:var(--card-shadow);
+}
+.reader-page.theme-boericke{background:#F4EFDF;color:#28241d;font-family:'Source Serif 4',serif;}
+.reader-page.theme-phatak{background:#eef4ea;color:#1f2e1a;}
+.reader-page.theme-murphy{background:#f7ecec;color:#3a1a20;}
+.reader-page.theme-light{background:#ffffff;color:#222;}
+.reader-page.theme-dark{background:#1b1b1b;color:#eee;}
+.reader-page.theme-amoled{background:#000;color:#ddd;}
+.reader-page h2{font-family:'Fraunces',serif;font-style:italic;font-weight:600;margin-top:0;}
+.reader-page .rx-meta{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;opacity:0.6;margin-bottom:20px;}
+.reader-page p{line-height:1.8;font-size:1.02rem;}
+
+.action-row{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;}
+.action-row button{
+  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;
+  padding:8px 14px;border-radius:4px;border:1px solid var(--bottle);background:transparent;color:var(--bottle);cursor:pointer;
+}
+.action-row button.on{background:var(--bottle);color:var(--parchment);}
+
+.note-box{margin-top:18px;}
+.note-box textarea{
+  width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--parchment-dark);border-radius:6px;
+  font-family:'Source Serif 4',serif;font-size:0.9rem;resize:vertical;
+}
+.note-box button.save{
+  margin-top:8px;background:var(--bottle);color:var(--parchment);border:none;padding:8px 16px;border-radius:4px;
+  font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;cursor:pointer;
+}
+
+/* ===== NOTES / FAVORITES VIEW ===== */
+.note-card{background:white;border:1px solid var(--parchment-dark);border-radius:6px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--card-shadow);}
+.note-card .nmeta{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;text-transform:uppercase;color:var(--sage);display:flex;justify-content:space-between;}
+.note-card p{margin:8px 0 4px;font-size:0.9rem;}
+.note-card .del{cursor:pointer;color:var(--burgundy);font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;}
+
+.empty{
+  text-align:center;padding:50px 20px;color:var(--sage);
+  font-family:'IBM Plex Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;
+}
+
+footer.note-strip{
+  background:var(--bottle-dark);color:var(--parchment-dark);
+  font-family:'IBM Plex Mono',monospace;font-size:0.68rem;
+  text-align:center;padding:14px;letter-spacing:0.02em;
+}
+footer.note-strip a{color:var(--brass-light);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="rail">
+    <div class="wordmark">Pradip's Homoe<small>Personal Digital Library</small></div>
+    <nav class="tabs">
+      <button data-view="home" class="active">Home</button>
+      <button data-view="materia">Materia Medica</button>
+      <button data-view="repertory">Repertory</button>
+      <button data-view="search">Search</button>
+      <button data-view="notes">Notes &amp; Favorites</button>
+    </nav>
+    <div class="rail-spacer"></div>
+    <div class="rail-search">
+      <span style="opacity:.6">⌕</span>
+      <input id="quickSearch" placeholder="Quick search remedies, rubrics…" />
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ HOME ============ -->
+    <section class="view active" id="view-home">
+      <h1 class="page-title">Welcome back</h1>
+      <p class="page-sub">Six references, one reading room</p>
+
+      <div class="stat-row" id="statRow"></div>
+
+      <div class="section-label">The Cabinet</div>
+      <div class="cabinet">
+        <div class="drawer" onclick="openBrowse('materia','Boericke')">
+          <div class="plate">Materia Medica</div>
+          <h3>William Boericke</h3>
+          <p>Pocket manual · concise keynotes</p>
+        </div>
+        <div class="drawer phatak" onclick="openBrowse('materia','Phatak')">
+          <div class="plate">Materia Medica</div>
+          <h3>S. R. Phatak</h3>
+          <p>Comparative concordance style</p>
+        </div>
+        <div class="drawer murphy" onclick="openBrowse('materia','Murphy')">
+          <div class="plate">Materia Medica</div>
+          <h3>Robin Murphy</h3>
+          <p>Modern clinical repertorial notes</p>
+        </div>
+        <div class="drawer" onclick="openBrowse('repertory','Boericke')">
+          <div class="plate">Repertory</div>
+          <h3>Boericke</h3>
+          <p>Rubric index, cross-referenced</p>
+        </div>
+        <div class="drawer phatak" onclick="openBrowse('repertory','Phatak')">
+          <div class="plate">Repertory</div>
+          <h3>Phatak</h3>
+          <p>Rubric index, cross-referenced</p>
+        </div>
+        <div class="drawer murphy" onclick="openBrowse('repertory','Murphy')">
+          <div class="plate">Repertory</div>
+          <h3>Murphy</h3>
+          <p>Rubric index, cross-referenced</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="section-label">Continue Reading</div>
+          <ul class="list-simple" id="continueList"></ul>
+        </div>
+        <div>
+          <div class="section-label">Favorite Remedies &amp; Rubrics</div>
+          <ul class="list-simple" id="favList"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SEARCH ============ -->
+    <section class="view" id="view-search">
+      <h1 class="page-title">Universal Search</h1>
+      <p class="page-sub">One box, every author, every remedy and rubric</p>
+      <div class="search-hero">
+        <input id="mainSearch" placeholder="Try “fear of being touched”, “bloating”, or “Lycopodium”…" />
+        <div class="filter-chips" id="filterChips"></div>
+      </div>
+      <div class="result-count" id="resultCount"></div>
+      <div id="resultsWrap"></div>
+    </section>
+
+    <!-- ============ MATERIA MEDICA ============ -->
+    <section class="view" id="view-materia">
+      <h1 class="page-title">Materia Medica</h1>
+      <p class="page-sub" id="materiaSub">Browsing remedies A–Z</p>
+      <div class="author-tabs" id="materiaAuthorTabs"></div>
+      <div class="az-grid" id="materiaAZ"></div>
+      <div class="specimen-grid" id="materiaGrid"></div>
+    </section>
+
+    <!-- ============ REPERTORY ============ -->
+    <section class="view" id="view-repertory">
+      <h1 class="page-title">Repertory</h1>
+      <p class="page-sub" id="repSub">Browsing rubrics</p>
+      <div class="author-tabs" id="repAuthorTabs"></div>
+      <div id="repList"></div>
+    </section>
+
+    <!-- ============ READER ============ -->
+    <section class="view" id="view-reader">
+      <div class="reader-toolbar">
+        <button class="back" onclick="goBack()">← Back</button>
+        <div class="spacer"></div>
+        <button data-theme="boericke">Boericke Classic</button>
+        <button data-theme="phatak">Phatak Emerald</button>
+        <button data-theme="murphy">Murphy Burgundy</button>
+        <button data-theme="light">Light</button>
+        <button data-theme="dark">Dark</button>
+        <button data-theme="amoled">AMOLED</button>
+        <button onclick="adjustFont(-1)">A−</button>
+        <button onclick="adjustFont(1)">A+</button>
+      </div>
+      <div class="reader-page theme-boericke" id="readerPage">
+        <div class="rx-meta" id="readerMeta"></div>
+        <h2 id="readerTitle"></h2>
+        <div id="readerBody"></div>
+        <div class="action-row">
+          <button id="btnFav" onclick="toggleFav()">☆ Favorite</button>
+          <button id="btnBookmark" onclick="toggleBookmark()">🔖 Bookmark</button>
+          <button onclick="document.getElementById('noteInput').focus()">✎ Add note</button>
+        </div>
+        <div class="note-box">
+          <textarea id="noteInput" placeholder="Personal clinical note…"></textarea>
+          <button class="save" onclick="saveNote()">Save note</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NOTES / FAVORITES ============ -->
+    <section class="view" id="view-notes">
+      <h1 class="page-title">Notes &amp; Favorites</h1>
+      <p class="page-sub">Everything you've saved, stored privately on this device</p>
+      <div class="section-label">Your Notes</div>
+      <div id="notesWrap"></div>
+      <div class="section-label" style="margin-top:30px;">Favorites</div>
+      <ul class="list-simple" id="favListFull"></ul>
+    </section>
+
+  </main>
+
+  <footer class="note-strip">
+    Sample library shell with placeholder entries — add your own licensed book text to personalize it. Stored notes and favorites are private to you.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   SAMPLE DATA (original placeholder text — not sourced from
+   any copyrighted edition; replace with your own licensed
+   book content).
+   ============================================================ */
+const AUTHORS = ["Boericke","Phatak","Murphy"];
+
+const REMEDIES = [
+  {id:"arnica", name:"Arnica montana", author:"Boericke", letter:"A",
+   keynote:"The remedy of bruises and shock. Says nothing is wrong even when clearly hurt; dreads being touched or approached; bed feels too hard.",
+   full:"Classic first-thought remedy after any physical trauma, fall, or overexertion — soreness described as 'bruised' or 'beaten.' Mental picture: denial of illness paired with irritability if anyone approaches to help. Worse for touch, motion, damp cold. Useful before and after minor procedures or dental work."},
+  {id:"belladonna", name:"Belladonna", author:"Boericke", letter:"B",
+   keynote:"Sudden, violent, throbbing complaints with heat and redness. Worse from jarring, light, noise; pupils often dilated.",
+   full:"Onset is abrupt and intense — high fever with burning heat, throbbing headache, flushed face, glassy eyes. The person may be drowsy yet restless, or briefly delirious. Symptoms come and go quickly and are aggravated by the slightest jar, draft, or light."},
+  {id:"nux-vomica", name:"Nux vomica", author:"Boericke", letter:"N",
+   keynote:"The over-worked, over-indulged, chilly and irritable type; digestive upset after rich food, coffee, or alcohol.",
+   full:"Fits the driven, competitive personality who pushes through with stimulants and then pays for it — heartburn, constipation with ineffectual urging, irritability at the smallest noise or interruption. Worse mornings, after eating, in cold air; better from a short nap or warmth."},
+  {id:"pulsatilla", name:"Pulsatilla", author:"Phatak", letter:"P",
+   keynote:"Mild, weepy, craves company and sympathy; symptoms constantly shift; worse in a warm room, better in open air.",
+   full:"The 'changeable' remedy — thirstlessness, changeable moods, discharges that are bland and yellow-green. Wants a window open, wants company nearby, cries easily and feels better for consolation. Complaints often follow suppressed grief or getting chilled after being overheated."},
+  {id:"sulphur", name:"Sulphur", author:"Phatak", letter:"S",
+   keynote:"The untidy philosopher — hot-blooded, theorizing, skin complaints that itch and burn; worse from bathing and heat.",
+   full:"Constitutional remedy for the person who thinks aloud, is generally warm-blooded and dislikes washing, with a history of recurring skin eruptions or complaints that keep 'moving' from skin to other organs and back. Worse at 11am, from heat of bed, from bathing."},
+  {id:"rhus-tox", name:"Rhus toxicodendron", author:"Phatak", letter:"R",
+   keynote:"Rusty-gate stiffness — worse on first motion, better on continued motion; worse damp cold, better warm and dry.",
+   full:"Think of joints and muscles that feel stiff and painful on starting to move but loosen with continued gentle motion, only to ache again after prolonged exertion. Restlessness — the person constantly changes position seeking a comfortable one. Aggravated by cold, damp, or getting wet."},
+  {id:"lycopodium", name:"Lycopodium", author:"Murphy", letter:"L",
+   keynote:"Bloating that builds through the day, worse 4–8pm; bluff confidence hiding self-doubt; right-sided complaints.",
+   full:"Digestive complaints dominate — fullness and rumbling after small meals, craving sweets, intolerance of tight clothing at the waist. Personality often appears authoritative or bossy at work but is privately anxious about performing or facing new situations. Right side of the body frequently affected first."},
+  {id:"phosphorus", name:"Phosphorus", author:"Murphy", letter:"P",
+   keynote:"Sensitive, sympathetic, craves company and reassurance; bleeds easily; sensitive to external impressions (light, sound, smell).",
+   full:"The affectionate, artistic, easily-startled type who absorbs the moods of people around them. Physically: tendency to nosebleeds or easy bruising, burning pains, great thirst for cold drinks. Worse from lying on the left side, in the evening, in thundery weather; better from sleep and eating."},
+  {id:"aconite", name:"Aconitum napellus", author:"Murphy", letter:"A",
+   keynote:"Sudden onset after fright or cold dry wind exposure; intense fear, restlessness, may predict the time of death.",
+   full:"Onset is abrupt — a shock, a scare, or exposure to a cold dry wind precipitates high fever, panic, and restlessness. The fear is dramatic and specific, sometimes with a fixed conviction something terrible will happen. Best given early, before the picture has settled into a more chronic remedy."},
+  {id:"ignatia", name:"Ignatia amara", author:"Boericke", letter:"I",
+   keynote:"Grief and disappointment held in — sighing, lump-in-throat sensation, contradictory and paradoxical symptoms.",
+   full:"The classic remedy for acute grief, especially silent or suppressed grief following loss, disappointment in love, or reprimand. Symptoms are contradictory (the sore throat that's better from swallowing solids) and change rapidly. Frequent sighing, sensitive to contradiction, may laugh and cry alternately."}
+];
+
+const RUBRICS = [
+  {id:"r1", path:"Mind", title:"Fear — of being touched", author:"Boericke",
+   remedies:["Arnica montana","Belladonna"]},
+  {id:"r2", path:"Mind", title:"Weeping — better for consolation", author:"Phatak",
+   remedies:["Pulsatilla","Ignatia amara"]},
+  {id:"r3", path:"Head", title:"Pain — throbbing", author:"Boericke",
+   remedies:["Belladonna","Lycopodium"]},
+  {id:"r4", path:"Stomach", title:"Bloating — flatulent, after eating", author:"Murphy",
+   remedies:["Lycopodium","Nux vomica"]},
+  {id:"r5", path:"Extremities", title:"Stiffness — better from continued motion", author:"Phatak",
+   remedies:["Rhus toxicodendron"]},
+  {id:"r6", path:"Generalities", title:"Worse — damp, cold weather", author:"Phatak",
+   remedies:["Rhus toxicodendron","Nux vomica"]},
+  {id:"r7", path:"Mind", title:"Fear — with restlessness, sudden onset", author:"Murphy",
+   remedies:["Aconitum napellus"]},
+  {id:"r8", path:"Skin", title:"Eruptions — itching, worse from heat of bed", author:"Phatak",
+   remedies:["Sulphur"]}
+];
+
+/* ============================================================
+   STATE (persisted via window.storage — personal, not shared)
+   ============================================================ */
+let favorites = new Set();      // remedy/rubric ids
+let bookmarks = new Set();
+let notesData = [];             // {id, refId, refTitle, text, date}
+let history = [];                // recently opened refIds
+let currentRef = null;           // currently open remedy or rubric
+let currentTab = {materia:"Boericke", repertory:"Boericke"};
+let fontStep = 0;
+let materiaFilterLetter = null;
+
+async function loadState(){
+  try{
+    const r = await window.storage.get('pradip-state', false);
+    if(r && r.value){
+      const d = JSON.parse(r.value);
+      favorites = new Set(d.favorites||[]);
+      bookmarks = new Set(d.bookmarks||[]);
+      notesData = d.notesData||[];
+      history = d.history||[];
+    }
+  }catch(e){ /* no saved state yet */ }
+  renderHome(); renderNotesView();
+}
+async function saveState(){
+  try{
+    await window.storage.set('pradip-state', JSON.stringify({
+      favorites:[...favorites], bookmarks:[...bookmarks], notesData, history
+    }), false);
+  }catch(e){ console.error('storage save failed', e); }
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchView(btn.dataset.view));
+});
+function switchView(name){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(name==='materia') renderMateria();
+  if(name==='repertory') renderRepertory();
+  if(name==='notes') renderNotesView();
+  if(name==='search') renderSearch();
+}
+function goBack(){
+  if(currentRef && currentRef.type==='remedy') switchView('materia');
+  else if(currentRef && currentRef.type==='rubric') switchView('repertory');
+  else switchView('home');
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function renderHome(){
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat"><div class="num">6</div><div class="lbl">Books</div></div>
+    <div class="stat"><div class="num">${REMEDIES.length+RUBRICS.length}</div><div class="lbl">Entries</div></div>
+    <div class="stat"><div class="num">${bookmarks.size}</div><div class="lbl">Bookmarks</div></div>
+    <div class="stat"><div class="num">${notesData.length}</div><div class="lbl">Notes</div></div>
+    <div class="stat"><div class="num">${favorites.size}</div><div class="lbl">Favorites</div></div>
+  `;
+  const cont = document.getElementById('continueList');
+  cont.innerHTML = history.length ? history.slice(0,6).map(id=>{
+    const item = findById(id);
+    return item ? `<li onclick="openRef('${item.type}','${item.data.id}')"><span>${item.data.name||item.data.title}</span><span class="tag">${item.data.author}</span></li>` : '';
+  }).join('') : `<li style="cursor:default;color:#999;">Nothing opened yet — browse a drawer to begin</li>`;
+
+  const fav = document.getElementById('favList');
+  const favItems = [...favorites].slice(0,6).map(id=>{
+    const item = findById(id);
+    return item ? `<li onclick="openRef('${item.type}','${item.data.id}')"><span>${item.data.name||item.data.title}</span><span class="tag">☆</span></li>` : '';
+  }).join('');
+  fav.innerHTML = favItems || `<li style="cursor:default;color:#999;">Tap the star on any entry to save it here</li>`;
+}
+function findById(id){
+  let r = REMEDIES.find(x=>x.id===id);
+  if(r) return {type:'remedy', data:r};
+  let ru = RUBRICS.find(x=>x.id===id);
+  if(ru) return {type:'rubric', data:ru};
+  return null;
+}
+
+/* ============================================================
+   MATERIA MEDICA
+   ============================================================ */
+function renderMateria(){
+  const tabsEl = document.getElementById('materiaAuthorTabs');
+  tabsEl.innerHTML = AUTHORS.map(a=>`<button class="${currentTab.materia===a?'active':''}" onclick="setMateriaAuthor('${a}')">${a}</button>`).join('');
+  const az = document.getElementById('materiaAZ');
+  const letters = [...new Set(REMEDIES.filter(r=>r.author===currentTab.materia).map(r=>r.letter))].sort();
+  az.innerHTML = letters.map(l=>`<span>${l}</span>`).join('');
+  document.getElementById('materiaSub').textContent = `Browsing ${currentTab.materia}'s remedies A–Z (${REMEDIES.filter(r=>r.author===currentTab.materia).length} sample entries)`;
+  renderMateriaGrid();
+}
+function setMateriaAuthor(a){ currentTab.materia = a; renderMateria(); }
+function renderMateriaGrid(){
+  const grid = document.getElementById('materiaGrid');
+  const items = REMEDIES.filter(r=>r.author===currentTab.materia).sort((a,b)=>a.name.localeCompare(b.name));
+  grid.innerHTML = items.map(r=>`
+    <div class="specimen" onclick="openRef('remedy','${r.id}')">
+      <div class="tab"><span>${r.author}</span><span class="fav-star ${favorites.has(r.id)?'on':''}" onclick="event.stopPropagation();quickFav('${r.id}')">★</span></div>
+      <div class="punch"></div>
+      <div class="body">
+        <h4>${r.name}</h4>
+        <div class="keynote">${r.keynote}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function openBrowse(view, author){
+  currentTab[view] = author;
+  switchView(view);
+}
+
+/* ============================================================
+   REPERTORY
+   ============================================================ */
+function renderRepertory(){
+  const tabsEl = document.getElementById('repAuthorTabs');
+  tabsEl.innerHTML = AUTHORS.map(a=>`<button class="${currentTab.repertory===a?'active':''}" onclick="setRepAuthor('${a}')">${a}</button>`).join('');
+  document.getElementById('repSub').textContent = `Browsing ${currentTab.repertory}'s rubric index`;
+  const list = document.getElementById('repList');
+  const items = RUBRICS.filter(r=>r.author===currentTab.repertory);
+  list.innerHTML = items.length ? items.map(r=>`
+    <div class="rubric-item" onclick="openRef('rubric','${r.id}')">
+      <div class="rpath">${r.path}</div>
+      <h4>${r.title} <span class="fav-star ${favorites.has(r.id)?'on':''}" style="font-size:0.8rem;cursor:pointer;" onclick="event.stopPropagation();quickFav('${r.id}')">★</span></h4>
+      <div class="remedies">Remedies: ${r.remedies.map(rm=>`<b>${rm}</b>`).join(', ')}</div>
+    </div>
+  `).join('') : `<div class="empty">No sample rubrics filed under ${currentTab.repertory} yet</div>`;
+}
+function setRepAuthor(a){ currentTab.repertory = a; renderRepertory(); }
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+let activeFilter = 'All';
+function renderSearch(){
+  const chips = document.getElementById('filterChips');
+  const opts = ['All','Materia Medica','Repertory','Boericke','Phatak','Murphy'];
+  chips.innerHTML = opts.map(o=>`<span class="chip ${activeFilter===o?'active':''}" onclick="setFilter('${o}')">${o}</span>`).join('');
+  runSearch(document.getElementById('mainSearch').value);
+}
+function setFilter(o){ activeFilter = o; renderSearch(); }
+document.getElementById('mainSearch').addEventListener('input', e=>runSearch(e.target.value));
+document.getElementById('quickSearch').addEventListener('input', e=>{
+  if(e.target.value.trim().length>0){
+    switchView('search');
+    document.getElementById('mainSearch').value = e.target.value;
+    runSearch(e.target.value);
+  }
+});
+function highlight(text, q){
+  if(!q) return text;
+  const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+  return text.replace(re, '<mark>$1</mark>');
+}
+function runSearch(q){
+  q = (q||'').trim();
+  let pool = [];
+  REMEDIES.forEach(r=>pool.push({type:'remedy', data:r, text:(r.name+' '+r.keynote+' '+r.full)}));
+  RUBRICS.forEach(r=>pool.push({type:'rubric', data:r, text:(r.title+' '+r.path+' '+r.remedies.join(' '))}));
+
+  if(activeFilter==='Materia Medica') pool = pool.filter(p=>p.type==='remedy');
+  else if(activeFilter==='Repertory') pool = pool.filter(p=>p.type==='rubric');
+  else if(AUTHORS.includes(activeFilter)) pool = pool.filter(p=>p.data.author===activeFilter);
+
+  let results = pool;
+  if(q.length>0){
+    const ql = q.toLowerCase();
+    results = pool.filter(p=>p.text.toLowerCase().includes(ql));
+  }
+
+  document.getElementById('resultCount').textContent = q ? `${results.length} result${results.length!==1?'s':''} for “${q}”` : `Showing ${results.length} entries — start typing to narrow it down`;
+  const wrap = document.getElementById('resultsWrap');
+  wrap.innerHTML = results.map(r=>{
+    const title = r.data.name || r.data.title;
+    const snippetSrc = r.type==='remedy' ? r.data.keynote : `${r.data.path} — remedies: ${r.data.remedies.join(', ')}`;
+    return `<div class="result-card" onclick="openRef('${r.type}','${r.data.id}')">
+      <div class="rtitle">${highlight(title,q)}</div>
+      <div class="rmeta">${r.type==='remedy'?'Materia Medica':'Repertory'} · ${r.data.author}</div>
+      <div class="rsnippet">${highlight(snippetSrc,q)}</div>
+    </div>`;
+  }).join('') || `<div class="empty">No matches — try a different word, or add more entries to your library</div>`;
+}
+
+/* ============================================================
+   READER
+   ============================================================ */
+function openRef(type, id){
+  const data = type==='remedy' ? REMEDIES.find(r=>r.id===id) : RUBRICS.find(r=>r.id===id);
+  currentRef = {type, data};
+  history = [id, ...history.filter(h=>h!==id)].slice(0,10);
+  saveState();
+
+  document.getElementById('readerMeta').textContent = `${type==='remedy'?'Materia Medica':'Repertory'} · ${data.author}`;
+  document.getElementById('readerTitle').textContent = data.name || data.title;
+  document.getElementById('readerBody').innerHTML = type==='remedy'
+    ? `<p>${data.full}</p>`
+    : `<p><b>${data.path}</b> — ${data.title}</p><p>Associated remedies: ${data.remedies.join(', ')}</p>`;
+
+  document.getElementById('btnFav').textContent = favorites.has(id) ? '★ Favorited' : '☆ Favorite';
+  document.getElementById('btnFav').classList.toggle('on', favorites.has(id));
+  document.getElementById('btnBookmark').textContent = bookmarks.has(id) ? '🔖 Bookmarked' : '🔖 Bookmark';
+  document.getElementById('btnBookmark').classList.toggle('on', bookmarks.has(id));
+  document.getElementById('noteInput').value = '';
+
+  // default theme by author
+  const themeMap = {Boericke:'boericke', Phatak:'phatak', Murphy:'murphy'};
+  applyTheme(themeMap[data.author] || 'light');
+
+  switchView('reader');
+}
+function quickFav(id){
+  if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  saveState();
+  renderMateriaGrid(); renderRepertory(); renderHome();
+}
+function toggleFav(){
+  const id = currentRef.data.id;
+  if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  saveState();
+  document.getElementById('btnFav').textContent = favorites.has(id) ? '★ Favorited' : '☆ Favorite';
+  document.getElementById('btnFav').classList.toggle('on', favorites.has(id));
+}
+function toggleBookmark(){
+  const id = currentRef.data.id;
+  if(bookmarks.has(id)) bookmarks.delete(id); else bookmarks.add(id);
+  saveState();
+  document.getElementById('btnBookmark').textContent = bookmarks.has(id) ? '🔖 Bookmarked' : '🔖 Bookmark';
+  document.getElementById('btnBookmark').classList.toggle('on', bookmarks.has(id));
+}
+function saveNote(){
+  const text = document.getElementById('noteInput').value.trim();
+  if(!text) return;
+  notesData.unshift({
+    id: 'n'+Date.now(),
+    refId: currentRef.data.id,
+    refTitle: currentRef.data.name || currentRef.data.title,
+    text,
+    date: new Date().toLocaleDateString()
+  });
+  document.getElementById('noteInput').value = '';
+  saveState();
+  renderNotesView();
+}
+document.querySelectorAll('.reader-toolbar [data-theme]').forEach(btn=>{
+  btn.addEventListener('click', ()=>applyTheme(btn.dataset.theme));
+});
+function applyTheme(t){
+  const page = document.getElementById('readerPage');
+  page.className = 'reader-page theme-'+t;
+  document.querySelectorAll('.reader-toolbar [data-theme]').forEach(b=>b.classList.toggle('on', b.dataset.theme===t));
+}
+function adjustFont(dir){
+  fontStep = Math.max(-2, Math.min(4, fontStep+dir));
+  document.getElementById('readerPage').style.fontSize = (1 + fontStep*0.08) + 'rem';
+}
+
+/* ============================================================
+   NOTES / FAVORITES VIEW
+   ============================================================ */
+function renderNotesView(){
+  const wrap = document.getElementById('notesWrap');
+  wrap.innerHTML = notesData.length ? notesData.map(n=>`
+    <div class="note-card">
+      <div class="nmeta"><span>${n.refTitle}</span><span>${n.date}</span></div>
+      <p>${n.text}</p>
+      <span class="del" onclick="deleteNote('${n.id}')">Delete</span>
+    </div>
+  `).join('') : `<div class="empty">No notes yet — open any remedy or rubric and jot one down</div>`;
+
+  const favWrap = document.getElementById('favListFull');
+  const items = [...favorites].map(id=>{
+    const item = findById(id);
+    return item ? `<li onclick="openRef('${item.type}','${item.data.id}')"><span>${item.data.name||item.data.title}</span><span class="tag">${item.data.author}</span></li>` : '';
+  }).join('');
+  favWrap.innerHTML = items || `<li style="cursor:default;color:#999;">No favorites saved yet</li>`;
+}
+function deleteNote(id){
+  notesData = notesData.filter(n=>n.id!==id);
+  saveState();
+  renderNotesView(); renderHome();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadState();
+</script>
+</body>
+</html>
