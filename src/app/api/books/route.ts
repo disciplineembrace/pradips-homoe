@@ -1,21 +1,13 @@
-/** GET /api/books — full e-books list (requires auth) */
+/** GET /api/books — list all books (requires auth) */
 import { NextResponse } from 'next/server';
+import { getAllBooks } from '@/lib/books-data';
 import { requireAuth } from '@/lib/require-auth';
-import { getBooks } from '@/lib/books-data';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
   const { errorResponse } = await requireAuth();
   if (errorResponse) return errorResponse;
-
-  const books = (await getBooks()).map(b => ({
-    id: b.id,
-    title: b.title,
-    author: b.author,
-    description: b.description,
-    cover: b.cover,
-    chapters: b.chapters.map(c => ({ id: c.id, title: c.title })),
-  }));
+  const books = await getAllBooks();
   return NextResponse.json({ books });
 }
