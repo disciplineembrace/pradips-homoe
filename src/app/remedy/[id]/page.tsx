@@ -61,25 +61,40 @@ export default function RemedyDetailPage() {
   );
   if (!remedy) return null;
 
-  // Helper: check if a field has meaningful content (not empty, not placeholder)
+  // Helper: check if a field has meaningful content
   function hasContent(val?: string): boolean {
     if (!val) return false;
     const v = val.trim().toLowerCase();
-    return v.length > 2 && v !== '—' && v !== '-' && v !== 'see full text.' && v !== 'see full text' && v !== 'n/a';
+    return v.length > 2 && v !== '—' && v !== '-' && v !== 'see full text.' && v !== 'see full text' && v !== 'n/a' && v !== ' ';
   }
 
-  // Helper: check if two fields are duplicates (first 200 chars match)
-  function isDuplicate(a?: string, b?: string): boolean {
+  // Helper: check if field B is a duplicate of field A (first 200 chars match)
+  function isDuplicateOf(a?: string, b?: string): boolean {
     if (!a || !b) return false;
-    return a.trim().substring(0, 200).toLowerCase() === b.trim().substring(0, 200).toLowerCase();
+    const aTrim = a.trim().substring(0, 200).toLowerCase();
+    const bTrim = b.trim().substring(0, 200).toLowerCase();
+    return aTrim === bTrim;
   }
 
-  // Determine which sections to show (only unique, non-empty content)
+  // Determine which sections to show — compare at render time, DON'T delete data
+  // Keynote is always shown if it has content
   const showKeynote = hasContent(remedy.keynote);
-  const showConstitution = hasContent(remedy.constitution) && !isDuplicate(remedy.keynote, remedy.constitution);
-  const showFull = hasContent(remedy.full) && !isDuplicate(remedy.keynote, remedy.full);
+
+  // Constitution: show only if it has content AND is NOT a duplicate of keynote
+  const showConstitution = hasContent(remedy.constitution) && !isDuplicateOf(remedy.keynote, remedy.constitution);
+
+  // Full: show only if it has content AND is NOT a duplicate of keynote
+  // (if full starts with the same text as keynote, it's OK — full is a longer version)
+  // But if full == keynote exactly (same length), don't show full
+  const showFull = hasContent(remedy.full) && !isDuplicateOf(remedy.keynote, remedy.full);
+
+  // Modalities: show only if it has real content (not placeholder)
   const showModalities = hasContent(remedy.modalities);
+
+  // Relationships: show only if it has real content (not "—")
   const showRelationships = hasContent(remedy.relationships) && remedy.relationships.trim() !== '—';
+
+  // Dose: show if it has content
   const showDose = hasContent(remedy.dose);
 
   const isFav = rf.isFavorite(remedy.id, 'remedy');
@@ -156,7 +171,7 @@ export default function RemedyDetailPage() {
           </div>
         )}
 
-        {/* Content sections — only show sections with unique, non-empty content */}
+        {/* Content sections — show only unique content per section, hide duplicates at render time */}
         <article className="bg-white rounded-lg shadow p-6">
           {showKeynote && (
             <section className="mb-6 last:mb-0">
@@ -200,7 +215,7 @@ export default function RemedyDetailPage() {
             </section>
           )}
 
-          {/* If no sections have content, show a message */}
+          {/* If no sections have content */}
           {!showKeynote && !showConstitution && !showFull && !showModalities && !showRelationships && !showDose && (
             <p className="text-sm text-[#7C8F6E] italic text-center py-8">No detailed content available for this remedy.</p>
           )}
