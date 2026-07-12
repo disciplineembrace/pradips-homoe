@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [view, setView] = useState<'materia' | 'therapeutics' | 'predictive'>('materia');
   
   useEffect(() => {
-    fetch(/api/auth/session).then(r => r.json()).then(d => {
+    fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) {
         router.push('/login');
         return;
