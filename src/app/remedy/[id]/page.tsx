@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { useReaderFeatures } from '@/hooks/use-reader-features';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -16,7 +19,10 @@ export default function RemedyDetailPage() {
   const [remedy, setRemedy] = useState<Remedy | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const rf = useReaderFeatures();
+
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) router.push('/login');
@@ -26,84 +32,181 @@ export default function RemedyDetailPage() {
       return r.json();
     }).then(d => {
       if (d?.error) setError(d.error);
-      else setRemedy(d);
+      else { setRemedy(d); rf.addHistory({ id: d.id, type: 'remedy', name: d.name }); }
       setLoading(false);
     });
   }, [router, params.id]);
-  
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#173B2D] text-stone-200">Loading remedy...</div>;
+
+  if (loading) return (
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin mb-4"></div>
+          <p className="text-sm text-[#7C8F6E]">Loading remedy...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#173B2D] text-stone-200 flex-col gap-4">
-      <p>{error}</p>
-      <Link href="/dashboard" className="bg-[#C8A24A] hover:bg-[#d4b560] px-4 py-2 rounded">← Back to Dashboard</Link>
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center text-[#6E2A3A] flex-col gap-4">
+        <p>{error}</p>
+        <Link href="/materia-medica" className="bg-[#C8A24A] text-[#173B2D] px-4 py-2 rounded">← Back to Materia Medica</Link>
+      </div>
+      <Footer />
     </div>
   );
   if (!remedy) return null;
-  
+
+  // Helper: check if a field has meaningful content (not empty, not placeholder)
+  function hasContent(val?: string): boolean {
+    if (!val) return false;
+    const v = val.trim().toLowerCase();
+    return v.length > 2 && v !== '—' && v !== '-' && v !== 'see full text.' && v !== 'see full text' && v !== 'n/a';
+  }
+
+  // Helper: check if two fields are duplicates (first 200 chars match)
+  function isDuplicate(a?: string, b?: string): boolean {
+    if (!a || !b) return false;
+    return a.trim().substring(0, 200).toLowerCase() === b.trim().substring(0, 200).toLowerCase();
+  }
+
+  // Determine which sections to show (only unique, non-empty content)
+  const showKeynote = hasContent(remedy.keynote);
+  const showConstitution = hasContent(remedy.constitution) && !isDuplicate(remedy.keynote, remedy.constitution);
+  const showFull = hasContent(remedy.full) && !isDuplicate(remedy.keynote, remedy.full);
+  const showModalities = hasContent(remedy.modalities);
+  const showRelationships = hasContent(remedy.relationships) && remedy.relationships.trim() !== '—';
+  const showDose = hasContent(remedy.dose);
+
+  const isFav = rf.isFavorite(remedy.id, 'remedy');
+  const isBm = rf.isBookmarked(remedy.id, 'remedy');
+  const remedyNotes = rf.notes.filter(n => n.refId === remedy.id);
+
+  function copyToClipboard() {
+    const text = `${remedy!.name}\n${remedy!.common || ''}\n\nKeynote:\n${remedy!.keynote || ''}\n\nFull:\n${remedy!.full || ''}`;
+    navigator.clipboard.writeText(text);
+    alert('Remedy copied to clipboard');
+  }
+
+  function addNote() {
+    if (!noteText.trim()) return;
+    rf.addNote({ type: 'remedy', refId: remedy!.id, refName: remedy!.name, text: noteText });
+    setNoteText('');
+    setShowNoteForm(false);
+  }
+
   return (
-    <div className="min-h-screen bg-[#F5EFE0]">
-      <header className="bg-[#173B2D] text-stone-100 sticky top-0 z-10 shadow border-b-2 border-[#C8A24A]/40">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded">← Back</Link>
-          <h1 className="font-serif italic text-[#C8A24A] tracking-wide">Pradip&apos;s Homoe</h1>
-          <span className="text-xs text-stone-300">{remedy.author}</span>
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-6 w-full">
+        {/* Back + actions */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/materia-medica" className="text-sm bg-[#173B2D] text-white px-4 py-2 rounded hover:bg-[#2a5443]">← Back</Link>
+          <div className="flex gap-2">
+            <button onClick={() => rf.toggleFavorite({ id: remedy.id, type: 'remedy', name: remedy.name })} className={`text-xl ${isFav ? 'text-[#C8A24A]' : 'text-stone-400 hover:text-[#C8A24A]'}`} title="Favorite">★</button>
+            <button onClick={() => rf.toggleBookmark({ id: remedy.id, type: 'remedy', name: remedy.name })} className={`text-xl ${isBm ? 'text-[#173B2D]' : 'text-stone-400 hover:text-[#173B2D]'}`} title="Bookmark">🔖</button>
+            <button onClick={copyToClipboard} className="text-xl text-stone-400 hover:text-[#173B2D]" title="Copy">📋</button>
+            <button onClick={() => window.print()} className="text-xl text-stone-400 hover:text-[#173B2D]" title="Print">🖨️</button>
+            <button onClick={() => setShowNoteForm(!showNoteForm)} className="text-xl text-stone-400 hover:text-[#173B2D]" title="Add Note">📝</button>
+          </div>
         </div>
-      </header>
-      <article className="max-w-4xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
-          <div className="border-b border-[#E8DCC3] pb-4 mb-6">
-            <h1 className="font-serif text-3xl text-[#173B2D]">{remedy.name}</h1>
-            {remedy.common && <p className="text-sm italic text-[#7C8F6E] mt-1">{remedy.common}</p>}
-            <div className="flex flex-wrap gap-2 mt-3 text-xs">
-              {remedy.author && <span className="bg-emerald-100 text-[#173B2D] px-2 py-1 rounded">{remedy.author}</span>}
-              {remedy.chapter && <span className="bg-amber-100 text-[#C8A24A] px-2 py-1 rounded">{remedy.chapter}</span>}
-              {remedy.organ && <span className="bg-stone-200 text-stone-700 px-2 py-1 rounded">{remedy.organ}</span>}
+
+        {/* Title */}
+        <div className="bg-white rounded-lg shadow p-6 mb-4">
+          <h1 className="font-serif text-3xl text-[#173B2D]">{remedy.name}</h1>
+          {remedy.common && <p className="text-sm italic text-[#7C8F6E] mt-1">{remedy.common}</p>}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {remedy.author && <span className="text-xs bg-[#173B2D] text-[#C8A24A] px-2 py-1 rounded font-semibold">{remedy.author}</span>}
+            {remedy.chapter && <span className="text-xs bg-[#C8A24A]/20 text-[#a8862f] px-2 py-1 rounded font-semibold">{remedy.chapter}</span>}
+            {remedy.organ && <span className="text-xs bg-[#F5EFE0] text-[#173B2D] px-2 py-1 rounded">{remedy.organ}</span>}
+          </div>
+        </div>
+
+        {/* Note form */}
+        {showNoteForm && (
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <h3 className="font-serif text-lg text-[#173B2D] mb-2">Add Note</h3>
+            <textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Write your note..." rows={3} className="w-full px-3 py-2 border-2 border-[#E8DCC3] rounded text-sm focus:outline-none focus:border-[#173B2D]" />
+            <div className="flex gap-2 mt-2">
+              <button onClick={addNote} className="bg-[#173B2D] text-white px-4 py-1.5 rounded text-sm font-semibold">Save Note</button>
+              <button onClick={() => setShowNoteForm(false)} className="bg-stone-300 text-stone-700 px-4 py-1.5 rounded text-sm">Cancel</button>
             </div>
           </div>
-          
-          {remedy.keynote && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Keynote</h2>
+        )}
+
+        {/* Existing notes */}
+        {remedyNotes.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <h3 className="font-serif text-lg text-[#173B2D] mb-2">My Notes ({remedyNotes.length})</h3>
+            <div className="space-y-2">
+              {remedyNotes.map(n => (
+                <div key={n.id} className="border-l-2 border-[#C8A24A] pl-3">
+                  <p className="text-sm text-stone-700">{n.text}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-[#7C8F6E]">{new Date(n.ts).toLocaleString()}</span>
+                    <button onClick={() => rf.removeNote(n.id)} className="text-xs text-[#6E2A3A] hover:underline">Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Content sections — only show sections with unique, non-empty content */}
+        <article className="bg-white rounded-lg shadow p-6">
+          {showKeynote && (
+            <section className="mb-6 last:mb-0">
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Keynote</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
             </section>
           )}
-          
-          {remedy.constitution && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Constitution</h2>
+
+          {showConstitution && (
+            <section className="mb-6 last:mb-0">
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Constitution</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
             </section>
           )}
-          
-          {remedy.full && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Full Description</h2>
+
+          {showFull && (
+            <section className="mb-6 last:mb-0">
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Full Description</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.full}</p>
             </section>
           )}
-          
-          {remedy.modalities && remedy.modalities.trim() && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Modalities</h2>
+
+          {showModalities && (
+            <section className="mb-6 last:mb-0">
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Modalities</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
             </section>
           )}
-          
-          {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Relationships</h2>
+
+          {showRelationships && (
+            <section className="mb-6 last:mb-0">
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Relationships</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
             </section>
           )}
-          
-          {remedy.dose && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Dose</h2>
+
+          {showDose && (
+            <section className="mb-6 last:mb-0">
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Dose</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.dose}</p>
             </section>
           )}
-        </div>
-      </article>
+
+          {/* If no sections have content, show a message */}
+          {!showKeynote && !showConstitution && !showFull && !showModalities && !showRelationships && !showDose && (
+            <p className="text-sm text-[#7C8F6E] italic text-center py-8">No detailed content available for this remedy.</p>
+          )}
+        </article>
+      </main>
+      <Footer />
     </div>
   );
 }
