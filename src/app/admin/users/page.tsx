@@ -73,29 +73,29 @@ export default function AdminUsersPage() {
     : users;
 
   if (!session) return (
-    <div className="min-h-screen flex flex-col bg-stone-50">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center text-stone-500">Loading...</div>
+      <div className="flex-1 flex items-center justify-center text-[#7C8F6E]">Loading...</div>
       <Footer />
     </div>
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <h2 className="font-serif text-2xl text-emerald-900">Users ({filtered.length}{search ? ` of ${users.length}` : ''})</h2>
+          <h2 className="font-serif text-2xl text-[#173B2D]">Users ({filtered.length}{search ? ` of ${users.length}` : ''})</h2>
           <div className="flex-1" />
           <input
             type="text"
             placeholder="🔍 Search by name, email, role, status..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="flex-1 min-w-[250px] max-w-md px-3 py-2 border-2 border-stone-200 rounded text-sm focus:outline-none focus:border-emerald-700"
+            className="flex-1 min-w-[250px] max-w-md px-3 py-2 border-2 border-[#E8DCC3] rounded text-sm focus:outline-none focus:border-[#173B2D]"
           />
           <button onClick={loadUsers} className="bg-stone-200 hover:bg-stone-300 px-4 py-2 text-sm rounded">↻ Refresh</button>
-          <Link href="/admin/users/create" className="bg-emerald-900 hover:bg-emerald-800 text-white text-sm px-4 py-2 rounded font-semibold">+ Create User</Link>
+          <Link href="/admin/users/create" className="bg-[#173B2D] hover:bg-[#2a5443] text-white text-sm px-4 py-2 rounded font-semibold">+ Create User</Link>
         </div>
 
         {loading ? <div className="text-center py-12">Loading...</div> : (
@@ -116,20 +116,20 @@ export default function AdminUsersPage() {
                 {filtered.map(u => {
                   const isLocked = u.pinLockedUntil && new Date(u.pinLockedUntil) > new Date();
                   return (
-                    <tr key={u.id} className="border-b border-stone-200 hover:bg-stone-50">
+                    <tr key={u.id} className="border-b border-[#E8DCC3] hover:bg-[#F5EFE0]">
                       <td className="p-3">
-                        <Link href={`/admin/users/${u.id}`} className="font-semibold text-emerald-900 hover:underline">{u.name}</Link>
+                        <Link href={`/admin/users/${u.id}`} className="font-semibold text-[#173B2D] hover:underline">{u.name}</Link>
                       </td>
-                      <td className="p-3 text-xs text-stone-500">{u.email || '—'}</td>
+                      <td className="p-3 text-xs text-[#7C8F6E]">{u.email || '—'}</td>
                       <td className="p-3">
                         <span className={`text-xs px-2 py-1 rounded font-semibold ${
-                          u.role === 'admin' ? 'bg-amber-100 text-amber-800' :
+                          u.role === 'admin' ? 'bg-amber-100 text-[#C8A24A]' :
                           u.role === 'staff' ? 'bg-blue-100 text-blue-800' :
                           'bg-stone-200 text-stone-700'
                         }`}>{u.role}</span>
                       </td>
                       <td className="p-3">
-                        <span className={`text-xs font-semibold ${u.status === 'active' ? 'text-emerald-700' : 'text-red-700'}`}>
+                        <span className={`text-xs font-semibold ${u.status === 'active' ? 'text-[#173B2D]' : 'text-red-700'}`}>
                           {u.status === 'active' ? '● Active' : '● Disabled'}
                         </span>
                       </td>
@@ -137,12 +137,12 @@ export default function AdminUsersPage() {
                         {isLocked ? (
                           <span className="text-xs text-red-700 font-semibold">🔒 Locked ({u.pinFailCount}/5)</span>
                         ) : u.pinFailCount > 0 ? (
-                          <span className="text-xs text-amber-700">{u.pinFailCount}/5 fails</span>
+                          <span className="text-xs text-[#C8A24A]">{u.pinFailCount}/5 fails</span>
                         ) : (
-                          <span className="text-xs text-stone-500">OK</span>
+                          <span className="text-xs text-[#7C8F6E]">OK</span>
                         )}
                       </td>
-                      <td className="p-3 text-xs text-stone-600">
+                      <td className="p-3 text-xs text-[#5a6b50]">
                         {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'}
                       </td>
                       <td className="p-3">
@@ -161,7 +161,7 @@ export default function AdminUsersPage() {
                   );
                 })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="p-8 text-center text-stone-500">{search ? 'No users match your search.' : 'No users found.'}</td></tr>
+                  <tr><td colSpan={7} className="p-8 text-center text-[#7C8F6E]">{search ? 'No users match your search.' : 'No users found.'}</td></tr>
                 )}
               </tbody>
             </table>

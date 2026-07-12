@@ -20,25 +20,14 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
-  openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-  },
+  title: "Pradip's Homoe — Personal Digital Homeopathy Library",
+  description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+  keywords: ["homeopathy", "materia medica", "repertory", "therapeutics", "organon", "homoeopathy", "pradip"],
+  authors: [{ name: "Pradip Sagathiya" }],
+};
+
+export const viewport = {
+  themeColor: "#173B2D",
 };
 
 export default function RootLayout({
@@ -48,8 +37,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Unregister any old service workers from the previous static site */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              registrations.forEach(function(reg) { reg.unregister(); });
+            });
+            caches.keys().then(function(keys) {
+              keys.forEach(function(k) { caches.delete(k); });
+            });
+          }
+        `}} />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-[#F5EFE0] text-[#2B2420]`}
       >
         {children}
         <Toaster />
