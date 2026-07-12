@@ -32,7 +32,7 @@ export async function getBook(id: string): Promise<any> {
 }
 
 export async function getAllBooks(): Promise<any[]> {
-  const bookIds = ['farokh-master'];
+  const bookIds = ['farokh-master', 'banerjea-synoptic-memorizer', 'patil-textbook-mm'];
   const books = [];
   for (const id of bookIds) {
     const book = await getBook(id);
