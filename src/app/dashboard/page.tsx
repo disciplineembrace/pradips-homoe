@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [view, setView] = useState<'materia' | 'therapeutics' | 'predictive'>('materia');
   
   useEffect(() => {
-    fetch('/api/auth/session').then(r => r.json()).then(d => {
+    fetch(/api/auth/session).then(r => r.json()).then(d => {
       if (!d.authenticated) {
         router.push('/login');
         return;
@@ -64,9 +64,9 @@ export default function DashboardPage() {
   }
   
   if (!session) return (
-    <div className="min-h-screen flex flex-col bg-stone-100">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center text-stone-500">Loading...</div>
+      <div className="flex-1 flex items-center justify-center text-[#7C8F6E]">Loading...</div>
       <Footer />
     </div>
   );
@@ -77,16 +77,16 @@ export default function DashboardPage() {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-100">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
         {/* View tabs */}
-        <div className="flex gap-1 mb-4 border-b border-stone-300">
+        <div className="flex gap-1 mb-4 border-b border-[#E8DCC3]">
           {(['materia', 'therapeutics', 'predictive'] as const).map(v => (
             <button
               key={v}
               onClick={() => { setView(v); setPage(1); setQ(''); setLetter(''); setAuthor(''); }}
-              className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${view === v ? 'border-emerald-700 text-emerald-900' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
+              className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${view === v ? 'border-[#173B2D] text-[#173B2D]' : 'border-transparent text-[#7C8F6E] hover:text-stone-800'}`}
             >
               {v === 'materia' ? 'Materia Medica' : v === 'therapeutics' ? 'Therapeutics' : 'Predictive'}
             </button>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                 <button
                   key={L}
                   onClick={() => { setLetter(letter === L ? '' : L); setPage(1); }}
-                  className={`w-8 h-8 text-xs font-mono rounded ${letter === L ? 'bg-emerald-900 text-white' : 'bg-white border hover:bg-stone-50'}`}
+                  className={`w-8 h-8 text-xs font-mono rounded ${letter === L ? 'bg-[#173B2D] text-white' : 'bg-white border hover:bg-[#F5EFE0]'}`}
                 >{L}</button>
               ))}
             </div>
@@ -123,21 +123,21 @@ export default function DashboardPage() {
             <div className="text-sm text-stone-600 mb-3">{total} remedies {q && `matching "${q}"`}</div>
             {/* Grid */}
             {loading ? (
-              <div className="text-center py-12 text-stone-500">Loading...</div>
+              <div className="text-center py-12 text-[#7C8F6E]">Loading...</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {remedies.map(r => (
                   <Link
                     key={r.id}
                     href={`/remedy/${r.id}`}
-                    className="block bg-white rounded-lg shadow hover:shadow-md p-4 transition-shadow border-l-4 border-emerald-700"
+                    className="block bg-white rounded-lg shadow hover:shadow-md p-4 transition-shadow border-l-4 border-[#173B2D]"
                   >
                     <div className="flex items-baseline justify-between mb-1">
-                      <h3 className="font-serif text-lg text-emerald-900">{r.name}</h3>
-                      <span className="text-xs text-stone-500">{r.author}</span>
+                      <h3 className="font-serif text-lg text-[#173B2D]">{r.name}</h3>
+                      <span className="text-xs text-[#7C8F6E]">{r.author}</span>
                     </div>
-                    {r.common && <div className="text-xs text-stone-500 italic mb-2">{r.common}</div>}
-                    {r.chapter && <div className="text-xs text-amber-700 mb-2">{r.chapter}</div>}
+                    {r.common && <div className="text-xs text-[#7C8F6E] italic mb-2">{r.common}</div>}
+                    {r.chapter && <div className="text-xs text-[#C8A24A] mb-2">{r.chapter}</div>}
                     {r.keynote && <p className="text-sm text-stone-600 line-clamp-2">{r.keynote}</p>}
                   </Link>
                 ))}
@@ -198,7 +198,7 @@ function TherapeuticsPanel() {
           <button
             key={L}
             onClick={() => setLetter(letter === L ? '' : L)}
-            className={`w-8 h-8 text-xs font-mono rounded ${letter === L ? 'bg-emerald-900 text-white' : 'bg-white border hover:bg-stone-50'}`}
+            className={`w-8 h-8 text-xs font-mono rounded ${letter === L ? 'bg-[#173B2D] text-white' : 'bg-white border hover:bg-[#F5EFE0]'}`}
           >{L}</button>
         ))}
       </div>
@@ -207,14 +207,14 @@ function TherapeuticsPanel() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {items.map((d: any) => (
             <div key={d.id} className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-serif text-lg text-emerald-900">{d.name}</h3>
-              {d.note && <div className="text-xs italic text-stone-500 mb-2">({d.note})</div>}
-              <div className="text-xs text-amber-700 mb-2">{d.subCount} formulas</div>
+              <h3 className="font-serif text-lg text-[#173B2D]">{d.name}</h3>
+              {d.note && <div className="text-xs italic text-[#7C8F6E] mb-2">({d.note})</div>}
+              <div className="text-xs text-[#C8A24A] mb-2">{d.subCount} formulas</div>
               {d.subcategories?.map((s: any, i: number) => (
                 <div key={i} className="text-sm mb-1">
                   <span className="font-semibold text-stone-700">{s.name}:</span>{' '}
                   {s.remedies?.slice(0, 8).map((r: any, j: number) => (
-                    <span key={j} className="text-emerald-700">{r.name}{r.potency ? `(${r.potency})` : ''}{j < s.remedies.length - 1 && j < 7 ? ', ' : ''}</span>
+                    <span key={j} className="text-[#173B2D]">{r.name}{r.potency ? `(${r.potency})` : ''}{j < s.remedies.length - 1 && j < 7 ? ', ' : ''}</span>
                   ))}
                   {s.remedies?.length > 8 && <span className="text-stone-400 text-xs"> +{s.remedies.length - 8}</span>}
                 </div>
@@ -238,9 +238,9 @@ function PredictivePanel() {
       {(data.books || []).map((b: any) => (
         <div key={b.id} className="bg-white rounded-lg shadow p-4">
           <div className="text-3xl mb-2">📖</div>
-          <h3 className="font-serif text-lg text-emerald-900">{b.title}</h3>
-          <div className="text-xs text-stone-500 mb-2">by {b.author}</div>
-          <div className="text-xs text-amber-700">{b.chapters?.length || 0} chapters</div>
+          <h3 className="font-serif text-lg text-[#173B2D]">{b.title}</h3>
+          <div className="text-xs text-[#7C8F6E] mb-2">by {b.author}</div>
+          <div className="text-xs text-[#C8A24A]">{b.chapters?.length || 0} chapters</div>
         </div>
       ))}
     </div>

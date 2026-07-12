@@ -94,20 +94,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl p-8 shadow-xl border border-stone-200 border-t-4 border-t-amber-700">
+          <div className="bg-white rounded-2xl p-8 shadow-xl border border-[#E8DCC3] border-t-4 border-t-amber-700">
             <div className="text-center mb-8">
-              <h1 className="font-serif italic text-3xl text-emerald-900 mb-1">Pradip&apos;s Homoe</h1>
-              <p className="text-xs uppercase tracking-widest text-stone-500 mt-2">Sign In</p>
+              <h1 className="font-serif italic text-3xl text-[#173B2D] mb-1">Pradip&apos;s Homoe</h1>
+              <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-2">Sign In</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1.5">Email</label>
+                <label className="block text-xs font-semibold text-[#5a6b50] uppercase tracking-wider mb-1.5">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -115,14 +115,14 @@ export default function LoginPage() {
                   autoComplete="email"
                   required
                   autoFocus
-                  className="w-full px-4 py-3 border-2 border-stone-200 rounded-lg text-stone-900 focus:outline-none focus:border-emerald-700"
+                  className="w-full px-4 py-3 border-2 border-[#E8DCC3] rounded-lg text-stone-900 focus:outline-none focus:border-[#173B2D]"
                   placeholder="your.email@example.com"
                 />
               </div>
 
               {/* 6-digit PIN */}
               <div>
-                <label className="block text-xs font-semibold text-stone-600 uppercase tracking-wider mb-1.5">6-digit PIN</label>
+                <label className="block text-xs font-semibold text-[#5a6b50] uppercase tracking-wider mb-1.5">6-digit PIN</label>
                 <div className="flex justify-center gap-2" onPaste={handlePaste}>
                   {pin.map((d, i) => (
                     <input
@@ -135,7 +135,7 @@ export default function LoginPage() {
                       onChange={e => handlePinChange(i, e.target.value)}
                       onKeyDown={e => handleKeyDown(i, e)}
                       disabled={loading || lockedMinutes !== null}
-                      className="w-12 h-14 text-center text-2xl font-mono border-2 border-stone-200 rounded-lg text-stone-900 focus:outline-none focus:border-emerald-700 disabled:opacity-50"
+                      className="w-12 h-14 text-center text-2xl font-mono border-2 border-[#E8DCC3] rounded-lg text-stone-900 focus:outline-none focus:border-[#173B2D] disabled:opacity-50"
                     />
                   ))}
                 </div>
@@ -160,17 +160,17 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading || lockedMinutes !== null || !email || pin.join('').length !== 6}
-                className="w-full bg-emerald-900 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full bg-[#173B2D] hover:bg-[#2a5443] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 {loading ? 'Signing in...' : 'Sign In →'}
               </button>
             </form>
 
-            <p className="text-center text-xs text-stone-500 mt-6 font-mono">
+            <p className="text-center text-xs text-[#7C8F6E] mt-6 font-mono">
               5 wrong attempts → 15-min lock · Paste PIN supported
             </p>
             <div className="text-center mt-3">
-              <a href="/contact" className="text-xs text-emerald-700 underline">Forgot PIN? Contact admin</a>
+              <a href="/contact" className="text-xs text-[#C8A24A] underline">Forgot PIN? Contact admin</a>
             </div>
           </div>
         </div>

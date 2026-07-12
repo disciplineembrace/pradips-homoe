@@ -13,7 +13,7 @@ export default function AdminLogsPage() {
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) { router.push('/login'); return; }
-      if (d.user.role !== 'admin') { router.push('/dashboard'); return; }
+      if (d.role !== 'admin') { router.push('/dashboard'); return; }
       setSession(d);
       loadLogs();
     });
@@ -29,19 +29,19 @@ export default function AdminLogsPage() {
   
   useEffect(() => { if (session) loadLogs(); }, [type, session]);
   
-  if (!session) return <div className="min-h-screen bg-emerald-950 text-stone-300 flex items-center justify-center">Loading...</div>;
+  if (!session) return <div className="min-h-screen bg-[#173B2D] text-stone-300 flex items-center justify-center">Loading...</div>;
   
   return (
-    <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 shadow border-b-2 border-amber-700/60">
+    <div className="min-h-screen bg-[#F5EFE0]">
+      <header className="bg-[#173B2D] text-stone-100 shadow border-b-2 border-[#C8A24A]/40">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="font-serif italic text-xl text-amber-200 tracking-wide">Admin — Logs</h1>
-          <button onClick={() => { fetch('/api/auth/logout', { method: 'POST' }).then(() => router.push('/login')); }} className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded">Logout</button>
+          <h1 className="font-serif italic text-xl text-[#C8A24A] tracking-wide">Admin — Logs</h1>
+          <button onClick={() => { fetch('/api/auth/logout', { method: 'POST' }).then(() => router.push('/login')); }} className="text-xs bg-[#6E2A3A] hover:bg-[#8a3548] px-3 py-1.5 rounded">Logout</button>
         </div>
         <div className="max-w-5xl mx-auto px-4 flex gap-1 pb-2">
-          <Link href="/admin" className="px-3 py-1.5 text-xs rounded-t text-stone-300 hover:bg-emerald-900">Overview</Link>
-          <Link href="/admin/users" className="px-3 py-1.5 text-xs rounded-t text-stone-300 hover:bg-emerald-900">Users</Link>
-          <Link href="/admin/logs" className="px-3 py-1.5 text-xs rounded-t bg-stone-100 text-emerald-900 font-semibold">Logs</Link>
+          <Link href="/admin" className="px-3 py-1.5 text-xs rounded-t text-stone-300 hover:bg-[#173B2D]">Overview</Link>
+          <Link href="/admin/users" className="px-3 py-1.5 text-xs rounded-t text-stone-300 hover:bg-[#173B2D]">Users</Link>
+          <Link href="/admin/logs" className="px-3 py-1.5 text-xs rounded-t bg-[#F5EFE0] text-emerald-900 font-semibold">Logs</Link>
         </div>
       </header>
       
@@ -51,7 +51,7 @@ export default function AdminLogsPage() {
             <button
               key={t}
               onClick={() => setType(t)}
-              className={`px-4 py-2 text-sm rounded ${type === t ? 'bg-emerald-900 text-white font-semibold' : 'bg-white border hover:bg-stone-50'}`}
+              className={`px-4 py-2 text-sm rounded ${type === t ? 'bg-[#173B2D] text-white font-semibold' : 'bg-white border hover:bg-stone-50'}`}
             >{t.charAt(0).toUpperCase() + t.slice(1)} Logs</button>
           ))}
           <button onClick={loadLogs} className="ml-auto bg-stone-200 hover:bg-stone-300 px-4 py-2 text-sm rounded">↻ Refresh</button>

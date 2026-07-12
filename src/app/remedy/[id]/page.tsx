@@ -31,74 +31,74 @@ export default function RemedyDetailPage() {
     });
   }, [router, params.id]);
   
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#173B2D] text-stone-200">Loading remedy...</div>;
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#173B2D] text-stone-200 flex-col gap-4">
       <p>{error}</p>
-      <Link href="/dashboard" className="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded">← Back to Dashboard</Link>
+      <Link href="/dashboard" className="bg-[#C8A24A] hover:bg-[#d4b560] px-4 py-2 rounded">← Back to Dashboard</Link>
     </div>
   );
   if (!remedy) return null;
   
   return (
-    <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
+    <div className="min-h-screen bg-[#F5EFE0]">
+      <header className="bg-[#173B2D] text-stone-100 sticky top-0 z-10 shadow border-b-2 border-[#C8A24A]/40">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/dashboard" className="text-sm bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded">← Back</Link>
-          <h1 className="font-serif italic text-amber-200 tracking-wide">Pradip&apos;s Homoe</h1>
-          <span className="text-xs text-stone-400">{remedy.author}</span>
+          <h1 className="font-serif italic text-[#C8A24A] tracking-wide">Pradip&apos;s Homoe</h1>
+          <span className="text-xs text-stone-300">{remedy.author}</span>
         </div>
       </header>
       <article className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
-          <div className="border-b border-stone-200 pb-4 mb-6">
-            <h1 className="font-serif text-3xl text-emerald-900">{remedy.name}</h1>
-            {remedy.common && <p className="text-sm italic text-stone-500 mt-1">{remedy.common}</p>}
+          <div className="border-b border-[#E8DCC3] pb-4 mb-6">
+            <h1 className="font-serif text-3xl text-[#173B2D]">{remedy.name}</h1>
+            {remedy.common && <p className="text-sm italic text-[#7C8F6E] mt-1">{remedy.common}</p>}
             <div className="flex flex-wrap gap-2 mt-3 text-xs">
-              {remedy.author && <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded">{remedy.author}</span>}
-              {remedy.chapter && <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded">{remedy.chapter}</span>}
+              {remedy.author && <span className="bg-emerald-100 text-[#173B2D] px-2 py-1 rounded">{remedy.author}</span>}
+              {remedy.chapter && <span className="bg-amber-100 text-[#C8A24A] px-2 py-1 rounded">{remedy.chapter}</span>}
               {remedy.organ && <span className="bg-stone-200 text-stone-700 px-2 py-1 rounded">{remedy.organ}</span>}
             </div>
           </div>
           
           {remedy.keynote && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Keynote</h2>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Keynote</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
             </section>
           )}
           
           {remedy.constitution && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Constitution</h2>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Constitution</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
             </section>
           )}
           
           {remedy.full && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Full Description</h2>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Full Description</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.full}</p>
             </section>
           )}
           
           {remedy.modalities && remedy.modalities.trim() && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Modalities</h2>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Modalities</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
             </section>
           )}
           
           {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Relationships</h2>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Relationships</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
             </section>
           )}
           
           {remedy.dose && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Dose</h2>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-2">Dose</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.dose}</p>
             </section>
           )}
