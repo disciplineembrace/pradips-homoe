@@ -1,90 +1,16 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
 
-type Chapter = {
+type BookSection = {
   id: string;
-  number: number;
   title: string;
-  summary: string;
-  aphorisms: string;
+  content: string;
 };
-
-const CHAPTERS: Chapter[] = [
-  {
-    id: 'org-intro',
-    number: 0,
-    title: 'Introduction',
-    summary: 'Hahnemann introduces the Organon and the state of medicine in his time, criticising allopathic practice and laying the groundwork for a rational system of cure.',
-    aphorisms: 'Preface & Introduction',
-  },
-  {
-    id: 'org-mission',
-    number: 1,
-    title: "The Physician's Mission",
-    summary: 'The physician\'s high and only mission is to restore the sick to health — to cure, as it is termed. Cure must be rapid, gentle, and permanent.',
-    aphorisms: '§1 – §2',
-  },
-  {
-    id: 'org-knowledge',
-    number: 2,
-    title: 'Knowledge of the Physician',
-    summary: 'The physician must know what is to be cured in disease, what is curative in medicines, and how to apply the latter to the former according to clear principles.',
-    aphorisms: '§3 – §4',
-  },
-  {
-    id: 'org-medicine',
-    number: 3,
-    title: 'Knowledge of Medicines',
-    summary: 'The true healing power of medicines can only be discovered by observing the symptoms they produce in the healthy human body — the proving.',
-    aphorisms: '§5 – §7',
-  },
-  {
-    id: 'org-vital-force',
-    number: 4,
-    title: 'The Vital Force',
-    summary: 'The material organism is animated by the spiritual vital force. Without it, the body is dead. Disease is primarily a disturbance of this dynamic principle.',
-    aphorisms: '§9 – §16',
-  },
-  {
-    id: 'org-similia',
-    number: 5,
-    title: 'The Law of Similars',
-    summary: 'A weaker dynamic affection is permanently extinguished by a stronger one, if the latter is very similar in its manifestations. Similia similibus curentur.',
-    aphorisms: '§26 – §27',
-  },
-  {
-    id: 'org-cases',
-    number: 6,
-    title: 'Case Taking',
-    summary: 'The physician must take the case with unprejudiced observation, recording every peculiar and characteristic symptom that individualises the patient.',
-    aphorisms: '§83 – §104',
-  },
-  {
-    id: 'org-potency',
-    number: 7,
-    title: 'Potentisation & Dose',
-    summary: 'Medicines are prepared through serial dilution and succussion. The minimum dose — just sufficient to gently stimulate the vital force — is the homoeopathic dose.',
-    aphorisms: '§269 – §285',
-  },
-  {
-    id: 'org-acute',
-    number: 8,
-    title: 'Acute & Chronic Diseases',
-    summary: 'Hahnemann distinguishes acute diseases (self-limited) from chronic miasms (psora, sycosis, syphilis) that require deep-acting anti-miasmatic remedies.',
-    aphorisms: '§72 – §81, Chronic Diseases',
-  },
-  {
-    id: 'org-obstacles',
-    number: 9,
-    title: 'Obstacles to Cure',
-    summary: 'The physician must identify and remove obstacles to cure: improper diet, regimen, occupation, environment, and the lingering effects of allopathic drugging.',
-    aphorisms: '§259 – §268',
-  },
-];
 
 const HAHNEMANN_QUOTE = '"The physician\'s high and only mission is to restore the sick to health, to cure, as it is termed.\n\nThe highest ideal of cure is rapid, gentle and permanent restoration of the health, or removal and annihilation of the disease in its whole extent, in the shortest, most reliable, and most harmless way, on easily comprehensible principles." — Samuel Hahnemann, Organon §1–§2';
 
@@ -92,28 +18,48 @@ export default function OrganonPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [q, setQ] = useState('');
+  const [book, setBook] = useState<any>(null);
+  const [selectedSection, setSelectedSection] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
   const reader = useReaderFeatures();
 
-  // Auth check
   useEffect(() => {
     fetch('/api/auth/session')
       .then(r => r.json())
       .then(d => {
         if (!d.authenticated) { router.push('/login'); return; }
         setSession(d);
+        // Load the Organon book
+        fetch('/api/books/organon-bk-sarkar')
+          .then(r => r.json())
+          .then(d => {
+            if (d && !d.error) {
+              setBook(d);
+            }
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
       })
       .catch(() => router.push('/login'));
   }, [router]);
 
+  const sections: BookSection[] = useMemo(() => {
+    if (!book || !book.chapters) return [];
+    return book.chapters.map((ch: any, i: number) => ({
+      id: ch.id,
+      title: ch.title,
+      content: ch.content,
+    }));
+  }, [book]);
+
   const filtered = useMemo(() => {
-    if (!q) return CHAPTERS;
+    if (!q) return sections;
     const s = q.toLowerCase();
-    return CHAPTERS.filter(c =>
-      c.title.toLowerCase().includes(s) ||
-      c.summary.toLowerCase().includes(s) ||
-      c.aphorisms.toLowerCase().includes(s)
+    return sections.filter(sec =>
+      sec.title.toLowerCase().includes(s) ||
+      sec.content.toLowerCase().includes(s)
     );
-  }, [q]);
+  }, [q, sections]);
 
   if (!session) {
     return (
@@ -137,7 +83,9 @@ export default function OrganonPage() {
         {/* Page header */}
         <header className="mb-6">
           <h1 className="font-serif text-3xl text-[#173B2D]">Organon of Medicine</h1>
-          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Samuel Hahnemann&apos;s foundational text — the philosophy & principles of homoeopathy</p>
+          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">
+            {book ? `${book.title} — by ${book.author}` : 'Samuel Hahnemann\'s foundational text — the philosophy & principles of homoeopathy'}
+          </p>
           <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
         </header>
 
@@ -154,7 +102,7 @@ export default function OrganonPage() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search chapters by title, summary, or aphorism..."
+              placeholder="Search within Organon..."
               value={q}
               onChange={e => setQ(e.target.value)}
               className="w-full px-4 py-2.5 pl-10 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
@@ -164,39 +112,77 @@ export default function OrganonPage() {
         </div>
 
         <div className="text-sm text-[#7C8F6E] mb-3">
-          {filtered.length} chapter{filtered.length !== 1 ? 's' : ''}
+          {filtered.length} section{filtered.length !== 1 ? 's' : ''}
+          {book && ` — ${book.totalChapters} total`}
         </div>
 
-        {/* Chapter cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map(c => {
-            const bm = reader.isBookmarked(c.id);
-            return (
-              <article
-                key={c.id}
-                className="bg-white rounded-lg shadow hover:shadow-md p-5 transition-shadow border-t-2 border-[#173B2D]"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#173B2D] text-[#C8A24A] flex items-center justify-center font-serif text-base">
-                      {c.number === 0 ? '§' : c.number}
+        {loading ? (
+          <div className="text-center py-12 text-[#7C8F6E]">Loading content...</div>
+        ) : sections.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-sm text-[#7C8F6E]">No content available yet.</p>
+          </div>
+        ) : (
+          <>
+            {/* Section cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {filtered.map((sec, i) => {
+                const bm = reader.isBookmarked(sec.id);
+                // Find the original index
+                const origIdx = sections.findIndex(s => s.id === sec.id);
+                return (
+                  <article
+                    key={sec.id}
+                    className="bg-white rounded-lg shadow hover:shadow-md p-5 transition-shadow border-t-2 border-[#173B2D] cursor-pointer"
+                    onClick={() => setSelectedSection(origIdx)}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#173B2D] text-[#C8A24A] flex items-center justify-center font-serif text-base">
+                          {origIdx + 1}
+                        </div>
+                        <div>
+                          <h3 className="font-serif text-lg text-[#173B2D] leading-tight">{sec.title}</h3>
+                          <p className="text-[0.65rem] text-[#C8A24A] font-semibold uppercase tracking-wider">{sec.content.length.toLocaleString()} chars</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); reader.toggleBookmark({ id: sec.id, type: 'organon', name: sec.title }); }}
+                        title={bm ? 'Remove bookmark' : 'Add bookmark'}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors flex-shrink-0 ${bm ? 'bg-[#173B2D]/10 text-[#173B2D]' : 'text-[#7C8F6E] hover:bg-[#F5EFE0]'}`}
+                      >🔖</button>
                     </div>
-                    <div>
-                      <h3 className="font-serif text-lg text-[#173B2D] leading-tight">{c.title}</h3>
-                      <p className="text-[0.65rem] text-[#C8A24A] font-semibold uppercase tracking-wider">{c.aphorisms}</p>
-                    </div>
+                    <p className="text-sm text-stone-600 leading-relaxed mt-2 line-clamp-3">{sec.content.substring(0, 200)}...</p>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* Selected section content reader */}
+            {sections[selectedSection] && (
+              <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#E8DCC3]">
+                  <h2 className="font-serif text-xl text-[#173B2D]">{sections[selectedSection].title}</h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSelectedSection(Math.max(0, selectedSection - 1))}
+                      disabled={selectedSection === 0}
+                      className="text-xs bg-[#173B2D] text-white px-3 py-1.5 rounded disabled:opacity-30"
+                    >← Prev</button>
+                    <button
+                      onClick={() => setSelectedSection(Math.min(sections.length - 1, selectedSection + 1))}
+                      disabled={selectedSection === sections.length - 1}
+                      className="text-xs bg-[#173B2D] text-white px-3 py-1.5 rounded disabled:opacity-30"
+                    >Next →</button>
                   </div>
-                  <button
-                    onClick={() => reader.toggleBookmark({ id: c.id, type: 'organon', title: c.title })}
-                    title={bm ? 'Remove bookmark' : 'Add bookmark'}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors flex-shrink-0 ${bm ? 'bg-[#173B2D]/10 text-[#173B2D]' : 'text-[#7C8F6E] hover:bg-[#F5EFE0]'}`}
-                  >🔖</button>
                 </div>
-                <p className="text-sm text-stone-600 leading-relaxed mt-2">{c.summary}</p>
-              </article>
-            );
-          })}
-        </div>
+                <div className="prose prose-stone max-w-none">
+                  <p className="text-sm text-stone-700 whitespace-pre-line leading-relaxed">{sections[selectedSection].content}</p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Full Book Reader Link */}
         <div className="mt-8 bg-[#173B2D] rounded-lg shadow-lg p-6 text-center border-l-4 border-[#C8A24A]">
