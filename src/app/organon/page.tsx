@@ -197,6 +197,13 @@ export default function OrganonPage() {
             );
           })}
         </div>
+
+        {/* Full Book Reader Link */}
+        <div className="mt-8 bg-[#173B2D] rounded-lg shadow-lg p-6 text-center border-l-4 border-[#C8A24A]">
+          <h2 className="font-serif text-xl text-[#C8A24A] mb-2">📖 Complete Organon by B.K. Sarkar</h2>
+          <p className="text-sm text-stone-300 mb-4">Full text of Organon of Medicine translated and annotated by B.K. Sarkar. Contains Translator&apos;s Preface, Introduction, and Hahnemann&apos;s aphorisms with commentary.</p>
+          <a href="/books/organon-bk-sarkar" className="inline-block bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors">Read Full Book →</a>
+        </div>
       </main>
       <Footer />
     </div>

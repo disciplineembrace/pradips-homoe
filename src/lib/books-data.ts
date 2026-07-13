@@ -39,6 +39,7 @@ export async function getAllBooks(): Promise<any[]> {
     'sehgal-roh-series',
     'khaneja-illustrated-guide',
     'sommer-quick-easy',
+    'organon-bk-sarkar',
   ];
   const books = [];
   for (const id of bookIds) {
