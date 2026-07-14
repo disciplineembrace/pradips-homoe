@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/require-auth';
 import { isSupabaseServerConfigured } from '@/database/supabase/client';
 import { NotesRepo } from '@/database/supabase/repositories';
+import { isSchemaNotAppliedError } from '../_helpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
     const items = await NotesRepo.listNotes(user!.id, { itemId, itemType });
     return NextResponse.json({ items });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ items: [] });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -37,6 +39,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ ok: true, item });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ ok: true, mode: 'local' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -52,6 +55,7 @@ export async function DELETE(req: NextRequest) {
     await NotesRepo.deleteNote(noteId, user!.id);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ ok: true, mode: 'local' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
