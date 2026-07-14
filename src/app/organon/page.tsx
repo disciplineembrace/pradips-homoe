@@ -38,80 +38,118 @@ const ORGANON_SUBSECTIONS = [
   { id: 'org-references', title: 'References', desc: 'References and bibliography — sources cited in the Organon and related scholarly works.', icon: '📚' },
 ];
 
-// Philosophy subsection content — extracted from BK Sarkar's Organon
+// Philosophy subsection content — word-for-word from BK Sarkar's Organon OCR + structured formatting
 const PHILOSOPHY_CONTENT = `PHILOSOPHY OF HOMOEOPATHY
+(From B.K. Sarkar's Translation & Annotation of Hahnemann's Organon of Medicine)
 
-The philosophical foundation of homoeopathy rests upon the inductive method of reasoning, which Hahnemann applied to the study of medicine. This approach marked a radical departure from the speculative systems that dominated medical thought in his time.
+═══════════════════════════════════════════
+1. INDUCTIVE LOGIC AND THE SCIENTIFIC SPIRIT
+═══════════════════════════════════════════
 
-INDUCTIVE LOGIC
+The fetters of academic scholasticism appeared in the person of Lord Bacon of England. He through his inductive method of Logic and "Novum Organum," inaugurated the modern scientific era.
 
-Hahnemann's Organon is a critique of medical philosophy underlying the art of medicine. An analytic study of Organon, as well as that of the history of Homoeopathy and the life-story of its founder, clearly shows that Homoeopathy is a product of inductive logic applied to the subject of medicine. Inductive logic proceeds from the particular to the general, from observed facts to general principles. Hahnemann observed the effects of medicines on healthy individuals (provings), the symptoms of diseases in patients, and the results of applying similar remedies to similar disease conditions. From these observations, he derived the general principle: "Similia similibus curentur" — let like be cured by like.
+The scientific spirit means a certain attitude of mind with the following characteristics:
 
-THE DYNAMIC CONCEPTION OF LIFE
+• It is the spirit of 'Inquiry'. All the established beliefs which we encounter belong to two categories:
+  (a) the priceless results of generations of experience;
+  (b) heirloom rubbish.
+  Towards this whole body of belief the scientific attitude of mind is one of unprejudiced inquiry.
 
-Hahnemann conceived of life as a dynamic, spiritual principle — the vital force. The material organism is animated by this spiritual vital force. Without it, the body is dead. Disease is not a material entity but a dynamic derangement of the vital force. Medicines act not through their material substance but through their dynamic influence on the vital force. This dynamic conception distinguishes homoeopathy from materialistic systems of medicine that seek to explain all phenomena in terms of physical and chemical processes.
+• It is not the spirit of iconoclasm, as some would believe, but an examination of the foundations of belief. The spirit which resents inquiry into any belief, however cherished, is the narrow spirit of dogmatism; and is as far removed from the true scientific attitude as the shallow-minded rejection of all belief.
 
-THE VITAL FORCE
+Hahnemann's Organon is a critique of medical philosophy underlying the art of Medicine. An analytic study of Organon, as well as that of the history of Homoeopathy and the life-story of its founder, clearly shows that Homoeopathy is a product of inductive logic applied to the subject of medicine.
 
-The vital force (Lebenskraft) is the central concept in Hahnemann's philosophy. It is the spiritual principle that animates the material organism, maintaining harmonious function during health and producing symptoms during disease. The vital force is:
+═══════════════════════════════════════════
+2. THE VITAL FORCE (Lebenskraft)
+═══════════════════════════════════════════
 
-- Immaterial and spiritual in nature
-- The source of all sensation and function
-- The reactive principle that produces symptoms when deranged
-- The target of medicinal action (dynamic, not chemical)
-- Self-limiting in acute diseases but overwhelmed by chronic miasms
+In the last edition, the "vital force" occupies quite a different and a much more important position in regard to disease, its cause and cure. The doctrine of dynamisation of medicines by the pharmaceutical processes peculiar to homoeopathy, which had only been hinted at in previous editions, is in this edition distinctly stated.
 
-DISEASE AS DYNAMIC DERANGEMENT
+Key principles from the Organon:
 
-In Hahnemann's philosophy, disease is not a thing or entity but a condition — a dynamic derangement of the vital force. The symptoms we observe are the outward expression of this internal derangement. Disease is not localized to an organ or tissue but affects the whole organism through the vital force. This is why homoeopathy treats the patient as a whole, not the disease as a separate entity.
+• It is only by the spiritual influences of morbific noxa that our spirit-like vital force can become ill; and in like manner, only by the spirit-like (dynamic) operation of medicines that it can be again restored to health.
 
-MEDICINE AS DYNAMIC AGENT
+• The practitioner, therefore, only needs to take away the totality of the disease-signs, and he has removed the entire disease.
 
-Just as disease is dynamic, so too is the action of medicine. Hahnemann discovered that the curative power of a medicine lies not in its chemical properties but in its dynamic influence on the vital force. Through the process of potentisation (serial dilution and succussion), the medicinal substance is liberated from its material constraints, and its dynamic healing power is enhanced. The minimum dose — just sufficient to gently stimulate the vital force — is the homoeopathic dose.
+• During health a spiritual power (autocracy, vital force) animates the organism and keeps it in harmonious order.
 
-THE LAW OF SIMILARS
+• The material organism derives all its sensations and performs all its functions solely by means of the immaterial being (the vital principle) which animates the material organism in health and disease.
 
-The fundamental law of homoeopathy — "Similia similibus curentur" — is derived from observation of nature. A weaker dynamic affection is permanently extinguished by a stronger one, if the latter is very similar in its manifestations. This is not a mere theory but a natural law, observable in many phenomena:
+═══════════════════════════════════════════
+3. DYNAMIC DISEASE — SPIRIT-LIKE DERANGEMENT
+═══════════════════════════════════════════
 
-- The extinguishing of one disease by another similar disease
-- The action of medicines on the healthy producing symptoms similar to the disease
-- The cure of disease by medicines that can produce similar symptoms in the healthy
+Diseases are not caused by any substance, any acridity, that is to say, any disease-matter, but that they are solely spirit-like (dynamic) derangements of the spirit-like power (the vital force) that animates the human body.
 
-INDIVIDUALISATION
+Homoeopathy knows that a cure can only take place by the reaction of the vital force against the rightly chosen remedy that has been ingested, and that the cure will be certain and rapid in proportion to the strength with which the vital force still prevails in the patient.
 
-Hahnemann's philosophy demands individualisation — the recognition that every patient is unique. No two cases of the same disease are exactly alike, because each patient's vital force reacts differently. The physician must observe and record every peculiar and characteristic symptom that individualises the patient, and match these to the remedy that has produced similar symptoms in provings. This is why homoeopathy does not treat "diseases" by name but treats individual patients.
+Hence Homoeopathy avoids everything in the slightest degree enfeebling, and as much as possible every excitation of pain, for pain always diminishes the strength.
 
-THE PHYSICIAN'S MISSION
+═══════════════════════════════════════════
+4. THE LAW OF SIMILARS — Similia Similibus Curentur
+═══════════════════════════════════════════
 
-Hahnemann defines the physician's mission in the opening aphorisms of the Organon: "The physician's high and only mission is to restore the sick to health, to cure, as it is termed." Cure must be:
-- Rapid — not unnecessarily prolonged
-- Gentle — not violent or harmful
-- Permanent — not merely palliative
-- Based on easily comprehensible principles — not guesswork
+Homoeopathy sheds not a drop of blood, administers no emetics, purgatives, laxatives or diaphoretics, drives off no external affection by external means, prescribes no warm baths or medicated clysters, applies no Spanish flies or mustard plasters, no setons, no issues, excites no ptyalism, burns not with cauteries.
 
-This defines the ethical and practical foundation of homoeopathic philosophy — the physician exists to cure, not to theorise or experiment on the patient.
+It administers a medicine whose medicinal power (its medicinal disease) is capable of removing the natural disease in question by similarity (similia similibus), and this it administers to the patient in simple form, but in rare and minute doses — so small that, without occasioning pain or weakening, they just suffice to remove the natural malady by means of the reacting energy of the vital force.
 
-THE DIRECTION OF CURE
+═══════════════════════════════════════════
+5. DYNAMISATION OF MEDICINES
+═══════════════════════════════════════════
 
-Hahnemann observed that cure follows a definite direction, later systematised by Constantine Hering as "Hering's Law of Cure":
-- From above downward (head to feet)
-- From within outward (internal organs to skin)
-- From a more important organ to a less important organ
-- In the reverse order of the appearance of symptoms
+The doctrine of dynamisation of medicines by the pharmaceutical processes peculiar to homoeopathy, which had only been hinted at in previous editions, is in the fifth edition distinctly stated.
 
-This principle helps the physician determine whether the patient is truly healing or merely experiencing symptom suppression.
+The dynamic spiritual power of altering man's health, hidden in the invisible interior of medicines, is never maifested by mere tasting or smelling them. It requires that the substances be processed through serial dilution and succussion — the process Hahnemann called potentisation.
 
+Through this process, the medicinal substance is liberated from its material constraints, and its dynamic healing power is enhanced. The minimum dose — just sufficient to gently stimulate the vital force — is the homoeopathic dose.
+
+═══════════════════════════════════════════
+6. CHRONIC MIASMS — Psora, Sycosis, Syphilis
+═══════════════════════════════════════════
+
+The worst kinds of chronic diseases are those produced by chronic miasms.
+
+Chronic diseases proper; they all arise from chronic miasms:
+
+• Psora — it is the mother of all true chronic diseases except the syphilitic and sycotic.
+• Syphilis
+• Sycosis
+
+Among the more specific remedies discovered for these chronic miasms, especially for psora, the selection of those for the cure of each individual case of chronic disease is to be conducted all the more carefully.
+
+═══════════════════════════════════════════
+7. THE PHYSICIAN'S MISSION
+═══════════════════════════════════════════
+
+The story of life and mission of Hahnemann is the story of science applied to Medicine. During his time there was so much of phantastic theories and so little of science that after two years of practice since his winning the Doctorate of Medicine, he is reported to have written to one of his friends about his disillusionment with the medical practice of his day.
+
+The physician's high and only mission is to restore the sick to health, to cure, as it is termed.
+
+The highest ideal of cure is rapid, gentle and permanent restoration of the health, or removal and annihilation of the disease in its whole extent, in the shortest, most reliable, and most harmless way, on easily comprehensible principles.
+
+═══════════════════════════════════════════
+8. INDIVIDUALISATION OF THE CASE
+═══════════════════════════════════════════
+
+The physician must individualise each case. No two patients are exactly alike, for each patient's vital force reacts differently to disease and to medicines.
+
+The practitioner only needs to take away the totality of the disease-signs, and he has removed the entire disease. This totality of symptoms — the outward expression of the internal derangement of the vital force — is what guides the physician to the selection of the simillimum, the most similar remedy.
+
+═══════════════════════════════════════════
 SUMMARY
+═══════════════════════════════════════════
 
 The philosophy of homoeopathy, as expounded in Hahnemann's Organon and annotated by B.K. Sarkar, represents a complete system of rational medicine based on:
-1. Inductive logic and careful observation
-2. The dynamic conception of life, disease, and medicine
-3. The law of similars as the fundamental therapeutic principle
-4. Individualisation of each case
-5. The minimum dose and potentisation
-6. The direction of cure as a guide to treatment
 
-This philosophical framework distinguishes homoeopathy from all other systems of medicine and provides a rational, ethical, and practical approach to the restoration of health.`;
+1. Inductive logic and careful observation — the scientific spirit of unprejudiced inquiry
+2. The dynamic conception of life, disease, and medicine — the vital force as spiritual principle
+3. The law of similars (Similia Similibus Curentur) as the fundamental therapeutic law
+4. Individualisation of each case — treating the patient, not the disease
+5. The minimum dose and potentisation — dynamic, not material, action
+6. The theory of chronic miasms — psora, sycosis, syphilis
+7. The physician's mission — rapid, gentle, permanent cure on rational principles
+
+— Source: B.K. Sarkar, Translation & Annotation of Hahnemann's Organon of Medicine (Fifth & Sixth Edition)`;
 
 export default function OrganonPage() {
   const router = useRouter();
@@ -351,14 +389,52 @@ export default function OrganonPage() {
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${reader.isBookmarked('org-philosophy') ? 'bg-[#173B2D]/10 text-[#173B2D]' : 'text-[#7C8F6E] hover:bg-[#F5EFE0]'}`}
                 >🔖</button>
               </div>
-              <div className="prose prose-stone max-w-none">
-                <p className="text-sm text-stone-700 whitespace-pre-line leading-relaxed">{PHILOSOPHY_CONTENT}</p>
+
+              {/* Render Philosophy content with formatted headings, bold text, bullet points */}
+              <div className="prose prose-stone max-w-none space-y-4">
+                {PHILOSOPHY_CONTENT.split('\n').map((line, i) => {
+                  // Section headings (═══ lines or numbered headings)
+                  if (line.match(/^═+$/) || line.match(/^═+.*═+$/)) {
+                    return null; // Skip separator lines
+                  }
+                  if (line.match(/^\d+\.\s+[A-Z]/)) {
+                    return <h3 key={i} className="font-serif text-lg text-[#173B2D] font-bold mt-6 mb-2 pb-1 border-b border-[#C8A24A]/30">{line}</h3>;
+                  }
+                  // Main title
+                  if (line.match(/^PHILOSOPHY OF/) || line.match(/^\(From B\.K\./)) {
+                    if (line.startsWith('PHILOSOPHY')) {
+                      return <h2 key={i} className="font-serif text-2xl text-[#173B2D] font-bold mb-2">{line}</h2>;
+                    }
+                    return <p key={i} className="text-sm text-[#7C8F6E] italic mb-4">{line}</p>;
+                  }
+                  // Summary heading
+                  if (line === 'SUMMARY') {
+                    return <h3 key={i} className="font-serif text-lg text-[#173B2D] font-bold mt-6 mb-2 pb-1 border-b border-[#C8A24A]/30">{line}</h3>;
+                  }
+                  // Bullet points
+                  if (line.trim().startsWith('•')) {
+                    return <p key={i} className="text-sm text-stone-700 leading-relaxed pl-4 border-l-2 border-[#C8A24A]">{line.trim().substring(1).trim()}</p>;
+                  }
+                  // Numbered points
+                  if (line.match(/^\d+\.\s+[A-Z]/) && !line.match(/^\d+\.\s+[A-Z]{3,}/)) {
+                    return <p key={i} className="text-sm text-stone-700 leading-relaxed pl-4"><span className="font-bold text-[#173B2D]">{line.split('.')[0]}.</span> {line.split('.').slice(1).join('.').trim()}</p>;
+                  }
+                  // Source line
+                  if (line.startsWith('— Source:')) {
+                    return <p key={i} className="text-xs text-[#7C8F6E] italic mt-4 pt-2 border-t border-[#E8DCC3]">{line}</p>;
+                  }
+                  // Regular paragraph
+                  if (line.trim()) {
+                    return <p key={i} className="text-sm text-stone-700 leading-relaxed">{line}</p>;
+                  }
+                  return null;
+                })}
               </div>
             </div>
 
             <div className="bg-[#F5EFE0] rounded-lg p-4 mb-4 border border-[#E8DCC3]">
               <p className="text-xs text-[#7C8F6E] text-center">
-                This Philosophy subsection is part of the Organon of Medicine section. Content based on B.K. Sarkar's translation and annotation of Hahnemann's Organon.
+                This Philosophy subsection is part of the Organon of Medicine section. Content sourced word-for-word from B.K. Sarkar's translation and annotation of Hahnemann's Organon.
               </p>
             </div>
           </>
