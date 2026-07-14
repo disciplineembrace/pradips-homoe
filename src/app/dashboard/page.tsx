@@ -46,16 +46,13 @@ export default function DashboardPage() {
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  // Stats cards
+  // Stats cards — only content + bookmark stats shown on Home Dashboard.
+  // Favorites, Notes, Read Time, and Streak have been moved to /activity.
   const statCards = [
     { num: '9', label: 'Books', icon: '📚' },
     { num: (stats.remedies || 0).toLocaleString(), label: 'MM Entries', icon: '💊' },
     { num: (stats.rubrics || 0).toLocaleString(), label: 'Repertory', icon: '🗂️' },
     { num: rf.bookmarks.length, label: 'Bookmarks', icon: '🔖' },
-    { num: rf.favorites.length, label: 'Favorites', icon: '⭐' },
-    { num: rf.notes.length, label: 'Notes', icon: '📝' },
-    { num: '0m', label: 'Read Time', icon: '⏱️' },
-    { num: '0', label: 'Streak', icon: '🔥' },
   ];
 
   // The Cabinet — author cards
@@ -103,8 +100,8 @@ export default function DashboardPage() {
           <p className="text-xs uppercase tracking-widest text-stone-400 text-center">— Hahnemann, paraphrased</p>
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-8">
+        {/* Stats cards — 2×2 grid on mobile, single row on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           {statCards.map((s, i) => (
             <div key={i} className="bg-white rounded-lg shadow p-4 text-center">
               <div className="text-lg mb-1">{s.icon}</div>
@@ -112,6 +109,13 @@ export default function DashboardPage() {
               <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] mt-1 font-semibold">{s.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* Link to Activity page (Favorites, Notes, Read Time, Streak moved here) */}
+        <div className="text-right mb-8">
+          <Link href="/activity" className="text-xs text-[#7C8F6E] hover:text-[#173B2D] transition-colors">
+            View Activity (Favorites, Notes, Streak) →
+          </Link>
         </div>
 
         {/* Quick Search */}
