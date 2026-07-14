@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/require-auth';
 import { isSupabaseServerConfigured } from '@/database/supabase/client';
 import { HistoryRepo } from '@/database/supabase/repositories';
+import { isSchemaNotAppliedError } from '../_helpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,7 @@ export async function GET() {
     const items = await HistoryRepo.listHistory(user!.id);
     return NextResponse.json({ items });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ items: [] });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ ok: true, item });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ ok: true, mode: 'local' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -47,6 +50,7 @@ export async function DELETE() {
     await HistoryRepo.clearHistory(user!.id);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ ok: true, mode: 'local' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

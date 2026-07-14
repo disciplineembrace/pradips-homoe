@@ -42,7 +42,17 @@ export async function GET() {
       highlights,
     });
   } catch (e: any) {
-    // On any error, fall back to localStorage mode.
-    return NextResponse.json({ enabled: false, error: e.message });
+    // If Supabase tables don't exist yet (schema not applied), gracefully
+    // fall back to localStorage mode so the UI continues working.
+    const msg = String(e?.message || e);
+    if (
+      msg.includes('Could not find the table') ||
+      msg.includes('schema cache') ||
+      msg.includes('relation') && msg.includes('does not exist')
+    ) {
+      return NextResponse.json({ enabled: false, reason: 'schema-not-applied' });
+    }
+    // For any other error, also fall back to localStorage (don't break UI).
+    return NextResponse.json({ enabled: false, error: msg });
   }
 }
