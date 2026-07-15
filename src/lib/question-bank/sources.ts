@@ -100,7 +100,7 @@ export async function getBookById(id: string): Promise<BookSource | null> {
   }, 30 * 60 * 1000);
 }
 
-export async function listTherapeutics(): Promise<any[]> {
+export async function listTherapeutics(): Promise<any> {
   return cached('qb:therapeutics:all', async () => {
     return await getTherapeutics();
   }, 30 * 60 * 1000);
@@ -144,12 +144,17 @@ export async function getSourceMetadata() {
       totalChapters: b.totalChapters || b.chapters?.length || 0,
     }));
 
+    // Therapeutics count — therapeutics is an object {diseases: [...]}, not an array
+    const therapeuticsCount = Array.isArray(therapeutics)
+      ? therapeutics.length
+      : (therapeutics?.diseases?.length || therapeutics?.total_diseases || 0);
+
     return {
       remedies: { count: remedies.length, authors: remedyAuthors },
       rubrics: { count: rubrics.length, authors: rubricAuthors, chaptersByAuthor },
       books: { count: books.length, list: bookList },
-      therapeutics: { count: therapeutics.length },
-      totalSources: remedies.length + rubrics.length + books.length + therapeutics.length,
+      therapeutics: { count: therapeuticsCount },
+      totalSources: remedies.length + rubrics.length + books.length + therapeuticsCount,
     };
   }, 30 * 60 * 1000);
 }
