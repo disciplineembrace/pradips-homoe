@@ -40,6 +40,7 @@ export function Navbar() {
     { href: '/synthesis', label: 'Synthesis' },
     { href: '/analysis', label: 'Analysis' },
     { href: '/books', label: 'Books' },
+    { href: '/question-bank', label: 'Question Bank' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ];
