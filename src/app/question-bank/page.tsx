@@ -79,7 +79,8 @@ export default function QuestionBankPage() {
       const t = setTimeout(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            finishQuiz();
+            // Use setTimeout to avoid calling setState during render
+            setTimeout(() => finishQuiz(), 0);
             return 0;
           }
           return prev - 1;
@@ -100,13 +101,13 @@ export default function QuestionBankPage() {
   const availableAuthors = useCallback(() => {
     if (!sources) return [];
     const all = new Set<string>();
-    sources.remedies.authors.forEach(a => all.add(a));
-    sources.rubrics.authors.forEach(a => all.add(a));
+    (sources.remedies?.authors || []).forEach(a => all.add(a));
+    (sources.rubrics?.authors || []).forEach(a => all.add(a));
     return Array.from(all).sort();
   }, [sources]);
 
   const availableChapters = useCallback(() => {
-    if (!sources || !author) return [];
+    if (!sources || !author || !sources.rubrics?.chaptersByAuthor) return [];
     return sources.rubrics.chaptersByAuthor[author] || [];
   }, [sources, author]);
 
@@ -226,7 +227,7 @@ export default function QuestionBankPage() {
           <header className="mb-6">
             <h1 className="font-serif text-3xl text-[#173B2D]">Homeopathy Question Bank</h1>
             <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">
-              Generate quizzes from your library — {sources?.totalSources.toLocaleString() || '...'} sources available
+              Generate quizzes from your library — {(sources?.totalSources ?? 0).toLocaleString()} sources available
             </p>
             <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
           </header>
@@ -241,19 +242,19 @@ export default function QuestionBankPage() {
           {sources && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{sources.remedies.count.toLocaleString()}</div>
+                <div className="text-xl font-bold text-[#173B2D] font-serif">{(sources.remedies?.count ?? 0).toLocaleString()}</div>
                 <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Remedies (MM)</div>
               </div>
               <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{sources.rubrics.count.toLocaleString()}</div>
+                <div className="text-xl font-bold text-[#173B2D] font-serif">{(sources.rubrics?.count ?? 0).toLocaleString()}</div>
                 <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Rubrics</div>
               </div>
               <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{sources.books.count}</div>
+                <div className="text-xl font-bold text-[#173B2D] font-serif">{sources.books?.count ?? 0}</div>
                 <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Books</div>
               </div>
               <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{sources.totalSources.toLocaleString()}</div>
+                <div className="text-xl font-bold text-[#173B2D] font-serif">{(sources.totalSources ?? 0).toLocaleString()}</div>
                 <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Total Sources</div>
               </div>
             </div>
@@ -395,6 +396,19 @@ export default function QuestionBankPage() {
   // ═══════════════════════════════════════════════════════════════════════════
   if (phase === 'quiz') {
     const q = questions[currentIdx];
+    // Guard: if no question available, return to setup
+    if (!q) {
+      return (
+        <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+          <Navbar />
+          <main className="flex-1 max-w-3xl mx-auto px-4 py-6 w-full text-center">
+            <p className="text-sm text-[#7C8F6E]">No questions available. Returning to setup...</p>
+            <button onClick={resetQuiz} className="mt-4 px-6 py-2 bg-[#173B2D] text-[#F5EFE0] rounded text-sm">← Back to Setup</button>
+          </main>
+          <Footer />
+        </div>
+      );
+    }
     const answered = Object.keys(answers).length;
     const isMulti = q.type === 'multiple';
 
