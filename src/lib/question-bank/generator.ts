@@ -41,7 +41,10 @@ export type QuestionType =
   | 'single' | 'multiple' | 'true_false' | 'fill_blank'
   | 'match' | 'assertion_reason' | 'except' | 'not_true'
   | 'identify_remedy' | 'identify_rubric' | 'author_identify'
-  | 'chapter_based';
+  | 'chapter_based'
+  // New AI-powered types (examination-style)
+  | 'clinical_based' | 'statement_based' | 'concept_based'
+  | 'recall' | 'application';
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert';
 
@@ -75,6 +78,55 @@ export interface Question {
   keywords: string[];
   marks: number;
   negativeMark: number;
+}
+
+/**
+ * Client-safe question — NO source metadata exposed.
+ * This is what gets sent to the browser. The full Question (with source)
+ * is kept server-side only for tracking/dedup/admin purposes.
+ *
+ * CRITICAL SECURITY RULE:
+ *   Never send bookName, author, chapter, page, reference, or any source
+ *   identifier to the client. The user must never know which book a
+ *   question came from.
+ */
+export interface ClientQuestion {
+  id: string;                     // stable hash (safe to expose — it's just a hash)
+  type: QuestionType;
+  difficulty: Difficulty;
+  question: string;
+  options: QuestionOption[];
+  correctAnswer: string[];        // option ids
+  reason: string;                 // combined explanation (why correct + why others wrong)
+  estimatedTime: number;
+  marks: number;
+  negativeMark: number;
+}
+
+/**
+ * Strip source metadata from a Question before sending to client.
+ * Returns a ClientQuestion with NO source/book/author/chapter info.
+ */
+export function toClientQuestion(q: Question): ClientQuestion {
+  return {
+    id: q.id,
+    type: q.type,
+    difficulty: q.difficulty,
+    question: q.question,
+    options: q.options,
+    correctAnswer: q.correctAnswer,
+    reason: q.explanation + ' ' + q.correctReason + ' ' + q.incorrectReasons,
+    estimatedTime: q.estimatedTime,
+    marks: q.marks,
+    negativeMark: q.negativeMark,
+  };
+}
+
+/**
+ * Batch sanitize: convert Question[] to ClientQuestion[]
+ */
+export function toClientQuestions(qs: Question[]): ClientQuestion[] {
+  return qs.map(toClientQuestion);
 }
 
 export interface GenerateOptions {
@@ -664,6 +716,297 @@ async function genBookChapterQuestion(book: BookSource, difficulty: Difficulty, 
   };
 }
 
+// ─── NEW AI-POWERED QUESTION TYPES (examination-style) ────────────────────
+
+/**
+ * Clean OCR-extracted text: merge broken words, remove duplicate lines,
+ * strip page numbers/headers/footers, preserve meaning.
+ */
+function cleanOcrText(text: string): string {
+  if (!text) return '';
+  let cleaned = text
+    // Remove page numbers (standalone numbers or "Page X")
+    .replace(/\bPage\s+\d+\b/gi, '')
+    .replace(/^\s*\d+\s*$/gm, '')
+    // Remove common headers/footers
+    .replace(/\b(Chapter|Section|Unit)\s+\d+\b/gi, '')
+    // Merge hyphenated line breaks: "indi-\ncation" → "indication"
+    .replace(/(\w)-\n(\w)/g, '$1$2')
+    // Merge single-newline breaks within paragraphs (but keep paragraph breaks)
+    .replace(/([a-z,;:])\n([a-z])/g, '$1 $2')
+    // Remove duplicate consecutive lines
+    .split('\n')
+    .filter((line, i, arr) => line.trim() !== (arr[i - 1] || '').trim())
+    .join('\n')
+    // Collapse multiple spaces
+    .replace(/  +/g, ' ')
+    // Collapse multiple blank lines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return cleaned;
+}
+
+/**
+ * Extract clean, meaningful sentences from OCR text for question generation.
+ */
+function extractCleanSentences(text: string, minLen = 60, maxLen = 250): string[] {
+  const cleaned = cleanOcrText(text);
+  if (!cleaned) return [];
+  return cleaned
+    .split(/(?<=[.;])\s+(?=[A-Z])/)
+    .map(s => s.trim())
+    .filter(s => s.length >= minLen && s.length <= maxLen)
+    .filter(s => !/^(page|chapter|section|unit)\s+\d/i.test(s)) // skip page/chapter markers
+    .filter(s => /\b(is|are|was|were|has|have|can|may|should|must|the|a|an)\b/i.test(s)); // must be a real sentence
+}
+
+/**
+ * CLINICAL BASED — presents a clinical scenario, asks which remedy/concept applies.
+ */
+function genClinicalBased(remedy: RemedySource, allRemedies: RemedySource[], difficulty: Difficulty, shuffleOpts: boolean): Question | null {
+  const topics = extractRemedyTopics(remedy);
+  if (topics.length === 0) return null;
+  const topic = topics[Math.floor(Math.random() * Math.min(topics.length, 5))];
+  if (!topic || topic.length < 40) return null;
+
+  // Build a clinical scenario from the keynote
+  const scenario = topic.length > 180 ? topic.slice(0, 180) + '...' : topic;
+  const sameAuthor = allRemedies.filter(r => r.author === remedy.author && r.id !== remedy.id);
+  const pool = sameAuthor.length >= 3 ? sameAuthor : allRemedies.filter(r => r.id !== remedy.id);
+  const distractors = pick(pool, 3).map(r => r.name);
+  if (distractors.length < 3) return null;
+
+  const options = buildOptions(remedy.name, distractors, shuffleOpts);
+  const correctId = options.find(o => o.isCorrect)!.id;
+
+  return {
+    id: hash(`clinical:${remedy.id}:${topic.slice(0, 40)}`),
+    type: 'clinical_based',
+    difficulty,
+    question: `A patient presents with the following clinical picture:\n\n"${scenario}"\n\nWhich remedy is most indicated?`,
+    options,
+    correctAnswer: [correctId],
+    explanation: `The clinical picture described matches the symptom profile of ${remedy.name}.`,
+    correctReason: `The presented symptoms align with the characteristic indications of ${remedy.name}.`,
+    incorrectReasons: `The other options do not match the specific symptom profile described in the scenario.`,
+    source: {
+      type: 'remedy',
+      bookName: `${remedy.author}'s Materia Medica`,
+      author: remedy.author,
+      chapter: remedy.chapter || '—',
+      topic: remedy.name,
+      subtopic: 'Clinical Scenario',
+      reference: `${remedy.author}, ${remedy.name}`,
+    },
+    estimatedTime: estimateTime(difficulty, 'clinical_based'),
+    keywords: extractKeywords(topic),
+    marks: 1,
+    negativeMark: 0,
+  };
+}
+
+/**
+ * STATEMENT BASED — presents a statement, asks if it's correct or which statement is true.
+ */
+function genStatementBased(remedy: RemedySource, difficulty: Difficulty, shuffleOpts: boolean): Question | null {
+  const topics = extractRemedyTopics(remedy);
+  if (topics.length === 0) return null;
+  const topic = topics[Math.floor(Math.random() * topics.length)];
+  if (!topic || topic.length < 50) return null;
+
+  // Create a true statement and 3 modified (false) versions
+  const trueStatement = topic.length > 150 ? topic.slice(0, 150) + '...' : topic;
+  // Create plausible-sounding false statements by swapping key words
+  const falseStatements = [
+    trueStatement.replace(/\b(is|are|was|were)\b/, m => m === 'is' ? 'is not' : m === 'are' ? 'are not' : m === 'was' ? 'was not' : 'were not'),
+    trueStatement.replace(/\b(increased|decreased|elevated|reduced)\b/i, m => m === 'increased' ? 'decreased' : m === 'decreased' ? 'increased' : m === 'elevated' ? 'reduced' : 'elevated'),
+    trueStatement.replace(/\b(above|below|upper|lower|right|left)\b/i, m => m === 'above' ? 'below' : m === 'below' ? 'above' : m === 'upper' ? 'lower' : m === 'lower' ? 'upper' : m === 'right' ? 'left' : 'right'),
+  ].filter(s => s !== trueStatement);
+
+  if (falseStatements.length < 3) return null;
+
+  const options = buildOptions(trueStatement, falseStatements.slice(0, 3), shuffleOpts);
+  const correctId = options.find(o => o.isCorrect)!.id;
+
+  return {
+    id: hash(`statement:${remedy.id}:${topic.slice(0, 30)}`),
+    type: 'statement_based',
+    difficulty,
+    question: 'Which of the following statements is CORRECT?',
+    options,
+    correctAnswer: [correctId],
+    explanation: `The correct statement accurately reflects the source content.`,
+    correctReason: `This statement is faithful to the original text.`,
+    incorrectReasons: `The other statements contain modified or reversed information that does not match the source.`,
+    source: {
+      type: 'remedy',
+      bookName: `${remedy.author}'s Materia Medica`,
+      author: remedy.author,
+      chapter: remedy.chapter || '—',
+      topic: remedy.name,
+      subtopic: 'Statement Verification',
+      reference: `${remedy.author}, ${remedy.name}`,
+    },
+    estimatedTime: estimateTime(difficulty, 'statement_based'),
+    keywords: extractKeywords(topic),
+    marks: 1,
+    negativeMark: 0,
+  };
+}
+
+/**
+ * CONCEPT BASED — tests understanding of a concept (not memorization).
+ */
+function genConceptBased(remedy: RemedySource, allRemedies: RemedySource[], difficulty: Difficulty, shuffleOpts: boolean): Question | null {
+  const organs = remedy.organ?.split(/[,;]/).map(s => s.trim()).filter(Boolean) || [];
+  if (organs.length === 0) return null;
+  const concept = organs[0];
+
+  // Q: The remedy [Name] primarily acts on which system/organ?
+  const otherOrgans = allRemedies
+    .flatMap(r => r.organ?.split(/[,;]/).map(s => s.trim()) || [])
+    .filter(o => o && o !== concept);
+  const distractors = pick(otherOrgans, 3);
+  if (distractors.length < 3) return null;
+
+  const options = buildOptions(concept, distractors, shuffleOpts);
+  const correctId = options.find(o => o.isCorrect)!.id;
+
+  return {
+    id: hash(`concept:${remedy.id}:${concept}`),
+    type: 'concept_based',
+    difficulty,
+    question: `The remedy ${remedy.name} has its primary affinity for which organ system?`,
+    options,
+    correctAnswer: [correctId],
+    explanation: `${remedy.name} is documented as having a primary affinity for the ${concept} system.`,
+    correctReason: `The source text identifies ${concept} as a primary target of ${remedy.name}.`,
+    incorrectReasons: `The other organ systems are not the primary affinity of this remedy.`,
+    source: {
+      type: 'remedy',
+      bookName: `${remedy.author}'s Materia Medica`,
+      author: remedy.author,
+      chapter: remedy.chapter || '—',
+      topic: remedy.name,
+      subtopic: 'Organ Affinity',
+      reference: `${remedy.author}, ${remedy.name}`,
+    },
+    estimatedTime: estimateTime(difficulty, 'concept_based'),
+    keywords: [remedy.name.toLowerCase(), concept.toLowerCase()],
+    marks: 1,
+    negativeMark: 0,
+  };
+}
+
+/**
+ * RECALL — direct recall of a fact from the source.
+ */
+function genRecall(remedy: RemedySource, allRemedies: RemedySource[], difficulty: Difficulty, shuffleOpts: boolean): Question | null {
+  // Q: Which of the following is a characteristic indication of [Remedy]?
+  const topics = extractRemedyTopics(remedy);
+  if (topics.length === 0) return null;
+  const correctTopic = topics[Math.floor(Math.random() * topics.length)];
+  if (!correctTopic || correctTopic.length < 30) return null;
+
+  // Get indications from other remedies as distractors
+  const otherRemedies = allRemedies.filter(r => r.id !== remedy.id);
+  const distractorTopics: string[] = [];
+  for (const r of pick(otherRemedies, 10)) {
+    const rTopics = extractRemedyTopics(r);
+    for (const t of rTopics) {
+      if (t !== correctTopic && !distractorTopics.includes(t)) {
+        distractorTopics.push(t);
+        if (distractorTopics.length >= 3) break;
+      }
+    }
+    if (distractorTopics.length >= 3) break;
+  }
+  if (distractorTopics.length < 3) return null;
+
+  const correctText = correctTopic.length > 100 ? correctTopic.slice(0, 100) + '...' : correctTopic;
+  const distractorTexts = distractorTopics.map(t => t.length > 100 ? t.slice(0, 100) + '...' : t);
+
+  const options = buildOptions(correctText, distractorTexts, shuffleOpts);
+  const correctId = options.find(o => o.isCorrect)!.id;
+
+  return {
+    id: hash(`recall:${remedy.id}:${correctTopic.slice(0, 30)}`),
+    type: 'recall',
+    difficulty,
+    question: `Which of the following is a characteristic indication of ${remedy.name}?`,
+    options,
+    correctAnswer: [correctId],
+    explanation: `This indication is documented in the source material for ${remedy.name}.`,
+    correctReason: `The selected indication matches the characteristic symptom profile of ${remedy.name}.`,
+    incorrectReasons: `The other indications belong to different remedies.`,
+    source: {
+      type: 'remedy',
+      bookName: `${remedy.author}'s Materia Medica`,
+      author: remedy.author,
+      chapter: remedy.chapter || '—',
+      topic: remedy.name,
+      subtopic: 'Recall',
+      reference: `${remedy.author}, ${remedy.name}`,
+    },
+    estimatedTime: estimateTime(difficulty, 'recall'),
+    keywords: extractKeywords(correctTopic),
+    marks: 1,
+    negativeMark: 0,
+  };
+}
+
+/**
+ * APPLICATION — applies knowledge to a new situation.
+ */
+function genApplication(rubric: RubricSource, allRubrics: RubricSource[], difficulty: Difficulty, shuffleOpts: boolean): Question | null {
+  if (rubric.remedies.length < 3) return null;
+  const parsed = parseRubricTitle(rubric.title);
+
+  // Q: A patient exhibits [rubric symptom]. Which remedy would you consider?
+  const correctRemedy = pick(rubric.remedies, 1)[0];
+  const sameChapter = allRubrics.filter(r => r.path === rubric.path && r.id !== rubric.id);
+  const pool = sameChapter.length >= 5 ? sameChapter : allRubrics.filter(r => r.id !== rubric.id);
+  const distractorRemedies: string[] = [];
+  for (const r of pick(pool, 10)) {
+    for (const rem of r.remedies) {
+      if (rem !== correctRemedy && !distractorRemedies.includes(rem)) {
+        distractorRemedies.push(rem);
+        if (distractorRemedies.length >= 3) break;
+      }
+    }
+    if (distractorRemedies.length >= 3) break;
+  }
+  if (distractorRemedies.length < 3) return null;
+
+  const options = buildOptions(correctRemedy, distractorRemedies, shuffleOpts);
+  const correctId = options.find(o => o.isCorrect)!.id;
+
+  return {
+    id: hash(`application:${rubric.id}:${correctRemedy}`),
+    type: 'application',
+    difficulty,
+    question: `A patient presents with the symptom: "${parsed.main}${parsed.sub ? ' — ' + parsed.sub : ''}".\n\nBased on repertoric analysis, which remedy should be considered?`,
+    options,
+    correctAnswer: [correctId],
+    explanation: `${correctRemedy} is listed under this rubric, indicating its relevance for the presented symptom.`,
+    correctReason: `Repertoric analysis places ${correctRemedy} under this symptom rubric.`,
+    incorrectReasons: `The other remedies are not listed under this specific rubric.`,
+    source: {
+      type: 'rubric',
+      bookName: `${rubric.author} Repertory`,
+      author: rubric.author,
+      chapter: rubric.path,
+      topic: parsed.main,
+      subtopic: parsed.sub,
+      reference: `${rubric.author} Repertory, ${rubric.path}`,
+    },
+    estimatedTime: estimateTime(difficulty, 'application'),
+    keywords: [parsed.main.toLowerCase()],
+    marks: 1,
+    negativeMark: 0,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Main generation orchestrator
 // ─────────────────────────────────────────────────────────────────────────────
@@ -707,7 +1050,8 @@ export async function generateQuestions(opts: GenerateOptions): Promise<Question
   if (canUseRemedies && filteredRemedies.length > 0) {
     const pool = filteredRemedies;
     const types: QuestionType[] = questionType === 'any'
-      ? ['identify_remedy', 'chapter_based', 'true_false', 'single']
+      ? ['identify_remedy', 'chapter_based', 'true_false', 'single',
+         'clinical_based', 'statement_based', 'concept_based', 'recall']
       : [questionType];
 
     for (let i = 0; i < count * 3; i++) {
@@ -719,6 +1063,10 @@ export async function generateQuestions(opts: GenerateOptions): Promise<Question
         if (t === 'chapter_based') return genRemedyChapter(r, filteredRemedies, d, shuffleOptions);
         if (t === 'true_false') return genRemedyTrueFalse(r, d, shuffleOptions);
         if (t === 'single') return genRemedyDose(r, filteredRemedies, d, shuffleOptions);
+        if (t === 'clinical_based') return genClinicalBased(r, filteredRemedies, d, shuffleOptions);
+        if (t === 'statement_based') return genStatementBased(r, d, shuffleOptions);
+        if (t === 'concept_based') return genConceptBased(r, filteredRemedies, d, shuffleOptions);
+        if (t === 'recall') return genRecall(r, filteredRemedies, d, shuffleOptions);
         return null;
       });
     }
@@ -727,7 +1075,7 @@ export async function generateQuestions(opts: GenerateOptions): Promise<Question
   if (canUseRubrics && filteredRubrics.length > 0) {
     const pool = filteredRubrics;
     const types: QuestionType[] = questionType === 'any'
-      ? ['single', 'chapter_based', 'author_identify', 'except']
+      ? ['single', 'chapter_based', 'author_identify', 'except', 'application']
       : [questionType];
 
     for (let i = 0; i < count * 3; i++) {
@@ -739,6 +1087,7 @@ export async function generateQuestions(opts: GenerateOptions): Promise<Question
         if (t === 'chapter_based') return genRubricChapter(r, filteredRubrics, d, shuffleOptions);
         if (t === 'author_identify') return genRubricAuthor(r, filteredRubrics, d, shuffleOptions);
         if (t === 'except') return genRubricExcept(r, filteredRubrics, d, shuffleOptions);
+        if (t === 'application') return genApplication(r, filteredRubrics, d, shuffleOptions);
         return null;
       });
     }
