@@ -6,61 +6,51 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
 /**
- * Homeopathy Question Bank
+ * AI-Powered Homeopathy Question Bank
  *
- * Independent module — reads ONLY from existing database content.
- * Does not modify any other part of the website.
- *
- * Phases:
- *   1. Setup — user selects source, difficulty, type, count
- *   2. Quiz — displays questions one-by-one with timer
- *   3. Results — score, analysis, per-question review
+ * Features:
+ *   - 25 free MCQs/day, unlimited for premium (admin/staff)
+ *   - Source metadata is NEVER shown (security)
+ *   - Simplified answer format: Question, A/B/C/D, Correct Answer, Reason
+ *   - Bookmark + Review Later
+ *   - Daily limit reached → upgrade CTA
+ *   - Question + option shuffling
  */
-type Phase = 'setup' | 'quiz' | 'results';
+type Phase = 'setup' | 'quiz' | 'results' | 'limit_reached';
 
 interface QuestionOption { id: string; text: string; isCorrect: boolean; }
-interface Question {
+interface ClientQuestion {
   id: string; type: string; difficulty: string;
   question: string; options: QuestionOption[];
-  correctAnswer: string[]; explanation: string;
-  correctReason: string; incorrectReasons: string;
-  source: { bookName: string; author: string; chapter: string; topic: string; subtopic: string; reference: string; };
-  estimatedTime: number; keywords: string[]; marks: number; negativeMark: number;
+  correctAnswer: string[]; reason: string;
+  estimatedTime: number; marks: number; negativeMark: number;
 }
 
-interface SourceMeta {
-  remedies: { count: number; authors: string[] };
-  rubrics: { count: number; authors: string[]; chaptersByAuthor: Record<string, string[]> };
-  books: { count: number; list: Array<{ id: string; title: string; author: string; totalChapters: number }> };
-  totalSources: number;
+interface UsageInfo {
+  generated: number; limit: number; remaining: number; premium: boolean;
 }
 
 export default function QuestionBankPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [phase, setPhase] = useState<Phase>('setup');
-  const [sources, setSources] = useState<SourceMeta | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<ClientQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [startTime, setStartTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const [reviewLater, setReviewLater] = useState<Set<string>>(new Set());
 
   // Quiz settings
   const [sourceType, setSourceType] = useState<'mixed' | 'remedy' | 'rubric' | 'book'>('mixed');
-  const [author, setAuthor] = useState('');
-  const [chapter, setChapter] = useState('');
-  const [bookId, setBookId] = useState('');
-  const [difficulty, setDifficulty] = useState<'any' | 'easy' | 'medium' | 'hard' | 'expert'>('any');
+  const [difficulty, setDifficulty] = useState<'any' | 'easy' | 'medium' | 'hard'>('any');
   const [questionType, setQuestionType] = useState('any');
   const [count, setCount] = useState(10);
-  const [marks, setMarks] = useState(1);
-  const [negativeMark, setNegativeMark] = useState(0);
-  const [shuffleQuestions, setShuffleQuestions] = useState(true);
-  const [shuffleOptions, setShuffleOptions] = useState(true);
-  const [timerMinutes, setTimerMinutes] = useState(0); // 0 = no timer
+  const [timerMinutes, setTimerMinutes] = useState(0);
 
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
@@ -70,19 +60,14 @@ export default function QuestionBankPage() {
   }, [router]);
 
   useEffect(() => {
-    if (session) loadSources();
+    if (session) loadUsage();
   }, [session]);
 
   useEffect(() => {
-    // Timer countdown
     if (phase === 'quiz' && timeLeft > 0) {
       const t = setTimeout(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) {
-            // Use setTimeout to avoid calling setState during render
-            setTimeout(() => finishQuiz(), 0);
-            return 0;
-          }
+          if (prev <= 1) { setTimeout(() => finishQuiz(), 0); return 0; }
           return prev - 1;
         });
       }, 1000);
@@ -90,26 +75,13 @@ export default function QuestionBankPage() {
     }
   }, [phase, timeLeft]);
 
-  async function loadSources() {
+  async function loadUsage() {
     try {
-      const r = await fetch('/api/question-bank/sources');
+      const r = await fetch('/api/question-bank/usage');
       const d = await r.json();
-      setSources(d);
-    } catch (e: any) { setError(e.message); }
+      setUsage(d);
+    } catch {}
   }
-
-  const availableAuthors = useCallback(() => {
-    if (!sources) return [];
-    const all = new Set<string>();
-    (sources.remedies?.authors || []).forEach(a => all.add(a));
-    (sources.rubrics?.authors || []).forEach(a => all.add(a));
-    return Array.from(all).sort();
-  }, [sources]);
-
-  const availableChapters = useCallback(() => {
-    if (!sources || !author || !sources.rubrics?.chaptersByAuthor) return [];
-    return sources.rubrics.chaptersByAuthor[author] || [];
-  }, [sources, author]);
 
   async function startQuiz() {
     setLoading(true);
@@ -119,15 +91,19 @@ export default function QuestionBankPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sourceType, author: author || undefined, chapter: chapter || undefined,
-          bookId: bookId || undefined, difficulty, questionType,
-          count, marks, negativeMark, shuffleQuestions, shuffleOptions,
+          sourceType, difficulty, questionType, count,
         }),
       });
       const d = await r.json();
-      if (d.error) throw new Error(d.error);
+      if (d.error === 'DAILY_LIMIT_REACHED') {
+        setPhase('limit_reached');
+        setLoading(false);
+        loadUsage();
+        return;
+      }
+      if (d.error) throw new Error(d.message || d.error);
       if (!d.questions || d.questions.length === 0) {
-        throw new Error('No questions could be generated from the selected source. Try different settings.');
+        throw new Error('No questions could be generated. Try different settings.');
       }
       setQuestions(d.questions);
       setAnswers({});
@@ -135,6 +111,7 @@ export default function QuestionBankPage() {
       setStartTime(Date.now());
       if (timerMinutes > 0) setTimeLeft(timerMinutes * 60);
       setPhase('quiz');
+      loadUsage(); // refresh usage count
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -142,22 +119,13 @@ export default function QuestionBankPage() {
     }
   }
 
-  function selectAnswer(qId: string, optionId: string, multi: boolean = false) {
-    setAnswers(prev => {
-      if (multi) {
-        const cur = prev[qId] || [];
-        return { ...prev, [qId]: cur.includes(optionId) ? cur.filter(x => x !== optionId) : [...cur, optionId] };
-      }
-      return { ...prev, [qId]: [optionId] };
-    });
+  function selectAnswer(qId: string, optionId: string) {
+    setAnswers(prev => ({ ...prev, [qId]: [optionId] }));
   }
 
   function nextQuestion() {
-    if (currentIdx < questions.length - 1) {
-      setCurrentIdx(i => i + 1);
-    } else {
-      finishQuiz();
-    }
+    if (currentIdx < questions.length - 1) setCurrentIdx(i => i + 1);
+    else finishQuiz();
   }
 
   function prevQuestion() {
@@ -166,7 +134,7 @@ export default function QuestionBankPage() {
 
   function finishQuiz() {
     setPhase('results');
-    // Submit to server (fire and forget)
+    // Submit attempt
     const timeTaken = Math.round((Date.now() - startTime) / 1000);
     let correct = 0, incorrect = 0, skipped = 0;
     for (const q of questions) {
@@ -174,20 +142,16 @@ export default function QuestionBankPage() {
       if (!ans || ans.length === 0) { skipped++; continue; }
       const correctSet = new Set(q.correctAnswer);
       const ansSet = new Set(ans);
-      const isCorrect = correctSet.size === ansSet.size && Array.from(correctSet).every(x => ansSet.has(x));
-      if (isCorrect) correct++; else incorrect++;
+      if (correctSet.size === ansSet.size && Array.from(correctSet).every(x => ansSet.has(x))) correct++;
+      else incorrect++;
     }
-    const score = correct * marks - incorrect * negativeMark;
-    const maxScore = questions.length * marks;
-    const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-
     fetch('/api/question-bank/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         totalQuestions: questions.length, correct, incorrect, skipped,
-        score, percentage, timeTaken,
-        settings: { sourceType, author, chapter, difficulty, questionType, count },
+        score: correct, percentage: Math.round((correct / questions.length) * 100), timeTaken,
+        settings: { sourceType, difficulty, questionType, count },
       }),
     }).catch(() => {});
   }
@@ -199,6 +163,39 @@ export default function QuestionBankPage() {
     setCurrentIdx(0);
     setTimeLeft(0);
     setError('');
+    loadUsage();
+  }
+
+  async function toggleBookmark(q: ClientQuestion) {
+    const isBookmarked = bookmarks.has(q.id);
+    if (isBookmarked) {
+      setBookmarks(prev => { const n = new Set(prev); n.delete(q.id); return n; });
+      fetch(`/api/question-bank/bookmark?id=${encodeURIComponent(q.id)}`, { method: 'DELETE' }).catch(() => {});
+    } else {
+      setBookmarks(prev => new Set(prev).add(q.id));
+      fetch('/api/question-bank/bookmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: q.id, questionData: q }),
+      }).catch(() => {});
+    }
+  }
+
+  async function toggleReviewLater(q: ClientQuestion) {
+    const isInReview = reviewLater.has(q.id);
+    if (isInReview) {
+      setReviewLater(prev => { const n = new Set(prev); n.delete(q.id); return n; });
+      fetch(`/api/question-bank/review?id=${encodeURIComponent(q.id)}`, { method: 'DELETE' }).catch(() => {});
+    } else {
+      setReviewLater(prev => new Set(prev).add(q.id));
+      const ans = answers[q.id] || [];
+      const isCorrect = ans.length > 0 && q.correctAnswer.length === ans.length && q.correctAnswer.every(x => ans.includes(x));
+      fetch('/api/question-bank/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: q.id, questionData: q, userAnswer: ans, isCorrect }),
+      }).catch(() => {});
+    }
   }
 
   if (!session) {
@@ -217,6 +214,45 @@ export default function QuestionBankPage() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE: DAILY LIMIT REACHED
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (phase === 'limit_reached') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+        <Navbar />
+        <main className="flex-1 max-w-2xl mx-auto px-4 py-6 w-full">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <div className="text-5xl mb-4">🔒</div>
+            <h1 className="font-serif text-2xl text-[#173B2D] mb-3">Daily Free Limit Reached</h1>
+            <p className="text-sm text-[#7C8F6E] mb-6">
+              You&apos;ve used all {usage?.limit || 25} free MCQs for today.
+              Come back tomorrow or upgrade for unlimited access.
+            </p>
+            <div className="bg-[#173B2D] rounded-lg p-6 mb-6 text-left">
+              <h2 className="font-serif text-lg text-[#C8A24A] mb-3 text-center">⭐ Premium Benefits</h2>
+              <ul className="text-sm text-stone-200 space-y-2">
+                <li className="flex items-center gap-2"><span className="text-[#C8A24A]">✓</span> Unlimited Daily MCQs</li>
+                <li className="flex items-center gap-2"><span className="text-[#C8A24A]">✓</span> Unlimited Practice Sessions</li>
+                <li className="flex items-center gap-2"><span className="text-[#C8A24A]">✓</span> Unlimited Mock Tests</li>
+                <li className="flex items-center gap-2"><span className="text-[#C8A24A]">✓</span> Unlimited Random Papers</li>
+                <li className="flex items-center gap-2"><span className="text-[#C8A24A]">✓</span> Advanced Analytics</li>
+                <li className="flex items-center gap-2"><span className="text-[#C8A24A]">✓</span> Priority Question Generation</li>
+              </ul>
+            </div>
+            <button className="w-full bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] font-bold py-3 rounded uppercase tracking-wider text-sm mb-3">
+              ⭐ Upgrade to Premium
+            </button>
+            <button onClick={resetQuiz} className="w-full bg-white border border-[#E8DCC3] text-[#173B2D] py-2 rounded text-sm hover:bg-[#F5EFE0]">
+              ← Back to Setup
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // PHASE: SETUP
   // ═══════════════════════════════════════════════════════════════════════════
   if (phase === 'setup') {
@@ -225,12 +261,35 @@ export default function QuestionBankPage() {
         <Navbar />
         <main className="flex-1 max-w-4xl mx-auto px-4 py-6 w-full">
           <header className="mb-6">
-            <h1 className="font-serif text-3xl text-[#173B2D]">Homeopathy Question Bank</h1>
+            <h1 className="font-serif text-3xl text-[#173B2D]">AI Question Bank</h1>
             <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">
-              Generate quizzes from your library — {(sources?.totalSources ?? 0).toLocaleString()} sources available
+              Powered by your library content
             </p>
             <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
           </header>
+
+          {/* Usage bar */}
+          {usage && (
+            <div className="bg-white rounded-lg shadow p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">
+                  {usage.premium ? '⭐ Premium Account' : 'Free Plan'}
+                </span>
+                <span className="text-xs text-[#173B2D]">
+                  {usage.premium ? 'Unlimited' : `${usage.generated} / ${usage.limit} used today`}
+                </span>
+              </div>
+              {!usage.premium && (
+                <div className="w-full h-2 bg-[#E8DCC3] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#C8A24A] transition-all"
+                    style={{ width: `${Math.min(100, (usage.generated / usage.limit) * 100)}%` }} />
+                </div>
+              )}
+              {!usage.premium && usage.remaining > 0 && (
+                <p className="text-xs text-[#7C8F6E] mt-1">{usage.remaining} MCQs remaining today</p>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="bg-[#6E2A3A]/10 border border-[#6E2A3A]/30 text-[#6E2A3A] rounded p-3 mb-4 text-sm">
@@ -238,33 +297,10 @@ export default function QuestionBankPage() {
             </div>
           )}
 
-          {/* Sources overview */}
-          {sources && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-              <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{(sources.remedies?.count ?? 0).toLocaleString()}</div>
-                <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Remedies (MM)</div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{(sources.rubrics?.count ?? 0).toLocaleString()}</div>
-                <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Rubrics</div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{sources.books?.count ?? 0}</div>
-                <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Books</div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-3 text-center">
-                <div className="text-xl font-bold text-[#173B2D] font-serif">{(sources.totalSources ?? 0).toLocaleString()}</div>
-                <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Total Sources</div>
-              </div>
-            </div>
-          )}
-
           {/* Settings */}
           <div className="bg-white rounded-lg shadow p-5 space-y-4">
             <h2 className="font-serif text-lg text-[#173B2D] border-b border-[#E8DCC3] pb-2">Quiz Settings</h2>
 
-            {/* Source Type */}
             <div>
               <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Source Type</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
@@ -277,49 +313,15 @@ export default function QuestionBankPage() {
               </div>
             </div>
 
-            {/* Author + Chapter */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Author (optional)</label>
-                <select value={author} onChange={e => { setAuthor(e.target.value); setChapter(''); }}
-                  className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]">
-                  <option value="">All authors</option>
-                  {availableAuthors().map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Chapter (optional)</label>
-                <select value={chapter} onChange={e => setChapter(e.target.value)} disabled={!author}
-                  className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D] disabled:opacity-50">
-                  <option value="">All chapters</option>
-                  {availableChapters().map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Book selection */}
-            {sourceType === 'book' && sources && (
-              <div>
-                <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Specific Book (optional)</label>
-                <select value={bookId} onChange={e => setBookId(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]">
-                  <option value="">All books</option>
-                  {sources.books.list.map(b => <option key={b.id} value={b.id}>{b.title} — {b.author} ({b.totalChapters} ch)</option>)}
-                </select>
-              </div>
-            )}
-
-            {/* Difficulty + Question Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Difficulty</label>
                 <select value={difficulty} onChange={e => setDifficulty(e.target.value as any)}
                   className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]">
-                  <option value="any">Any (auto-distributed)</option>
+                  <option value="any">Any (random)</option>
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
                   <option value="hard">Hard</option>
-                  <option value="expert">Expert</option>
                 </select>
               </div>
               <div>
@@ -327,33 +329,23 @@ export default function QuestionBankPage() {
                 <select value={questionType} onChange={e => setQuestionType(e.target.value)}
                   className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]">
                   <option value="any">Any (mixed)</option>
-                  <option value="single">Single Correct Answer</option>
-                  <option value="multiple">Multiple Correct</option>
+                  <option value="single">Single Correct</option>
+                  <option value="clinical_based">Clinical Based</option>
+                  <option value="statement_based">Statement Based</option>
+                  <option value="assertion_reason">Assertion & Reason</option>
+                  <option value="concept_based">Concept Based</option>
+                  <option value="recall">Recall</option>
+                  <option value="application">Application</option>
                   <option value="true_false">True / False</option>
-                  <option value="identify_remedy">Remedy Identification</option>
-                  <option value="identify_rubric">Rubric Identification</option>
-                  <option value="author_identify">Author Identification</option>
-                  <option value="chapter_based">Chapter Based</option>
-                  <option value="except">EXCEPT Questions</option>
+                  <option value="except">EXCEPT</option>
                 </select>
               </div>
             </div>
 
-            {/* Count + Marks */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Question Count</label>
                 <input type="number" min={1} max={50} value={count} onChange={e => setCount(Math.min(50, Math.max(1, +e.target.value)))}
-                  className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]" />
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Marks (each)</label>
-                <input type="number" min={1} max={10} value={marks} onChange={e => setMarks(Math.min(10, Math.max(1, +e.target.value)))}
-                  className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]" />
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-[#7C8F6E] font-semibold">Neg. Mark</label>
-                <input type="number" min={0} max={5} step={0.25} value={negativeMark} onChange={e => setNegativeMark(Math.min(5, Math.max(0, +e.target.value)))}
                   className="w-full mt-1 px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]" />
               </div>
               <div>
@@ -364,21 +356,9 @@ export default function QuestionBankPage() {
               </div>
             </div>
 
-            {/* Toggles */}
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-sm text-[#173B2D]">
-                <input type="checkbox" checked={shuffleQuestions} onChange={e => setShuffleQuestions(e.target.checked)} className="accent-[#173B2D]" />
-                Shuffle Questions
-              </label>
-              <label className="flex items-center gap-2 text-sm text-[#173B2D]">
-                <input type="checkbox" checked={shuffleOptions} onChange={e => setShuffleOptions(e.target.checked)} className="accent-[#173B2D]" />
-                Shuffle Options
-              </label>
-            </div>
-
             <button onClick={startQuiz} disabled={loading}
               className="w-full bg-[#173B2D] hover:bg-[#2a5443] text-[#F5EFE0] font-semibold py-3 rounded uppercase tracking-wider text-sm disabled:opacity-50">
-              {loading ? '⏳ Generating Questions...' : `🚀 Start Quiz (${count} questions)`}
+              {loading ? '⏳ Generating...' : `🚀 Start Quiz (${count} questions)`}
             </button>
           </div>
 
@@ -396,13 +376,12 @@ export default function QuestionBankPage() {
   // ═══════════════════════════════════════════════════════════════════════════
   if (phase === 'quiz') {
     const q = questions[currentIdx];
-    // Guard: if no question available, return to setup
     if (!q) {
       return (
         <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
           <Navbar />
           <main className="flex-1 max-w-3xl mx-auto px-4 py-6 w-full text-center">
-            <p className="text-sm text-[#7C8F6E]">No questions available. Returning to setup...</p>
+            <p className="text-sm text-[#7C8F6E]">No questions available.</p>
             <button onClick={resetQuiz} className="mt-4 px-6 py-2 bg-[#173B2D] text-[#F5EFE0] rounded text-sm">← Back to Setup</button>
           </main>
           <Footer />
@@ -410,13 +389,14 @@ export default function QuestionBankPage() {
       );
     }
     const answered = Object.keys(answers).length;
-    const isMulti = q.type === 'multiple';
+    const isBookmarked = bookmarks.has(q.id);
+    const isInReview = reviewLater.has(q.id);
 
     return (
       <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
         <Navbar />
         <main className="flex-1 max-w-3xl mx-auto px-4 py-6 w-full">
-          {/* Progress bar */}
+          {/* Progress */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-[#7C8F6E] uppercase tracking-wider font-semibold">
               Question {currentIdx + 1} of {questions.length}
@@ -434,26 +414,41 @@ export default function QuestionBankPage() {
             <div className="h-full bg-[#C8A24A] rounded-full transition-all" style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }} />
           </div>
 
-          {/* Question card */}
+          {/* Question card — NO source metadata shown */}
           <div className="bg-white rounded-lg shadow p-6 mb-4">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[0.6rem] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F5EFE0] text-[#173B2D]">{q.type.replace(/_/g, ' ')}</span>
+              <span className="text-[0.6rem] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F5EFE0] text-[#173B2D]">
+                {q.type.replace(/_/g, ' ')}
+              </span>
               <span className={`text-[0.6rem] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
                 q.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
                 q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                 q.difficulty === 'hard' ? 'bg-orange-100 text-orange-800' :
                 'bg-red-100 text-red-800'
               }`}>{q.difficulty}</span>
-              <span className="text-[0.6rem] text-[#7C8F6E] ml-auto">+{q.marks} / -{q.negativeMark}</span>
+              {/* Bookmark + Review buttons */}
+              <div className="ml-auto flex gap-1">
+                <button onClick={() => toggleBookmark(q)}
+                  className={`text-xs px-2 py-1 rounded ${isBookmarked ? 'bg-[#C8A24A] text-[#173B2D]' : 'bg-[#E8DCC3] text-[#7C8F6E] hover:bg-[#D9C9A8]'}`}
+                  title="Bookmark">
+                  {isBookmarked ? '★' : '☆'}
+                </button>
+                <button onClick={() => toggleReviewLater(q)}
+                  className={`text-xs px-2 py-1 rounded ${isInReview ? 'bg-[#173B2D] text-[#C8A24A]' : 'bg-[#E8DCC3] text-[#7C8F6E] hover:bg-[#D9C9A8]'}`}
+                  title="Review Later">
+                  📋
+                </button>
+              </div>
             </div>
+            {/* Question text */}
             <p className="font-serif text-lg text-[#173B2D] whitespace-pre-wrap mb-4">{q.question}</p>
 
-            {/* Options */}
+            {/* Options A B C D */}
             <div className="space-y-2">
               {q.options.map(opt => {
                 const selected = (answers[q.id] || []).includes(opt.id);
                 return (
-                  <button key={opt.id} onClick={() => selectAnswer(q.id, opt.id, isMulti)}
+                  <button key={opt.id} onClick={() => selectAnswer(q.id, opt.id)}
                     className={`w-full text-left px-4 py-3 rounded border-2 transition-colors ${selected ? 'border-[#173B2D] bg-[#173B2D]/5' : 'border-[#E8DCC3] hover:border-[#173B2D]/50'}`}>
                     <span className="font-bold text-[#C8A24A] mr-2">{opt.id.toUpperCase()}.</span>
                     <span className="text-sm text-[#173B2D]">{opt.text}</span>
@@ -482,13 +477,13 @@ export default function QuestionBankPage() {
               ) : (
                 <button onClick={finishQuiz}
                   className="px-4 py-2 text-sm bg-[#C8A24A] text-[#173B2D] rounded font-bold hover:bg-[#d4b560]">
-                  ✓ Finish Quiz
+                  ✓ Finish
                 </button>
               )}
             </div>
           </div>
 
-          {/* Question grid (jump to any) */}
+          {/* Question grid */}
           <div className="mt-6 flex flex-wrap gap-1.5 justify-center">
             {questions.map((qq, i) => {
               const isAnswered = answers[qq.id] && answers[qq.id].length > 0;
@@ -508,31 +503,19 @@ export default function QuestionBankPage() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PHASE: RESULTS
+  // PHASE: RESULTS — Simplified format: Question, A/B/C/D, Correct, Reason
   // ═══════════════════════════════════════════════════════════════════════════
   const timeTaken = Math.round((Date.now() - startTime) / 1000);
   let correct = 0, incorrect = 0, skipped = 0;
-  const topicResults: Record<string, { correct: number; total: number }> = {};
-  const difficultyResults: Record<string, { correct: number; total: number }> = {};
-
   for (const q of questions) {
     const ans = answers[q.id];
-    const topic = q.source.topic || q.source.chapter || 'Unknown';
-    if (!topicResults[topic]) topicResults[topic] = { correct: 0, total: 0 };
-    if (!difficultyResults[q.difficulty]) difficultyResults[q.difficulty] = { correct: 0, total: 0 };
-    topicResults[topic].total++;
-    difficultyResults[q.difficulty].total++;
-
     if (!ans || ans.length === 0) { skipped++; continue; }
     const correctSet = new Set(q.correctAnswer);
     const ansSet = new Set(ans);
-    const isCorrect = correctSet.size === ansSet.size && Array.from(correctSet).every(x => ansSet.has(x));
-    if (isCorrect) { correct++; topicResults[topic].correct++; difficultyResults[q.difficulty].correct++; }
+    if (correctSet.size === ansSet.size && Array.from(correctSet).every(x => ansSet.has(x))) correct++;
     else incorrect++;
   }
-  const score = correct * marks - incorrect * negativeMark;
-  const maxScore = questions.length * marks;
-  const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+  const percentage = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
@@ -543,14 +526,14 @@ export default function QuestionBankPage() {
           <div className="w-16 h-0.5 bg-[#C8A24A] mt-3 mx-auto"></div>
         </header>
 
-        {/* Score card */}
+        {/* Score */}
         <div className="bg-[#173B2D] rounded-lg p-6 mb-6 text-center">
           <div className="text-5xl font-bold font-serif text-[#C8A24A] mb-2">{percentage}%</div>
-          <div className="text-sm text-stone-300">Score: {score} / {maxScore}</div>
+          <div className="text-sm text-stone-300">{correct} correct / {questions.length} total</div>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-3 mb-6">
           <div className="bg-white rounded-lg shadow p-4 text-center">
             <div className="text-2xl font-bold text-green-700 font-serif">{correct}</div>
             <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Correct</div>
@@ -565,46 +548,11 @@ export default function QuestionBankPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-4 text-center">
             <div className="text-2xl font-bold text-[#173B2D] font-serif">{Math.floor(timeTaken / 60)}:{String(timeTaken % 60).padStart(2, '0')}</div>
-            <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Time Taken</div>
+            <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E]">Time</div>
           </div>
         </div>
 
-        {/* Topic-wise analysis */}
-        <div className="bg-white rounded-lg shadow p-5 mb-6">
-          <h3 className="font-serif text-lg text-[#173B2D] mb-3">Topic-wise Performance</h3>
-          <div className="space-y-2">
-            {Object.entries(topicResults).sort(([,a],[,b]) => (a.correct/a.total) - (b.correct/b.total)).map(([topic, r]) => (
-              <div key={topic} className="flex items-center gap-3">
-                <span className="text-sm text-[#173B2D] flex-1 truncate">{topic}</span>
-                <div className="w-32 h-2 bg-[#E8DCC3] rounded-full overflow-hidden">
-                  <div className={`h-full ${r.correct / r.total >= 0.7 ? 'bg-green-600' : r.correct / r.total >= 0.4 ? 'bg-yellow-600' : 'bg-[#6E2A3A]'}`}
-                    style={{ width: `${(r.correct / r.total) * 100}%` }} />
-                </div>
-                <span className="text-xs text-[#7C8F6E] w-16 text-right">{r.correct}/{r.total}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Difficulty analysis */}
-        <div className="bg-white rounded-lg shadow p-5 mb-6">
-          <h3 className="font-serif text-lg text-[#173B2D] mb-3">Difficulty Analysis</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {['easy', 'medium', 'hard', 'expert'].map(d => {
-              const r = difficultyResults[d];
-              if (!r) return null;
-              return (
-                <div key={d} className="text-center p-3 bg-[#F5EFE0] rounded">
-                  <div className="text-xs uppercase tracking-wider text-[#7C8F6E] mb-1">{d}</div>
-                  <div className="text-lg font-bold text-[#173B2D] font-serif">{r.correct}/{r.total}</div>
-                  <div className="text-xs text-[#7C8F6E]">{r.total > 0 ? Math.round((r.correct / r.total) * 100) : 0}%</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Per-question review */}
+        {/* Per-question review — SIMPLIFIED FORMAT (no source metadata) */}
         <div className="bg-white rounded-lg shadow p-5 mb-6">
           <h3 className="font-serif text-lg text-[#173B2D] mb-4">Question Review</h3>
           <div className="space-y-4">
@@ -613,16 +561,16 @@ export default function QuestionBankPage() {
               const isCorrect = ans.length > 0 && q.correctAnswer.length === ans.length && q.correctAnswer.every(x => ans.includes(x));
               const isSkipped = ans.length === 0;
               return (
-                <div key={q.id} className={`border-l-4 p-3 rounded ${isSkipped ? 'border-[#7C8F6E] bg-[#F5EFE0]/50' : isCorrect ? 'border-green-600 bg-green-50' : 'border-[#6E2A3A] bg-[#6E2A3A]/5'}`}>
-                  <div className="flex items-start gap-2 mb-2">
+                <div key={q.id} className={`border-l-4 p-4 rounded ${isSkipped ? 'border-[#7C8F6E] bg-[#F5EFE0]/50' : isCorrect ? 'border-green-600 bg-green-50' : 'border-[#6E2A3A] bg-[#6E2A3A]/5'}`}>
+                  {/* Question */}
+                  <div className="flex items-start gap-2 mb-3">
                     <span className="text-xs font-bold text-[#7C8F6E]">Q{i + 1}.</span>
-                    <p className="text-sm text-[#173B2D] flex-1 whitespace-pre-wrap">{q.question}</p>
-                    <span className="text-xs">
-                      {isSkipped ? '⏭️' : isCorrect ? '✅' : '❌'}
-                    </span>
+                    <p className="text-sm text-[#173B2D] flex-1 whitespace-pre-wrap font-medium">{q.question}</p>
+                    <span className="text-xs">{isSkipped ? '⏭️' : isCorrect ? '✅' : '❌'}</span>
                   </div>
-                  {/* Options with correct/incorrect marking */}
-                  <div className="ml-6 space-y-1 mb-2">
+
+                  {/* Options A B C D */}
+                  <div className="ml-6 space-y-1 mb-3">
                     {q.options.map(opt => {
                       const isAns = ans.includes(opt.id);
                       const isCorrectOpt = q.correctAnswer.includes(opt.id);
@@ -631,18 +579,28 @@ export default function QuestionBankPage() {
                           <span className="font-bold mr-1">{opt.id.toUpperCase()}.</span>
                           {opt.text}
                           {isCorrectOpt && ' ✓'}
-                          {isAns && !isCorrectOpt && ' ✗ (your answer)'}
+                          {isAns && !isCorrectOpt && ' ✗'}
                         </div>
                       );
                     })}
                   </div>
-                  {/* Explanation */}
-                  <div className="ml-6 mt-2 p-2 bg-[#F5EFE0] rounded text-xs">
-                    <p className="text-[#173B2D] mb-1"><strong>Explanation:</strong> {q.explanation}</p>
-                    <p className="text-green-700 mb-1"><strong>Why correct:</strong> {q.correctReason}</p>
-                    <p className="text-[#6E2A3A]"><strong>Why others wrong:</strong> {q.incorrectReasons}</p>
-                    <p className="text-[#7C8F6E] mt-1"><strong>Source:</strong> {q.source.reference}</p>
+
+                  {/* Correct Answer */}
+                  <div className="ml-6 mb-2 p-2 bg-green-50 rounded">
+                    <p className="text-xs text-green-800">
+                      <strong>✅ Correct Answer:</strong>{' '}
+                      {q.correctAnswer.map(id => id.toUpperCase()).join(', ')}
+                    </p>
                   </div>
+
+                  {/* Reason */}
+                  <div className="ml-6 p-2 bg-[#F5EFE0] rounded">
+                    <p className="text-xs text-[#173B2D]">
+                      <strong>Reason:</strong> {q.reason}
+                    </p>
+                  </div>
+
+                  {/* NO source metadata shown — security requirement */}
                 </div>
               );
             })}
