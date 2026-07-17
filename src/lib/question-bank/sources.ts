@@ -55,6 +55,7 @@ export interface BookSource {
   description?: string;
   totalChapters?: number;
   chapters?: Array<{ id: string; title: string; content?: string }>;
+  remedies?: Array<{ id: string; name: string; content?: string }>;
 }
 
 export type SourceType = 'remedy' | 'rubric' | 'book' | 'therapeutic';
