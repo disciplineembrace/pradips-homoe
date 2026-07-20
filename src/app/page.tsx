@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { VisitorCounter } from '@/components/VisitorCounter';
 import Link from 'next/link';
 
 export default function Home() {
@@ -30,6 +31,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Visitor counter */}
+        <section className="py-8 px-4 bg-white border-b border-stone-200">
+          <div className="max-w-2xl mx-auto">
+            <VisitorCounter />
+          </div>
+        </section>
+
         {/* Stats section */}
         <section className="py-12 px-4 bg-white">
           <div className="max-w-5xl mx-auto">
@@ -37,7 +45,7 @@ export default function Home() {
             <div className="w-16 h-0.5 bg-amber-700 mx-auto mb-8" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { num: '3,471', label: 'Remedies', desc: 'From 9 authors' },
+                { num: '4,416', label: 'Remedies', desc: 'From 9 authors' },
                 { num: '79,706', label: 'Rubrics', desc: 'Kent, Phatak, Murphy' },
                 { num: '408', label: 'Therapeutic Formulas', desc: 'Disease-wise' },
                 { num: '23', label: 'Predictive Chapters', desc: 'Dr. Prafull Vijayakar' },
