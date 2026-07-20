@@ -1,6 +1,5 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { VisitorCounter } from '@/components/VisitorCounter';
 import Link from 'next/link';
 
 export default function Home() {
@@ -28,13 +27,6 @@ export default function Home() {
                 Learn More
               </Link>
             </div>
-          </div>
-        </section>
-
-        {/* Visitor counter */}
-        <section className="py-8 px-4 bg-white border-b border-stone-200">
-          <div className="max-w-2xl mx-auto">
-            <VisitorCounter />
           </div>
         </section>
 
