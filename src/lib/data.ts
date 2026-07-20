@@ -13,6 +13,7 @@ const DATA_DIR_ALT = '/home/z/my-project/data';
 
 let _remedies: any[] | null = null;
 let _rubrics: any[] | null = null;
+let _biochemicRubrics: any[] | null = null;
 let _therapeutics: any = null;
 let _predictive: any = null;
 let _synthesis: any = null;
@@ -40,8 +41,33 @@ export async function getRemedies(): Promise<any[]> {
 
 export async function getRubrics(): Promise<any[]> {
   if (_rubrics) return _rubrics;
-  _rubrics = await readJson(path.join(DATA_DIR, 'rubrics.json'));
+  const mainRubrics = await readJson(path.join(DATA_DIR, 'rubrics.json'));
+  // Merge biochemic rubrics if available
+  try {
+    const biochemicData = await readJson(path.join(DATA_DIR, 'phatak-biochem-repertory.json'));
+    const biochemicRubrics = (biochemicData.rubrics || []).map((r: any) => ({
+      id: r.id,
+      path: r.path,
+      title: r.title,
+      author: r.author,
+      remedies: r.remedies,
+    }));
+    _rubrics = [...mainRubrics, ...biochemicRubrics];
+  } catch {
+    _rubrics = mainRubrics;
+  }
   return _rubrics!;
+}
+
+export async function getBiochemicRubrics(): Promise<any[]> {
+  if (_biochemicRubrics) return _biochemicRubrics;
+  try {
+    const data = await readJson(path.join(DATA_DIR, 'phatak-biochem-repertory.json'));
+    _biochemicRubrics = data.rubrics || [];
+  } catch {
+    _biochemicRubrics = [];
+  }
+  return _biochemicRubrics!;
 }
 
 export async function getTherapeutics(): Promise<any> {

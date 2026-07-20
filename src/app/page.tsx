@@ -46,7 +46,7 @@ export default function Home() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { num: '4,416', label: 'Remedies', desc: 'From 9 authors' },
-                { num: '79,706', label: 'Rubrics', desc: 'Kent, Phatak, Murphy' },
+                { num: '85,765', label: 'Rubrics', desc: 'Kent, Phatak, Murphy + Biochemic' },
                 { num: '408', label: 'Therapeutic Formulas', desc: 'Disease-wise' },
                 { num: '23', label: 'Predictive Chapters', desc: 'Dr. Prafull Vijayakar' },
               ].map((s, i) => (
