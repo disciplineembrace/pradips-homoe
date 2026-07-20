@@ -36,7 +36,7 @@ type Chapter = {
   rubricCount: number;
 };
 
-const AUTHORS = ['Kent', 'Phatak', 'Murphy', 'Boericke'];
+const AUTHORS = ['Kent', 'Phatak', 'Murphy', 'Boericke', 'Phatak Biochemic'];
 const PAGE_SIZE = 20;
 
 export default function RepertoryPage() {
