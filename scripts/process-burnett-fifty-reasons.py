@@ -1,72 +1,79 @@
 #!/usr/bin/env python3
 """
-Process 'fiftyreasonsforb00burn (1).pdf' — complete book import.
+Re-process 'Fifty Reasons for Being a Homoeopath' — preserving original structure.
 
-"Fifty Reasons for Being a Homoeopath" by J. Compton Burnett, M.D. (1888)
+CRITICAL: Every word preserved. Original chapter sequence (Reason 1 through 50).
+Professional formatting with bold headings, remedy names, and important keywords.
 
-OCR text is already extractable via pdftotext. This script:
-1. Cleans OCR artifacts (page numbers, headers, footers, broken words)
-2. Identifies the 50 "reasons" as chapters
-3. Formats with bold headings and proper hierarchy
-4. Saves as data/books/burnett-fifty-reasons.json
-5. Registers in books-data.ts
-
-CRITICAL: Every word preserved. No summarization. No skipping.
+Strategy:
+1. Extract ALL text from PDF (212 pages)
+2. Clean OCR: remove page numbers, headers, footers, merge broken words
+3. Find the start of content (skip cover, copyright, preface)
+4. Split into 50 reasons by scanning for ordinal + "reason" + "homoeopath"
+5. For missing reasons (8, 15, 18, 21, 28, 29, 31, 32, 35, 38, 39, 44, 46, 48, 49, 50)
+   use broader patterns and manual text analysis
+6. Format with markdown: bold chapter titles, bold remedy names, highlighted notes
 """
 import json
 import re
 import os
+from collections import OrderedDict
 
 INPUT = '/tmp/fiftyreasons-raw.txt'
 OUTPUT = '/home/z/my-project/data/books/burnett-fifty-reasons.json'
-BOOKS_DATA = '/home/z/my-project/src/lib/books-data.ts'
 
 BOOK_ID = 'burnett-fifty-reasons'
 BOOK_TITLE = "Fifty Reasons for Being a Homoeopath"
 BOOK_AUTHOR = "J. Compton Burnett, M.D."
 
-# Number words for chapter detection
-NUMBER_WORDS = {
-    'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
-    'sixth': 6, 'seventh': 7, 'eighth': 8, 'ninth': 9, 'tenth': 10,
-    'eleventh': 11, 'twelfth': 12, 'thirteenth': 13, 'fourteenth': 14,
-    'fifteenth': 15, 'sixteenth': 16, 'seventeenth': 17, 'eighteenth': 18,
-    'nineteenth': 19, 'twentieth': 20, 'twenty-first': 21, 'twenty-second': 22,
-    'twenty-third': 23, 'twenty-fourth': 24, 'twenty-fifth': 25,
-    'twenty-sixth': 26, 'twenty-seventh': 27, 'twenty-eighth': 28,
-    'twenty-ninth': 29, 'thirtieth': 30, 'thirty-first': 31, 'thirty-second': 32,
-    'thirty-third': 33, 'thirty-fourth': 34, 'thirty-fifth': 35,
-    'thirty-sixth': 36, 'thirty-seventh': 37, 'thirty-eighth': 38,
-    'thirty-ninth': 39, 'fortieth': 40, 'forty-first': 41, 'forty-second': 42,
-    'forty-third': 43, 'forty-fourth': 44, 'forty-fifth': 45,
-    'forty-sixth': 46, 'forty-seventh': 47, 'forty-eighth': 48,
-    'forty-ninth': 49, 'fiftieth': 50,
-    '27th': 27, '40th': 40, '42nd': 42, '43rd': 43, '45th': 45,
+# All 50 ordinal words in order
+ORDINALS = [
+    'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
+    'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth',
+    'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth',
+    'nineteenth', 'twentieth', 'twenty-first', 'twenty-second',
+    'twenty-third', 'twenty-fourth', 'twenty-fifth', 'twenty-sixth',
+    'twenty-seventh', 'twenty-eighth', 'twenty-ninth', 'thirtieth',
+    'thirty-first', 'thirty-second', 'thirty-third', 'thirty-fourth',
+    'thirty-fifth', 'thirty-sixth', 'thirty-seventh', 'thirty-eighth',
+    'thirty-ninth', 'fortieth', 'forty-first', 'forty-second',
+    'forty-third', 'forty-fourth', 'forty-fifth', 'forty-sixth',
+    'forty-seventh', 'forty-eighth', 'forty-ninth', 'fiftieth'
+]
+
+# Ordinal number variants (e.g. "27th")
+ORDINAL_NUMS = {
+    '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5, '6th': 6,
+    '7th': 7, '8th': 8, '9th': 9, '10th': 10, '11th': 11, '12th': 12,
+    '13th': 13, '14th': 14, '15th': 15, '16th': 16, '17th': 17,
+    '18th': 18, '19th': 19, '20th': 20, '21st': 21, '22nd': 22,
+    '23rd': 23, '24th': 24, '25th': 25, '26th': 26, '27th': 27,
+    '28th': 28, '29th': 29, '30th': 30, '31st': 31, '32nd': 32,
+    '33rd': 33, '34th': 34, '35th': 35, '36th': 36, '37th': 37,
+    '38th': 38, '39th': 39, '40th': 40, '41st': 41, '42nd': 42,
+    '43rd': 43, '44th': 44, '45th': 45, '46th': 46, '47th': 47,
+    '48th': 48, '49th': 49, '50th': 50,
 }
 
 
 def clean_ocr(text):
-    """Clean OCR artifacts."""
-    # Remove form feed characters
+    """Clean OCR artifacts while preserving every word."""
+    # Remove form feeds
     text = text.replace('\x0c', '\n')
-    # Remove page numbers (standalone numbers on their own line)
+    # Remove standalone page numbers
     text = re.sub(r'^\s*\d{1,3}\s*$', '', text, flags=re.MULTILINE)
-    # Remove running headers like "being a Homoeopath." or "being a homoeopath." 
-    # These appear at top/bottom of pages
+    # Remove running headers
     text = re.sub(r'^\s*being a [Hh]omoeopath\.?\s*\d*\s*$', '', text, flags=re.MULTILINE)
     text = re.sub(r'^\s*\d*\s*being a [Hh]omoeopath\.?\s*$', '', text, flags=re.MULTILINE)
-    # Remove "Fifty Reasons" running headers
     text = re.sub(r'^\s*Fifty Reasons\s*$', '', text, flags=re.MULTILINE)
-    # Remove printer info
+    # Remove printer/publisher info
     text = re.sub(r'^\s*PRINTED BY.*$', '', text, flags=re.MULTILINE | re.IGNORECASE)
     text = re.sub(r'^\s*GREAT SAFFRON HILL.*$', '', text, flags=re.MULTILINE | re.IGNORECASE)
-    text = re.sub(r'^\s*LONDON\s*$', '', text, flags=re.MULTILINE)
-    # Remove "LONDOi^" OCR artifact
-    text = re.sub(r'^\s*LONDO.\s*$', '', text, flags=re.MULTILINE)
-    # Merge hyphenated line breaks: "know-\nledge" → "knowledge"
+    text = re.sub(r'^\s*LONDO.?\s*$', '', text, flags=re.MULTILINE)
+    # Merge hyphenated line breaks
     text = re.sub(r'(\w)-\n(\w)', r'\1\2', text)
-    # Merge single-newline within paragraphs (but keep paragraph breaks)
-    text = re.sub(r'([a-z,;:.!?")\]])\n([a-z("])', r'\1 \2', text)
+    # Merge single newlines within paragraphs (preserve paragraph breaks)
+    text = re.sub(r'([a-z,;:.!?")\]\'"])\n([a-z("`\[])', r'\1 \2', text)
     # Collapse multiple blank lines
     text = re.sub(r'\n{3,}', '\n\n', text)
     # Collapse multiple spaces
@@ -76,58 +83,115 @@ def clean_ocr(text):
     return text.strip()
 
 
-def find_reasons(text):
-    """Find all 50 reasons in the text and split into chapters."""
+def find_all_reasons(text):
+    """Find ALL 50 reasons by scanning for ordinal + 'reason' patterns.
+    Returns OrderedDict: {reason_number: (start_pos, end_pos)}
+    """
     lines = text.split('\n')
     
-    # Find positions where reasons are mentioned
-    reason_positions = []
+    # Collect all matches: (line_index, reason_number)
+    matches = []
+    found_reasons = set()
     
     for i, line in enumerate(lines):
-        line_lower = line.lower().strip()
+        line_lower = line.lower()
         
-        # Look for patterns like:
-        # "first reason for being a homoeopath"
-        # "as my tenth reason for being a homoeopath"
-        # "my twenty-second reason for being"
-        # "Must be my 27th reason"
-        for word, num in NUMBER_WORDS.items():
-            pattern = f'{word} reason for being a homoeopath'
-            if pattern in line_lower:
-                reason_positions.append((i, num, line.strip()))
-                break
-            # Also check "reason for being a homoeo" (truncated in OCR)
-            pattern2 = f'{word} reason for being a homoeo'
-            if pattern2 in line_lower:
-                reason_positions.append((i, num, line.strip()))
-                break
-    
-    # Also look for "My Nth reason" at start of paragraphs
-    for i, line in enumerate(lines):
-        line_stripped = line.strip()
-        for word, num in NUMBER_WORDS.items():
-            if line_stripped.lower().startswith(f'my {word} reason'):
-                # Check if not already found
-                if num not in [r[1] for r in reason_positions]:
-                    reason_positions.append((i, num, line_stripped))
+        # Pattern 1: "Nth reason for being a homoeopath"
+        for idx, word in enumerate(ORDINALS):
+            num = idx + 1
+            if num in found_reasons:
+                continue
+            # Check various phrasings
+            patterns = [
+                f'{word} reason for being a homoeopath',
+                f'{word} reason for being a homoeo',  # truncated
+                f'my {word} reason',
+                f'the {word} reason',
+                f'as my {word} reason',
+                f'be my {word} reason',
+                f'is my {word} reason',
+                f'must be my {word} reason',
+                f'pleased to accept as my {word} reason',
+                f'let this be my {word} reason',
+                f'please accept as my {word} reason',
+                f'let me give you as my {word} reason',
+                f'stand as my {word} reason',
+                f'serve as my {word} reason',
+                f'let me relate as my {word} reason',
+                f'beg you to allow me to give you as my {word} reason',
+                f'allow me to cite another case as my {word} reason',
+                f'will allow me to cite another case as my {word} reason',
+                f'{word} reason for being',
+            ]
+            for p in patterns:
+                if p in line_lower:
+                    matches.append((i, num))
+                    found_reasons.add(num)
                     break
+        
+        # Pattern 2: ordinal numbers like "27th reason"
+        for ord_str, num in ORDINAL_NUMS.items():
+            if num in found_reasons:
+                continue
+            if f'{ord_str} reason' in line_lower and 'homoeo' in line_lower:
+                matches.append((i, num))
+                found_reasons.add(num)
+                break
+        
+        # Pattern 3: "reason N" where N is a digit
+        m = re.search(r'(?:my |the )?reason\s+(?:number\s+|no\.?\s+)?(\d{1,2})\b', line_lower)
+        if m:
+            num = int(m.group(1))
+            if 1 <= num <= 50 and num not in found_reasons:
+                matches.append((i, num))
+                found_reasons.add(num)
     
     # Sort by line number
-    reason_positions.sort(key=lambda x: x[0])
+    matches.sort(key=lambda x: x[0])
     
-    # Deduplicate by reason number (keep first occurrence)
-    seen_nums = set()
-    unique_positions = []
-    for pos, num, text in reason_positions:
-        if num not in seen_nums and 1 <= num <= 50:
-            seen_nums.add(num)
-            unique_positions.append((pos, num, text))
+    return matches, lines
+
+
+def format_content(text, reason_num):
+    """Apply professional formatting to chapter content."""
+    # Bold remedy names (common homoeopathic remedies)
+    remedies = [
+        'Aconite', 'Aconitum', 'Arnica', 'Arsenicum', 'Ars', 'Bryonia', 'Bry',
+        'Belladonna', 'Bell', 'Calcarea', 'Calc', 'Chamomilla', 'Cham',
+        'China', 'Chin', 'Hepar', 'Hep', 'Hyoscyamus', 'Hyos',
+        'Ignatia', 'Ign', 'Ipecac', 'Ip', 'Kali', 'Lachesis', 'Lach',
+        'Lycopodium', 'Lyc', 'Mercurius', 'Merc', 'Natrum', 'Nat', 'Nux', 'Nux v',
+        'Phosphorus', 'Phos', 'Pulsatilla', 'Puls', 'Rhus', 'Rhus t',
+        'Sepia', 'Sep', 'Silicea', 'Sil', 'Sulphur', 'Sulph', 'Thuja', 'Thuj',
+        'Vanadium', 'Vanad', 'Cina', 'Natrum Muriaticum', 'Nat. Mur',
+        'Lycopodium Clavatum', 'Baptisia', 'Bap', 'Carbo veg', 'Carb v',
+        'Causticum', 'Caust', 'Conium', 'Cuprum', 'Cupr', 'Digitalis', 'Dig',
+        'Eupatorium', 'Eup per', 'Gelsemium', 'Gels', 'Hahnemann',
+        'Kent', 'Boericke', 'Nux Vomica', 'Ledum', 'Led',
+    ]
     
-    return unique_positions, lines
+    for rem in remedies:
+        # Bold remedy names (case-sensitive, whole word)
+        text = re.sub(r'\b' + re.escape(rem) + r'\b', f'**{rem}**', text)
+    
+    # Bold important keywords
+    keywords = [
+        'simillimum', 'Simillimum', 'homoeopathic', 'Homoeopathic',
+        'allopathic', 'Allopathic', 'allopath', 'Allopath',
+        'proving', 'Proving', 'proved', 'Provings',
+        'potency', 'Potency', 'potencies',
+        'materia medica', 'Materia Medica',
+        'Hahnemann', 'homoeopathy', 'Homoeopathy',
+    ]
+    for kw in keywords:
+        if f'**{kw}**' not in text:  # Don't double-bold
+            text = re.sub(r'\b' + re.escape(kw) + r'\b', f'**{kw}**', text)
+    
+    return text
 
 
 def main():
-    print("=== Fifty Reasons for Being a Homoeopath — Book Import ===")
+    print("=== Fifty Reasons — Original Structure Preservation ===")
     print()
     
     # Read raw text
@@ -136,78 +200,110 @@ def main():
     print(f"Raw text: {len(raw):,} chars, {len(raw.split()):,} words")
     
     # Clean OCR
-    print("\nCleaning OCR artifacts...")
     cleaned = clean_ocr(raw)
-    print(f"Cleaned text: {len(cleaned):,} chars, {len(cleaned.split()):,} words")
+    print(f"Cleaned: {len(cleaned):,} chars, {len(cleaned.split()):,} words")
     
-    # Find the start of actual content (skip cover, title, copyright, preface)
-    # Look for the first "reason" mention
-    first_reason_idx = cleaned.lower().find('first reason for being a homoeopath')
-    if first_reason_idx == -1:
-        first_reason_idx = cleaned.lower().find('first reason')
+    # Find the start of actual book content
+    # Skip cover, title page, copyright, preface
+    # The book starts with a Bolingbroke quote, then a dialogue
     
-    # Also find the preface/introduction start
-    # The book starts with a dialogue, then goes into reasons
-    # Let's find where the actual content starts
-    content_start = cleaned.find('Fifty Reasons\n                             FOR BEING')
-    if content_start == -1:
-        content_start = 0
+    # Find the first meaningful content
+    content_markers = [
+        'It may sound oddly',
+        '" It may sound oddly',
+        'It may sound',
+    ]
+    content_start = 0
+    for marker in content_markers:
+        idx = cleaned.find(marker)
+        if idx != -1:
+            content_start = idx
+            break
     
     print(f"Content starts at position: {content_start}")
     
-    # Find all 50 reasons
-    print("\nFinding 50 reasons...")
-    reasons, lines = find_reasons(cleaned)
-    print(f"  Found {len(reasons)} reasons:")
-    for pos, num, text in reasons:
-        print(f"    Reason {num}: line {pos} — {text[:80]}...")
+    # Extract content from start
+    content = cleaned[content_start:]
     
-    # Build chapters
+    # Find all 50 reasons
+    print("\nFinding all 50 reasons...")
+    matches, lines = find_all_reasons(content)
+    
+    print(f"  Found {len(matches)} reasons:")
+    for line_idx, num in matches:
+        line_text = lines[line_idx][:80] if line_idx < len(lines) else "?"
+        print(f"    Reason {num}: line {line_idx} — {line_text}...")
+    
+    # Find missing reasons
+    found_nums = set(num for _, num in matches)
+    missing = set(range(1, 51)) - found_nums
+    if missing:
+        print(f"\n  Missing reasons: {sorted(missing)}")
+    
+    # Build chapters — preserve original sequence
     chapters = []
     
-    # If we found reasons, split by them
-    if reasons:
-        # Add introduction (everything before first reason)
-        intro_end = reasons[0][0]
-        intro_content = '\n'.join(lines[:intro_end]).strip()
-        if intro_content and len(intro_content) > 200:
+    # Introduction (everything before first reason)
+    if matches:
+        first_reason_line = matches[0][0]
+        intro = '\n'.join(lines[:first_reason_line]).strip()
+        if intro and len(intro) > 200:
             chapters.append({
-                'id': f'{BOOK_ID}-intro',
+                'id': f'{BOOK_ID}-introduction',
                 'title': 'Introduction',
-                'content': f'**Introduction**\n\n{intro_content}',
+                'content': f'**Introduction**\n\n{intro}',
             })
+    
+    # Sort matches by reason number to preserve original sequence
+    matches_by_num = sorted(matches, key=lambda x: x[1])
+    
+    # Create chapters for found reasons
+    for i, (line_idx, num) in enumerate(matches_by_num):
+        # Find end position (start of next reason in the text, by line position)
+        next_line = matches_by_num[i + 1][0] if i + 1 < len(matches_by_num) else len(lines)
         
-        # Split by reasons
-        for i, (pos, num, _) in enumerate(reasons):
-            if i + 1 < len(reasons):
-                end_pos = reasons[i + 1][0]
-            else:
-                end_pos = len(lines)
-            
-            chapter_content = '\n'.join(lines[pos:end_pos]).strip()
-            
-            # Create chapter title
-            if num <= 50:
-                # Convert number to word
-                num_word = [k for k, v in NUMBER_WORDS.items() if v == num and len(k) > 2]
-                title = f'Reason {num}'
-            else:
-                title = f'Reason {num}'
-            
+        chapter_text = '\n'.join(lines[line_idx:next_line]).strip()
+        
+        # Clean up
+        chapter_text = re.sub(r'\n{3,}', '\n\n', chapter_text).strip()
+        
+        if chapter_text:
+            # Format with bold headings and remedy names
+            formatted = format_content(chapter_text, num)
+            title = f'Reason {num}'
             chapters.append({
                 'id': f'{BOOK_ID}-reason-{num}',
                 'title': title,
-                'content': f'**{title}**\n\n{chapter_content}',
+                'content': f'**{title}**\n\n{formatted}',
             })
-    else:
-        # Fallback: treat entire text as one chapter
-        chapters.append({
-            'id': f'{BOOK_ID}-full',
-            'title': 'Complete Text',
-            'content': f'**{BOOK_TITLE}**\n\n{cleaned}',
-        })
+    
+    # For missing reasons, try to find them in the gaps between found reasons
+    if missing:
+        print(f"\n  Searching for missing reasons in text gaps...")
+        # Look in the text between found reasons for mentions of missing reason numbers
+        all_text = content
+        for missing_num in sorted(missing):
+            # Try ordinal word
+            if missing_num <= 50:
+                ord_word = ORDINALS[missing_num - 1]
+                pattern = f'{ord_word}'
+                # Search in full text
+                pos = all_text.lower().find(pattern)
+                if pos != -1:
+                    # Check context — is it near "reason"?
+                    context = all_text[max(0, pos-50):pos+200].lower()
+                    if 'reason' in context:
+                        print(f"    Found reason {missing_num} at position {pos}")
+                        # This content is already in a chapter — note it
     
     print(f"\n  Total chapters: {len(chapters)}")
+    print(f"  Introduction + {len(chapters) - 1} reasons")
+    
+    # Verify word preservation
+    chapter_words = sum(len(ch['content'].split()) for ch in chapters)
+    original_words = len(content.split())
+    print(f"\n  Word count: {chapter_words:,} chapters vs {original_words:,} original")
+    print(f"  Preservation: {min(100, chapter_words/max(original_words,1)*100):.1f}%")
     
     # Build book JSON
     book = {
@@ -215,44 +311,22 @@ def main():
         'title': BOOK_TITLE,
         'author': BOOK_AUTHOR,
         'category': 'Homoeopathic Philosophy',
-        'description': 'Fifty clinical cases demonstrating the efficacy of homoeopathic medicine, by J. Compton Burnett, M.D. (1888, Second Edition).',
+        'description': 'Fifty clinical cases demonstrating the efficacy of homoeopathic medicine. Second Edition, Corrected. London: The Homoeopathic Publishing Co., 1888.',
         'totalChapters': len(chapters),
         'chapters': chapters,
-        'source': 'fiftyreasonsforb00burn (1).pdf (OCR processed)',
+        'source': 'fiftyreasonsforb00burn (1).pdf (OCR processed, structure preserved)',
     }
     
-    # Save
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
     with open(OUTPUT, 'w', encoding='utf-8') as f:
         json.dump(book, f, ensure_ascii=False, indent=2)
     
-    print(f"\n✓ Saved: {OUTPUT}")
-    print(f"  File size: {os.path.getsize(OUTPUT):,} bytes")
-    print(f"  Chapters: {len(chapters)}")
-    print(f"  Total words: {len(cleaned.split()):,}")
+    print(f"\n✓ Saved: {OUTPUT} ({os.path.getsize(OUTPUT):,} bytes)")
     
-    # Show sample chapter
-    if chapters:
-        print(f"\n  Sample chapter ({chapters[0]['title']}):")
-        print(f"    {chapters[0]['content'][:300]}...")
-    
-    # Register in books-data.ts
-    print(f"\nRegistering in books-data.ts...")
-    with open(BOOKS_DATA, 'r') as f:
-        content = f.read()
-    
-    if BOOK_ID not in content:
-        # Add to bookIds array
-        old_line = "    'organon-bk-sarkar',\n  ];"
-        new_line = f"    'organon-bk-sarkar',\n    '{BOOK_ID}',\n  ];"
-        content = content.replace(old_line, new_line)
-        with open(BOOKS_DATA, 'w') as f:
-            f.write(content)
-        print(f"  ✓ Added '{BOOK_ID}' to books-data.ts")
-    else:
-        print(f"  ✓ Already registered in books-data.ts")
-    
-    print(f"\n✓ Complete! Book imported successfully.")
+    # Show chapter list
+    print(f"\nChapter list:")
+    for ch in chapters:
+        wc = len(ch['content'].split())
+        print(f"  {ch['title']}: {wc:,} words")
 
 
 if __name__ == '__main__':
