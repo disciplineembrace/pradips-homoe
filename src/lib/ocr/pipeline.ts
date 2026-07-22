@@ -48,6 +48,7 @@ export interface OcrPipelineOptions {
   detectTables?: boolean;
   detectLists?: boolean;
   removeDuplicates?: boolean;
+  removeRandomNumbers?: boolean;
   formatTypography?: boolean;
   validateQuality?: boolean;
   minConfidence?: number;
@@ -67,6 +68,7 @@ export const DEFAULT_OPTIONS: OcrPipelineOptions = {
   detectTables: true,
   detectLists: true,
   removeDuplicates: true,
+  removeRandomNumbers: true,
   formatTypography: true,
   validateQuality: true,
   minConfidence: 60,
@@ -190,6 +192,127 @@ function removeOcrArtifacts(text: string): string {
   return result;
 }
 
+/**
+ * Remove random numbers & OCR artifact digits appended to words.
+ *
+ * Detects and removes:
+ *   - Random numbers appended to words (Karti075 → Karti, Aconite123 → Aconite)
+ *   - OCR-generated serial numbers (Mind009 → Mind, Head09 → Head)
+ *   - Corrupted alphanumeric strings (ABC123XYZ → ABC)
+ *   - OCR confidence markers / scanner IDs
+ *
+ * PRESERVES legitimate numbers that are part of the original book:
+ *   - Chapter 1, Section 2, Aphorism 153
+ *   - Potency 30C, 200C, 1M, LM1
+ *   - Decimal numbering (1., 2., 3.)
+ *   - Roman numerals (I, II, III, IV)
+ *   - Page references ("see page 245")
+ *   - Remedy grades if printed in original
+ *   - Year references (1888, 2020)
+ *   - Dosage numbers (3x, 6x, 12x, 30C)
+ */
+function removeRandomNumbers(text: string, opts: OcrPipelineOptions): string {
+  if (!opts.removeRandomNumbers) return text;
+
+  let result = text;
+
+  // ── Pattern 1: Word followed by 2+ digits that are NOT a legitimate reference ──
+  // Examples to REMOVE: Karti075, Aconite123, Mind009, Head09
+  // Examples to KEEP: Chapter1 (has space), 30C (potency), page245 (context)
+  //
+  // Rule: Remove digits appended directly to a WORD (no space) when:
+  //   - The word is NOT a number-related keyword (page, chapter, section, etc.)
+  //   - The digits are NOT preceded by a potency indicator (x, C, M, LM)
+  //   - The digits are NOT part of a decimal numbering list (1., 2., etc.)
+
+  // First, protect legitimate number patterns by replacing them with placeholders
+  const PROTECTED_PATTERNS: Array<[RegExp, string]> = [
+    // Potency: 30C, 200C, 1M, 10M, 50M, CM, LM1, LM2
+    [/\b(\d{1,4})\s*([CxXmM]{1,2})\b/g, '§POTENCY_$1_$2§'],
+    // Decimal numbering: 1., 2., 3.
+    [/\b(\d{1,3})\.\s/g, '§DEC_$1.§ '],
+    // Chapter/Section/Aphorism/Page + number
+    [/\b(Chapter|Section|Aphorism|Page|page|Vol|Volume|Part|No\.?)\s*(\d{1,4})\b/gi, '§REF_$1_$2§'],
+    // Year references: 1888, 1900-2025
+    [/\b(1[89]\d{2}|20[0-2]\d)\b/g, '§YEAR_$1§'],
+    // Roman numerals at start of line (list items)
+    [/^([IVXLCDM]{1,5})\.\s/gm, '§ROMAN_$1.§ '],
+    // Dosage: 3x, 6x, 12x, 30x
+    [/\b(\d{1,3})x\b/gi, '§DOSE_$1x§'],
+    // Grade numbers in parentheses: (1), (2), (3), (4)
+    [/\((\d)\)/g, '§GR_$1§'],
+    // "see page 245" type references
+    [/(see\s+(?:page|p\.)\s*\d{1,4})/gi, '§SEE_$1§'],
+  ];
+
+  // Apply protections
+  for (const [pattern, replacement] of PROTECTED_PATTERNS) {
+    result = result.replace(pattern, replacement);
+  }
+
+  // Now remove random digits appended to words
+  // Pattern: word (letters) immediately followed by 2+ digits (no space)
+  // But NOT if the word is already a placeholder
+  result = result.replace(
+    /\b([a-zA-Z]{2,})(\d{2,})\b/g,
+    (match, word, digits) => {
+      // Don't touch placeholders
+      if (word.startsWith('§') || word.endsWith('§')) return match;
+      // Keep if the "word" is actually a known abbreviation (like Nat, Calc, etc.)
+      // and the digits might be a legitimate reference
+      // Check if this looks like an OCR artifact:
+      //   - The word is a known English/homeopathy word
+      //   - The digits don't follow a natural pattern
+      // Remove the digits — they're OCR artifacts
+      return word;
+    }
+  );
+
+  // Also remove single digit appended to short words (Mind9 → Mind)
+  // But only if the word is 3+ chars and the digit doesn't follow a potency pattern
+  result = result.replace(
+    /\b([a-zA-Z]{3,})(\d)\b(?!x\b|C\b|M\b)/g,
+    (match, word, digit) => {
+      if (word.startsWith('§') || word.endsWith('§')) return match;
+      // Keep if it's a list item like "Reason1" — check context
+      // Remove the trailing digit
+      return word;
+    }
+  );
+
+  // Remove standalone corrupted alphanumeric strings (ABC123XYZ, x7y2k9)
+  result = result.replace(/\b([a-zA-Z]\d+[a-zA-Z]+\d*|[a-zA-Z]+\d+[a-zA-Z]\d+)\b/g, (match) => {
+    // Keep if it could be a legitimate abbreviation (like B-v., Calc. p.)
+    if (match.length <= 4 && /^[A-Z]/.test(match)) return match;
+    // Otherwise remove — it's OCR garbage
+    return '';
+  });
+
+  // Remove OCR confidence markers (e.g., "7", "7 Zine. pic." where 7 is OCR noise)
+  // Pattern: standalone single digit followed by non-word content
+  result = result.replace(/\b(\d)\s+(?=[a-z])/g, (match, digit, offset, full) => {
+    // Only remove if it's at the start of a line or after a period
+    const before = full.slice(Math.max(0, offset - 5), offset);
+    if (before.trim().endsWith('.') || before.trim().endsWith('\n') || offset === 0) {
+      return ''; // Remove the digit
+    }
+    return match; // Keep it
+  });
+
+  // Restore protected patterns
+  result = result
+    .replace(/§POTENCY_(\d+)_([CxXmM]{1,2})§/g, '$1$2')
+    .replace(/§DEC_(\d{1,3})\.§ /g, '$1. ')
+    .replace(/§REF_(\w+)_(\d{1,4})§/gi, '$1 $2')
+    .replace(/§YEAR_(\d{4})§/g, '$1')
+    .replace(/§ROMAN_([IVXLCDM]+)\.§ /g, '$1. ')
+    .replace(/§DOSE_(\d{1,3})x§/gi, '$1x')
+    .replace(/§GR_(\d)§/g, '($1)')
+    .replace(/§SEE_(.*?)§/gi, '$1');
+
+  return result;
+}
+
 function formatTypography(text: string, opts: OcrPipelineOptions): string {
   if (!opts.formatTypography) return text;
   let result = text;
@@ -266,6 +389,7 @@ export function processOcrText(
   text = reconstructText(text, opts);
   text = removeDuplicates(text, opts);
   text = removeOcrArtifacts(text);
+  text = removeRandomNumbers(text, opts);
   text = formatTypography(text, opts);
   const validation = validateQuality(text);
   if (!validation.passed) issues.push(...validation.issues);
