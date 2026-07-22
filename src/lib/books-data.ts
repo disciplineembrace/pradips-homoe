@@ -41,6 +41,7 @@ export async function getAllBooks(): Promise<any[]> {
     'sommer-quick-easy',
     'organon-bk-sarkar',
     'kent-mm',
+    'burnett-fifty-reasons',
   ];
   const books = [];
   for (const id of bookIds) {
