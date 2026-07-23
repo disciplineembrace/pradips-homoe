@@ -180,15 +180,92 @@ function removeDuplicates(text: string, opts: OcrPipelineOptions): string {
 
 function removeOcrArtifacts(text: string): string {
   let result = text;
+  // Remove control characters (keep newline, tab)
   result = result.replace(/\x0c/g, '\n');
   result = result.replace(/[\x00-\x08\x0B\x0E-\x1F]/g, '');
+  // Fix smart quote artifacts
   result = result.replace(/â€œ/g, '"');
   result = result.replace(/â€\x9d/g, '"');
   result = result.replace(/â€™/g, "'");
   result = result.replace(/â€"/g, '—');
   result = result.replace(/â€"/g, '–');
   result = result.replace(/â€¢/g, '•');
-  result = result.replace(/\s[~`@#$%^&*+=<>{}[\]|\\]\s/g, ' ');
+  // Remove ligatures
+  result = result.replace(/ﬁ/g, 'fi');
+  result = result.replace(/ﬂ/g, 'fl');
+  result = result.replace(/ﬀ/g, 'ff');
+  result = result.replace(/ﬃ/g, 'ffi');
+  result = result.replace(/ﬄ/g, 'ffl');
+  // Fix common OCR character confusions (only in isolated contexts, not in words)
+  // rn → m (only standalone, not in words like "burn")
+  // cl → d (only in specific OCR garbage contexts)
+  // These are NOT applied globally to avoid changing legitimate words
+
+  // Remove isolated random symbols (not part of legitimate content)
+  // Pattern: symbol surrounded by spaces or at line boundaries
+  // PRESERVE: legitimate symbols (30C, 200C, °C, mg, ml, →, etc.)
+  result = result.replace(/^\s*[\^`´'~@#$]+$\s*$/gm, ''); // Lines with only symbols
+  result = result.replace(/^\s*[*_]{2,}\s*$/gm, ''); // Lines with only ** or __
+  result = result.replace(/^\s*[-=]{2,}\s*$/gm, ''); // Lines with only -- or ==
+  result = result.replace(/^\s*[|\\/]{2,}\s*$/gm, ''); // Lines with only || or \\
+  result = result.replace(/^\s*[<>]{2,}\s*$/gm, ''); // Lines with only << or >>
+  result = result.replace(/^\s*[¶†‡※¤§]+\s*$/gm, ''); // Lines with only rare symbols
+  result = result.replace(/^\s*\.{3,}\s*$/gm, ''); // Lines with only ...
+  result = result.replace(/^\s*_{3,}\s*$/gm, ''); // Lines with only ___
+  result = result.replace(/^\s*#{2,}\s*$/gm, ''); // Lines with only ##
+
+  // Remove OCR garbage patterns (garbled short tokens)
+  result = result.replace(/\b[iI][\^`´][gG]\b/g, ''); // "i^g" type garbage
+  result = result.replace(/\b\w*[0-9][a-zA-Z][0-9]\w*\b/g, (m) => {
+    // Keep legitimate alphanumeric (like B-v, Calc. p.)
+    if (m.length <= 4 && /^[A-Z]/.test(m)) return m;
+    return ''; // Remove corrupted strings
+  });
+
+  return result;
+}
+
+/**
+ * Remove markdown symbols that are OCR artifacts (not intentional formatting).
+ * Removes: **, __, ##, `` from OCR text that shouldn't have markdown.
+ * PRESERVES: legitimate formatting (bold headings, etc.)
+ */
+function removeMarkdownArtifacts(text: string): string {
+  let result = text;
+
+  // Remove stray markdown symbols that are NOT part of intentional formatting
+  // Pattern: ** not surrounding text (orphaned asterisks)
+  result = result.replace(/(?<!\w)\*\*(?!\w)/g, ''); // Orphaned **
+  result = result.replace(/(?<!\w)__(?!\w)/g, ''); // Orphaned __
+  result = result.replace(/(?<!\w)##(?!\w)/g, ''); // Orphaned ##
+  result = result.replace(/``/g, '"'); // Double backtick → quote
+  result = result.replace(/''/g, '"'); // Double single quote → quote
+
+  // Remove triple+ symbols
+  result = result.replace(/\*{3,}/g, '');
+  result = result.replace(/_{3,}/g, '');
+  result = result.replace(/-{4,}/g, ''); // Long dashes (keep ---)
+  result = result.replace(/={3,}/g, '');
+  result = result.replace(/\|{3,}/g, '');
+  result = result.replace(/#{3,}/g, '');
+
+  // Remove angled bracket artifacts: <text>, >text<
+  result = result.replace(/<([a-zA-Z\s]{1,20})>/g, '$1'); // <text> → text
+  result = result.replace(/<<([^>]+)>>/g, '$1'); // <<text>> → text
+  result = result.replace(/»/g, '"');
+  result = result.replace(/«/g, '"');
+
+  // Remove pipe artifacts: |text|
+  result = result.replace(/^\|([^|]+)\|$/gm, '$1');
+
+  // Remove tilde artifacts: ~text~
+  result = result.replace(/~([^~]+)~/g, '$1');
+
+  // Remove bracket artifacts around text: [text], {text}
+  // Only if the content looks like OCR garbage (not legitimate references)
+  // PRESERVE: [1], [2] (footnote references), {note} (legitimate)
+  result = result.replace(/\[([a-zA-Z\s]{50,})\]/g, '$1'); // Very long [text] → text
+
   return result;
 }
 
@@ -389,6 +466,7 @@ export function processOcrText(
   text = reconstructText(text, opts);
   text = removeDuplicates(text, opts);
   text = removeOcrArtifacts(text);
+  text = removeMarkdownArtifacts(text);
   text = removeRandomNumbers(text, opts);
   text = formatTypography(text, opts);
   const validation = validateQuality(text);
