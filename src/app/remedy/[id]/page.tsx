@@ -6,11 +6,17 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
 
+type RemedySection = {
+  heading?: string;
+  paragraphs?: string[];
+};
+
 type Remedy = {
   id: string; name: string; common?: string; author: string;
   chapter?: string; organ?: string; modalities?: string;
   constitution?: string; relationships?: string; dose?: string;
   keynote?: string; full?: string; letter?: string;
+  sections?: RemedySection[];
 };
 
 export default function RemedyDetailPage() {
@@ -242,13 +248,24 @@ export default function RemedyDetailPage() {
 
         {/* Content sections — show only unique content per section, hide duplicates at render time */}
         <article className="bg-white rounded-lg shadow p-6">
-          {/* For Dubey remedies: skip the Keynote section (it's just the first 300 chars of full text)
-              and render the Full Description with structured headings directly */}
-          {remedy.author === 'Dubey' && showFull ? (
-            <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-3 pb-1 border-b border-[#E8DCC3]">Full Description</h2>
-              {renderStructuredText(remedy.full!)}
-            </section>
+          {/* For Dubey remedies: render structured sections from the book's actual headings */}
+          {remedy.author === 'Dubey' && remedy.sections && remedy.sections.length > 0 ? (
+            <>
+              {remedy.sections.map((section, idx) => (
+                <section key={idx} className="mb-5 last:mb-0">
+                  {section.heading && (
+                    <h3 className="font-serif text-base text-[#173B2D] mt-4 mb-2 pb-1 border-b border-[#E8DCC3] font-semibold tracking-wide">
+                      {section.heading}
+                    </h3>
+                  )}
+                  {section.paragraphs && section.paragraphs.map((para, pidx) => (
+                    <p key={pidx} className="text-stone-700 leading-relaxed mb-2 text-sm">
+                      {para}
+                    </p>
+                  ))}
+                </section>
+              ))}
+            </>
           ) : (
             <>
               {showKeynote && (
