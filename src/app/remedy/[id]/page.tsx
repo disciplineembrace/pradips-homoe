@@ -76,6 +76,75 @@ export default function RemedyDetailPage() {
     return aTrim === bTrim;
   }
 
+  // Helper: render Dubey-style text with ALL CAPS section headers as proper subheadings
+  // This parses the OCR text and renders INTRODUCTION, CLINICAL, SPHERES OF ACTION, etc.
+  // as styled <h3> subheadings instead of plain text.
+  function renderStructuredText(text: string): React.ReactNode {
+    if (!text) return null;
+    const lines = text.split('\n');
+    const elements: React.ReactNode[] = [];
+    let currentParagraph: string[] = [];
+    let keyCounter = 0;
+
+    // Known section headers from S.K. Dubey's Materia Medica
+    const sectionHeaders = new Set([
+      'INTRODUCTION', 'CLINICAL', 'CLINICAL USE', 'PARTICULARS', 'PARTICULAR',
+      'PERTICULARS', 'GUIDING SYMPTOMS', 'SPHERES OF ACTION', 'SPHERE OF ACTION',
+      'SPHERES OF ACTION & PATHOGENESIS', 'SPHERE OF ACTION & PATHOGENESIS',
+      'SPHERES OF ACTION AND PATHOGENESIS', 'SPHERE OF ACTION AND PATHOGENESIS',
+      'PATHOGENESIS', 'CONSTITUTION', 'RELATIONS', 'RELATION', 'RELATIONSHIP',
+      'REMEDY RELATIONSHIP', 'CHARACTERISTIC INDICATIONS', 'PHYSIOLOGICAL ACTION',
+      'PREPARATION AND DOSE', 'BIOCHEMIC SYSTEM', 'GENERAL MODALITY', 'MODALITIES',
+      'AGGRAVATION', 'AMELIORATION', 'CAUSATION', 'DRUG ACTION', 'DRUG PICTURE',
+      'ORGAN AFFINITY', 'CHARACTERISTIC', 'CHARACTERISTICS', 'IMPORTANT SYMPTOMS',
+      'SUMMARY', 'BIOCHEMIC', 'GLOSSARY', 'COMPLEMENTARY', 'INIMICAL', 'ANTIDOTE',
+      'ANTIDOTES', 'COLLATERAL', 'COMPARE', 'COMPARISON', 'DOSE', 'POTENCY',
+      'MIASMATIC', 'MIASM', 'THERAPEUTIC', 'THERAPEUTICS', 'KEYNOTE', 'KEYNOTES',
+      'PROVING', 'OBSERVATION', 'OBSERVATIONS',
+      'THE TWELVE TISSUE SALTS', 'WINE RELATION',
+    ]);
+
+    function flushParagraph() {
+      if (currentParagraph.length > 0) {
+        const paraText = currentParagraph.join('\n').trim();
+        if (paraText) {
+          elements.push(
+            <p key={`p-${keyCounter++}`} className="text-stone-700 whitespace-pre-line leading-relaxed mb-3 text-sm">
+              {paraText}
+            </p>
+          );
+        }
+        currentParagraph = [];
+      }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) {
+        flushParagraph();
+        continue;
+      }
+      // Check if line is an ALL CAPS section header
+      const isAllCaps = line.match(/^[A-Z][A-Z\s\-\'/()&.]+$/) &&
+                        line.length >= 3 &&
+                        line.length <= 60 &&
+                        !line.endsWith('.') &&
+                        line.split(/\s+/).length <= 6;
+      if (isAllCaps && (sectionHeaders.has(line) || line.split(/\s+/).length <= 4)) {
+        flushParagraph();
+        elements.push(
+          <h3 key={`h-${keyCounter++}`} className="font-serif text-base text-[#173B2D] mt-4 mb-2 pb-1 border-b border-[#E8DCC3] font-semibold tracking-wide">
+            {line}
+          </h3>
+        );
+      } else {
+        currentParagraph.push(line);
+      }
+    }
+    flushParagraph();
+    return <div>{elements}</div>;
+  }
+
   // Determine which sections to show — compare at render time, DON'T delete data
   // Keynote is always shown if it has content
   const showKeynote = hasContent(remedy.keynote);
@@ -173,51 +242,62 @@ export default function RemedyDetailPage() {
 
         {/* Content sections — show only unique content per section, hide duplicates at render time */}
         <article className="bg-white rounded-lg shadow p-6">
-          {showKeynote && (
+          {/* For Dubey remedies: skip the Keynote section (it's just the first 300 chars of full text)
+              and render the Full Description with structured headings directly */}
+          {remedy.author === 'Dubey' && showFull ? (
             <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Keynote</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
+              <h2 className="font-serif text-xl text-[#173B2D] mb-3 pb-1 border-b border-[#E8DCC3]">Full Description</h2>
+              {renderStructuredText(remedy.full!)}
             </section>
-          )}
+          ) : (
+            <>
+              {showKeynote && (
+                <section className="mb-6 last:mb-0">
+                  <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Keynote</h2>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
+                </section>
+              )}
 
-          {showConstitution && (
-            <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Constitution</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
-            </section>
-          )}
+              {showConstitution && (
+                <section className="mb-6 last:mb-0">
+                  <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Constitution</h2>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
+                </section>
+              )}
 
-          {showFull && (
-            <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Full Description</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.full}</p>
-            </section>
-          )}
+              {showFull && (
+                <section className="mb-6 last:mb-0">
+                  <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Full Description</h2>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.full}</p>
+                </section>
+              )}
 
-          {showModalities && (
-            <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Modalities</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
-            </section>
-          )}
+              {showModalities && (
+                <section className="mb-6 last:mb-0">
+                  <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Modalities</h2>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
+                </section>
+              )}
 
-          {showRelationships && (
-            <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Relationships</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
-            </section>
-          )}
+              {showRelationships && (
+                <section className="mb-6 last:mb-0">
+                  <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Relationships</h2>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
+                </section>
+              )}
 
-          {showDose && (
-            <section className="mb-6 last:mb-0">
-              <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Dose</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.dose}</p>
-            </section>
-          )}
+              {showDose && (
+                <section className="mb-6 last:mb-0">
+                  <h2 className="font-serif text-xl text-[#173B2D] mb-2 pb-1 border-b border-[#E8DCC3]">Dose</h2>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.dose}</p>
+                </section>
+              )}
 
-          {/* If no sections have content */}
-          {!showKeynote && !showConstitution && !showFull && !showModalities && !showRelationships && !showDose && (
-            <p className="text-sm text-[#7C8F6E] italic text-center py-8">No detailed content available for this remedy.</p>
+              {/* If no sections have content */}
+              {!showKeynote && !showConstitution && !showFull && !showModalities && !showRelationships && !showDose && (
+                <p className="text-sm text-[#7C8F6E] italic text-center py-8">No detailed content available for this remedy.</p>
+              )}
+            </>
           )}
         </article>
       </main>
