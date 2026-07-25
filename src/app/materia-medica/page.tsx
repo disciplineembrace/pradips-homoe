@@ -16,7 +16,7 @@ type Remedy = {
   letter?: string;
 };
 
-const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur'];
+const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur', 'Dubey'];
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const PAGE_SIZE = 30;
 
