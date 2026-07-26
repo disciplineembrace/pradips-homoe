@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { useBrowseState } from '@/hooks/use-browse-state';
 
 type Rubric = {
   id: string;
@@ -44,10 +45,14 @@ export default function RepertoryPage() {
   const [session, setSession] = useState<any>(null);
   const [rubricNodes, setRubricNodes] = useState<MainRubricNode[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [q, setQ] = useState('');
-  const [author, setAuthor] = useState('Kent');
-  const [chapter, setChapter] = useState('');
+  // Use browse state persistence hook — preserves author/chapter/search/page across navigation
+  const { state: browseState, setState: setBrowseState, restoreScroll } = useBrowseState('repertory', {
+    author: 'Kent',
+    chapter: '',
+    q: '',
+    page: 1,
+  });
+  const { author, chapter, q, page } = browseState;
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -98,7 +103,7 @@ export default function RepertoryPage() {
   }, [session, loadRubrics]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [q, author, chapter]);
+  useEffect(() => { setBrowseState({ page: 1 }); }, [q, author, chapter]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -162,7 +167,7 @@ export default function RepertoryPage() {
           {AUTHORS.map(a => (
             <button
               key={a}
-              onClick={() => { setAuthor(a); setChapter(''); }}
+              onClick={() => setBrowseState({ author: a, chapter: '' })}
               className={`px-4 py-1.5 text-xs font-semibold rounded transition-colors ${
                 author === a
                   ? 'bg-[#173B2D] text-[#F5EFE0]'
@@ -182,7 +187,7 @@ export default function RepertoryPage() {
             {/* Chapter dropdown */}
             <select
               value={chapter}
-              onChange={e => setChapter(e.target.value)}
+              onChange={e => setBrowseState({ chapter: e.target.value })}
               className="px-3 py-2 text-sm border border-[#E8DCC3] rounded text-[#173B2D] bg-white min-w-[200px]"
             >
               <option value="">All Chapters</option>
@@ -196,7 +201,7 @@ export default function RepertoryPage() {
                 type="text"
                 placeholder="Search rubrics by title, chapter, or remedy..."
                 value={q}
-                onChange={e => setQ(e.target.value)}
+                onChange={e => setBrowseState({ q: e.target.value })}
                 className="w-full px-4 py-2 pl-10 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C8F6E]">🔍</span>
@@ -322,13 +327,13 @@ export default function RepertoryPage() {
         {totalPages > 1 && (
           <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
             <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
+              onClick={() => setBrowseState({ page: Math.max(1, page - 1) })}
               disabled={page === 1}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >← Prev</button>
             <span className="text-sm text-[#7C8F6E]">Page {page} of {totalPages}</span>
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setBrowseState({ page: Math.min(totalPages, page + 1) })}
               disabled={page === totalPages}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >Next →</button>
