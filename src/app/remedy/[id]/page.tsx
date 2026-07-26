@@ -248,12 +248,12 @@ export default function RemedyDetailPage() {
 
         {/* Content sections — show only unique content per section, hide duplicates at render time */}
         <article className="bg-white rounded-lg shadow p-6">
-          {/* For Dubey remedies: render structured sections with visual hierarchy
+          {/* For Dubey/Phatak remedies: render structured sections with visual hierarchy
               - Main section heading = RED + BOLD
               - Nested sub-labels (detected from "Label :" pattern) = BLACK + BOLD
               - Body text = BLACK + NORMAL
           */}
-          {remedy.author === 'Dubey' && remedy.sections && remedy.sections.length > 0 ? (
+          {(remedy.author === 'Dubey' || remedy.author === 'Phatak') && remedy.sections && remedy.sections.length > 0 ? (
             <>
               {remedy.sections.map((section, idx) => (
                 <section key={idx} className="mb-6 last:mb-0">
