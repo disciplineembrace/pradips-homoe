@@ -253,7 +253,7 @@ export default function RemedyDetailPage() {
               - Nested sub-labels (detected from "Label :" pattern) = BLACK + BOLD
               - Body text = BLACK + NORMAL
           */}
-          {(remedy.author === 'Dubey' || remedy.author === 'Phatak') && remedy.sections && remedy.sections.length > 0 ? (
+          {(remedy.author === 'Dubey' || remedy.author === 'Phatak' || remedy.author === 'Allen') && remedy.sections && remedy.sections.length > 0 ? (
             <>
               {remedy.sections.map((section, idx) => (
                 <section key={idx} className="mb-6 last:mb-0">
