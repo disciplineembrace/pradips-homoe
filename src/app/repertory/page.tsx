@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
@@ -40,7 +40,17 @@ type Chapter = {
 const AUTHORS = ['Kent', 'Phatak', 'Murphy', 'Boericke', 'Phatak Biochemic'];
 const PAGE_SIZE = 20;
 
+function RepertoryPageImpl()
+
 export default function RepertoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RepertoryPageImpl />
+    </Suspense>
+  );
+}
+
+function RepertoryPageImpl() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [rubricNodes, setRubricNodes] = useState<MainRubricNode[]>([]);
