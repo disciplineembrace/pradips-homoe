@@ -207,7 +207,7 @@ export default function RemedyDetailPage() {
 
         {/* Title */}
         <div className="bg-white rounded-lg shadow p-6 mb-4">
-          <h1 className="font-serif text-3xl text-[#173B2D]">{remedy.name}</h1>
+          <h1 className="font-serif text-3xl font-bold text-black">{remedy.name}</h1>
           {remedy.common && <p className="text-sm italic text-[#7C8F6E] mt-1">{remedy.common}</p>}
           <div className="flex flex-wrap gap-2 mt-3">
             {remedy.author && <span className="text-xs bg-[#173B2D] text-[#C8A24A] px-2 py-1 rounded font-semibold">{remedy.author}</span>}
@@ -248,21 +248,37 @@ export default function RemedyDetailPage() {
 
         {/* Content sections — show only unique content per section, hide duplicates at render time */}
         <article className="bg-white rounded-lg shadow p-6">
-          {/* For Dubey remedies: render structured sections from the book's actual headings */}
+          {/* For Dubey remedies: render structured sections with visual hierarchy
+              - Main section heading = RED + BOLD
+              - Nested sub-labels (detected from "Label :" pattern) = BLACK + BOLD
+              - Body text = BLACK + NORMAL
+          */}
           {remedy.author === 'Dubey' && remedy.sections && remedy.sections.length > 0 ? (
             <>
               {remedy.sections.map((section, idx) => (
-                <section key={idx} className="mb-5 last:mb-0">
+                <section key={idx} className="mb-6 last:mb-0">
                   {section.heading && (
-                    <h3 className="font-serif text-base text-[#173B2D] mt-4 mb-2 pb-1 border-b border-[#E8DCC3] font-semibold tracking-wide">
+                    <h3 className="text-lg font-bold text-red-700 mt-5 mb-2 tracking-wide">
                       {section.heading}
                     </h3>
                   )}
-                  {section.paragraphs && section.paragraphs.map((para, pidx) => (
-                    <p key={pidx} className="text-stone-700 leading-relaxed mb-2 text-sm">
-                      {para}
-                    </p>
-                  ))}
+                  {section.paragraphs && section.paragraphs.map((para, pidx) => {
+                    // Detect nested sub-labels: "Label :" or "Label:" at start of paragraph
+                    const labelMatch = para.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
+                    if (labelMatch) {
+                      return (
+                        <div key={pidx} className="mb-2">
+                          <span className="text-sm font-bold text-black">{labelMatch[1]}</span>{' '}
+                          <span className="text-sm text-black leading-relaxed">{labelMatch[2]}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <p key={pidx} className="text-sm text-black leading-relaxed mb-2">
+                        {para}
+                      </p>
+                    );
+                  })}
                 </section>
               ))}
             </>
