@@ -35,6 +35,7 @@ export function Navbar() {
     { href: '/repertory', label: 'Repertory' },
     { href: '/therapeutics', label: 'Therapeutics' },
     { href: '/clinical', label: 'Clinical' },
+    { href: '/quick-clinical-search', label: 'Quick Search' },
     { href: '/organon', label: 'Organon' },
     { href: '/segal', label: 'Segal' },
     { href: '/predictive', label: 'Predictive' },
