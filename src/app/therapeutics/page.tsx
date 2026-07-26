@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -18,7 +18,17 @@ type Disease = {
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+function TherapeuticsPageImpl()
+
 export default function TherapeuticsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TherapeuticsPageImpl />
+    </Suspense>
+  );
+}
+
+function TherapeuticsPageImpl() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [diseases, setDiseases] = useState<Disease[]>([]);

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
@@ -21,7 +21,17 @@ const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankar
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const PAGE_SIZE = 30;
 
+function MateriaMedicaPageImpl()
+
 export default function MateriaMedicaPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MateriaMedicaPageImpl />
+    </Suspense>
+  );
+}
+
+function MateriaMedicaPageImpl() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [remedies, setRemedies] = useState<Remedy[]>([]);
