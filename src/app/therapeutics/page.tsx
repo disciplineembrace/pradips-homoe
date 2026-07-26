@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { useBrowseState } from '@/hooks/use-browse-state';
 
 type Remedy = { name: string; potency?: string };
 type Subcategory = { name: string; remedies: Remedy[] };
@@ -22,8 +23,12 @@ export default function TherapeuticsPage() {
   const [session, setSession] = useState<any>(null);
   const [diseases, setDiseases] = useState<Disease[]>([]);
   const [total, setTotal] = useState(0);
-  const [q, setQ] = useState('');
-  const [letter, setLetter] = useState('');
+  // Use browse state persistence hook
+  const { state: browseState, setState: setBrowseState, restoreScroll } = useBrowseState('therapeutics', {
+    q: '',
+    letter: '',
+  });
+  const { q, letter } = browseState;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const reader = useReaderFeatures();
@@ -97,20 +102,20 @@ export default function TherapeuticsPage() {
               type="text"
               placeholder="Search diseases & formulas..."
               value={q}
-              onChange={e => setQ(e.target.value)}
+              onChange={e => setBrowseState({ q: e.target.value })}
               className="w-full px-4 py-2.5 pl-10 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C8F6E]">🔍</span>
           </div>
           <div className="flex flex-wrap gap-1">
             <button
-              onClick={() => setLetter('')}
+              onClick={() => setBrowseState({ letter: "" })}
               className={`px-3 h-7 text-xs font-mono rounded ${letter === '' ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-[#F5EFE0] border border-[#E8DCC3] hover:bg-[#E8DCC3] text-[#173B2D]'}`}
             >All</button>
             {LETTERS.map(L => (
               <button
                 key={L}
-                onClick={() => setLetter(letter === L ? '' : L)}
+                onClick={() => setBrowseState({ letter: letter === L ? "" : L })}
                 className={`w-7 h-7 text-xs font-mono rounded ${letter === L ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-[#F5EFE0] border border-[#E8DCC3] hover:bg-[#E8DCC3] text-[#173B2D]'}`}
               >{L}</button>
             ))}

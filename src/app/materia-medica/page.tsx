@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { useBrowseState } from '@/hooks/use-browse-state';
 
 type Remedy = {
   id: string;
@@ -25,12 +26,17 @@ export default function MateriaMedicaPage() {
   const [session, setSession] = useState<any>(null);
   const [remedies, setRemedies] = useState<Remedy[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [q, setQ] = useState('');
-  const [author, setAuthor] = useState('All');
-  const [letter, setLetter] = useState('');
   const [loading, setLoading] = useState(false);
   const reader = useReaderFeatures();
+
+  // Use browse state persistence hook — preserves author/letter/search/page across navigation
+  const { state: browseState, setState: setBrowseState, restoreScroll } = useBrowseState('materia-medica', {
+    author: 'All',
+    letter: '',
+    q: '',
+    page: 1,
+  });
+  const { author, letter, q, page } = browseState;
 
   // Auth check — set session immediately, do NOT block on data
   useEffect(() => {
@@ -65,8 +71,12 @@ export default function MateriaMedicaPage() {
     if (session) loadRemedies();
   }, [session, loadRemedies]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [q, author, letter]);
+  // Restore scroll position when returning from detail page
+  useEffect(() => {
+    if (session && remedies.length > 0) {
+      restoreScroll();
+    }
+  }, [session, remedies, restoreScroll]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -112,7 +122,7 @@ export default function MateriaMedicaPage() {
           {AUTHORS.map(a => (
             <button
               key={a}
-              onClick={() => setAuthor(a)}
+              onClick={() => setBrowseState({ author: a })}
               className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors whitespace-nowrap ${
                 author === a
                   ? 'bg-[#173B2D] text-[#F5EFE0]'
@@ -131,20 +141,20 @@ export default function MateriaMedicaPage() {
               type="text"
               placeholder="Search remedies by name, common name, or keynote..."
               value={q}
-              onChange={e => setQ(e.target.value)}
+              onChange={e => setBrowseState({ q: e.target.value })}
               className="w-full px-4 py-2.5 pl-10 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C8F6E]">🔍</span>
           </div>
           <div className="flex flex-wrap gap-1">
             <button
-              onClick={() => setLetter('')}
+              onClick={() => setBrowseState({ letter: "" })}
               className={`px-3 h-7 text-xs font-mono rounded ${letter === '' ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-[#F5EFE0] border border-[#E8DCC3] hover:bg-[#E8DCC3] text-[#173B2D]'}`}
             >All</button>
             {LETTERS.map(L => (
               <button
                 key={L}
-                onClick={() => setLetter(letter === L ? '' : L)}
+                onClick={() => setBrowseState({ letter: letter === L ? "" : L })}
                 className={`w-7 h-7 text-xs font-mono rounded ${letter === L ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-[#F5EFE0] border border-[#E8DCC3] hover:bg-[#E8DCC3] text-[#173B2D]'}`}
               >{L}</button>
             ))}
@@ -207,13 +217,13 @@ export default function MateriaMedicaPage() {
         {totalPages > 1 && (
           <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
             <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
+              onClick={() => setBrowseState({ page: Math.max(1, page - 1) })}
               disabled={page === 1}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >← Prev</button>
             <span className="text-sm text-[#7C8F6E]">Page {page} of {totalPages}</span>
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setBrowseState({ page: Math.min(totalPages, page + 1) })}
               disabled={page === totalPages}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >Next →</button>
