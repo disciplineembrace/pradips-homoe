@@ -34,6 +34,7 @@ export function Navbar() {
     { href: '/materia-medica', label: 'Materia Medica' },
     { href: '/repertory', label: 'Repertory' },
     { href: '/therapeutics', label: 'Therapeutics' },
+    { href: '/clinical', label: 'Clinical' },
     { href: '/organon', label: 'Organon' },
     { href: '/segal', label: 'Segal' },
     { href: '/predictive', label: 'Predictive' },
