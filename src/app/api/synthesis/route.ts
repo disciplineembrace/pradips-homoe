@@ -95,7 +95,19 @@ export async function GET(req: NextRequest) {
       const symptomId = url.searchParams.get('symptomId');
       if (!symptomId) return NextResponse.json({ crossRefs: [] });
       const crossRefs = await loadCrossRefs();
-      return NextResponse.json({ crossRefs: crossRefs[symptomId] || [] });
+      const sid = parseInt(symptomId, 10);
+      // BUG FIX: Same filtering as rubricDetail — exclude self-refs, dups, invalid
+      const rawXrefs = crossRefs[symptomId] || [];
+      const seenIds = new Set<number>();
+      const cleanXrefs = rawXrefs.filter((cr: any) => {
+        if (!cr.id || typeof cr.id !== 'number' || cr.id <= 0) return false;
+        if (cr.id === sid) return false;
+        if (seenIds.has(cr.id)) return false;
+        seenIds.add(cr.id);
+        if (!cr.text || typeof cr.text !== 'string' || cr.text.trim() === '') return false;
+        return true;
+      });
+      return NextResponse.json({ crossRefs: cleanXrefs });
     }
 
     if (action === 'remedyList') {
@@ -123,12 +135,30 @@ export async function GET(req: NextRequest) {
       const crossRefs = await loadCrossRefs();
       const byGrade: Record<number, { abbrev: string; full: string }[]> = {};
       for (const r of remedies) { if (!byGrade[r.d]) byGrade[r.d] = []; byGrade[r.d].push({ abbrev: r.r, full: remediesList[r.r] || r.r }); }
+      // BUG FIX: Filter cross-references to exclude self-references, duplicates,
+      // and entries with invalid/missing destination IDs.
+      // The rebuilt cross_references.json already excludes these, but this is
+      // defense-in-depth at the API layer.
+      const rawXrefs = crossRefs[String(rubricId)] || [];
+      const seenIds = new Set<number>();
+      const cleanXrefs = rawXrefs.filter((cr: any) => {
+        // Must have a valid destination ID
+        if (!cr.id || typeof cr.id !== 'number' || cr.id <= 0) return false;
+        // Must not be the same as the current rubric
+        if (cr.id === rubricId) return false;
+        // Must not be a duplicate
+        if (seenIds.has(cr.id)) return false;
+        seenIds.add(cr.id);
+        // Must have non-empty text
+        if (!cr.text || typeof cr.text !== 'string' || cr.text.trim() === '') return false;
+        return true;
+      });
       return NextResponse.json({
         rubric: { id: node.i, name: node.n, path: node.p, level: node.l, chapterId: node.c, fatherId: node.f },
         children: children.map((c: any) => ({ id: c.i, name: c.n, path: c.p, level: c.l })),
         remedyCount: remedies.length,
         byGrade,
-        crossRefs: crossRefs[String(rubricId)] || [],
+        crossRefs: cleanXrefs,
       });
     }
 
