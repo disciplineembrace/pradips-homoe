@@ -47,3 +47,10 @@ worklog.md
 agent-ctx/
 mini-services/
 examples/
+
+# Backups and intermediate files (not needed in production)
+data/backups/
+data/kent-remedies-fresh.json
+data/kent-remedies-final.json
+work/
+backups/
