@@ -1,28 +1,36 @@
 # Files/dirs to exclude from Vercel deployment
 # These are not needed in production and would bloat the deployment
 
-# Old backup of static site
-vercel-deploy-old-backup/
-
-# Old git repo (was for the static site)
-git-repo/
-
-# Upload folder (source PDFs - not needed in production)
+# Upload folder (source PDFs - 567 MB)
 upload/
 
-# Skills (Z.ai internal)
+# Skills (Z.ai internal - 61 MB)
 skills/
 
-# Scripts (dev/seed scripts - not needed at runtime)
+# Scripts (dev/seed scripts)
 scripts/
 
-# Download folder (delivery artifacts)
+# Download folder
 download/
 
-# Local SQLite db (we use Neon Postgres)
+# Local SQLite db
 db/
 
-# Local env files (env vars set via Vercel dashboard)
+# Work directory (OCR output)
+work/
+
+# Backups
+backups/
+data/backups/
+
+# Intermediate/build files (not used at runtime)
+data/kent-remedies-fresh.json
+data/kent-remedies-final.json
+data/phatak-remedies-fresh.json
+data/boericke-repertory.json
+data/predictive_chapters.json
+
+# Local env files
 .env
 .env.local
 .env.development
@@ -44,13 +52,13 @@ Thumbs.db
 # Misc
 README.md
 worklog.md
+SECURITY_AUDIT_REPORT.md
+PERFORMANCE_AUDIT_REPORT.md
+CAPACITY_AUDIT_REPORT.md
 agent-ctx/
 mini-services/
 examples/
-
-# Backups and intermediate files (not needed in production)
-data/backups/
-data/kent-remedies-fresh.json
-data/kent-remedies-final.json
-work/
-backups/
+vercel-deploy-old-backup/
+git-repo/
+Caddyfile
+push-to-github.sh

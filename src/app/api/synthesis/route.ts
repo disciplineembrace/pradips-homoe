@@ -14,14 +14,58 @@ let _remedyChunks: Record<number, Record<string, any[]>> = {};
 let _crossRefs: Record<string, any[]> | null = null;
 let _authors: any[] | null = null;
 
-async function loadTree() { if (_tree) return _tree; _tree = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'tree.json'), 'utf-8')); return _tree!; }
+async function loadTree() {
+  if (_tree) return _tree;
+  const raw = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'tree.json'), 'utf-8'));
+  // Compact format: [[i, f, n, l, c, p]] → convert to [{i, f, n, l, c, p}]
+  if (Array.isArray(raw) && raw.length > 0 && Array.isArray(raw[0])) {
+    _tree = raw.map((n: any[]) => ({ i: n[0], f: n[1], n: n[2], l: n[3], c: n[4], p: n[5] }));
+  } else {
+    _tree = raw;
+  }
+  return _tree!;
+}
 async function loadChapters() { if (_chapters) return _chapters; _chapters = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'chapters.json'), 'utf-8')); return _chapters!; }
 async function loadRemedies() { if (_remedies) return _remedies; _remedies = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'remedies.json'), 'utf-8')); return _remedies!; }
-async function loadCrossRefs() { if (_crossRefs) return _crossRefs; try { _crossRefs = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'cross_references.json'), 'utf-8')); } catch { _crossRefs = {}; } return _crossRefs!; }
+async function loadCrossRefs() {
+  if (_crossRefs) return _crossRefs;
+  try {
+    const raw = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'cross_references.json'), 'utf-8'));
+    // Compact format: {key: [[id, text, kind, dest_path, dest_level, dest_chapter_id, dest_remedies_count]]}
+    // Convert to {key: [{id, text, kind, dest_path, dest_level, dest_chapter_id, dest_remedies_count}]}
+    const converted: Record<string, any[]> = {};
+    for (const [key, refs] of Object.entries(raw)) {
+      if (Array.isArray(refs) && refs.length > 0 && Array.isArray(refs[0])) {
+        converted[key] = (refs as any[]).map((r: any[]) => ({
+          id: r[0], text: r[1], kind: r[2], dest_path: r[3],
+          dest_level: r[4], dest_chapter_id: r[5], dest_remedies_count: r[6]
+        }));
+      } else {
+        converted[key] = refs as any[];
+      }
+    }
+    _crossRefs = converted;
+  } catch { _crossRefs = {}; }
+  return _crossRefs!;
+}
 
 async function getRemediesForSymptom(symptomId: number) {
   for (let i = 0; i < 8; i++) {
-    if (!_remedyChunks[i]) { try { _remedyChunks[i] = JSON.parse(await fs.readFile(path.join(DATA_DIR, `remedies_chunk_${String(i).padStart(3, '0')}.json`), 'utf-8')); } catch { _remedyChunks[i] = {}; } }
+    if (!_remedyChunks[i]) {
+      try {
+        const raw = JSON.parse(await fs.readFile(path.join(DATA_DIR, `remedies_chunk_${String(i).padStart(3, '0')}.json`), 'utf-8'));
+        // Compact format: {key: [[r, d]]} → convert to {key: [{r, d}]}
+        const converted: Record<string, any[]> = {};
+        for (const [key, entries] of Object.entries(raw)) {
+          if (Array.isArray(entries) && entries.length > 0 && Array.isArray(entries[0])) {
+            converted[key] = (entries as any[]).map((e: any[]) => ({ r: e[0], d: e[1] }));
+          } else {
+            converted[key] = entries as any[];
+          }
+        }
+        _remedyChunks[i] = converted;
+      } catch { _remedyChunks[i] = {}; }
+    }
     const key = String(symptomId);
     if (_remedyChunks[i][key]) return _remedyChunks[i][key];
   }
