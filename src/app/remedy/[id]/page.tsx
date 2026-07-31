@@ -151,6 +151,173 @@ export default function RemedyDetailPage() {
     return <div>{elements}</div>;
   }
 
+  // Helper: render Kent-style text with section headings + clickable remedy references
+  // Kent's text has headings like "Introduction", "Mind", "Head", "Chest", etc.
+  // Remedy names mentioned in text (Bryonia, Pulsatilla, etc.) are rendered as
+  // blue italic clickable links.
+  function renderKentText(text: string): React.ReactNode {
+    if (!text) return null;
+    const lines = text.split('\n');
+    const elements: React.ReactNode[] = [];
+    let currentParagraph: string[] = [];
+    let keyCounter = 0;
+
+    // Known Kent section headings
+    const kentHeadings = new Set([
+      'Introduction', 'Mind', 'Head', 'Eyes', 'Ears', 'Nose', 'Face',
+      'Mouth', 'Throat', 'Stomach', 'Abdomen', 'Rectum', 'Urinary Organs',
+      'Male', 'Female', 'Respiratory', 'Chest', 'Heart', 'Back',
+      'Extremities', 'Sleep', 'Fever', 'Skin', 'Generalities',
+      'Marasmus', 'Croup', 'Diarrhoea', 'Dysentery', 'Pneumonia',
+      'Rheumatism', 'Neuralgia', 'Convulsions', 'Delirium',
+      'Menses', 'Pregnancy', 'Childbirth', 'Lactation',
+      'Vertigo', 'Headache', 'Cough', 'Expectoration',
+      'Palpitation', 'Pulse', 'Sweat', 'Chill', 'Heat',
+      'Discharges', 'Ulcers', 'Eruptions', 'Warts', 'Tumors',
+      'Cancer', 'Tuberculosis', 'Typhoid', 'Malaria',
+      'Metastasis', 'Circulation', 'Sensations', 'Tissues',
+      'Glands', 'Blood', 'Liver', 'Kidneys', 'Bladder',
+      'Spine', 'Limbs', 'Hands', 'Feet', 'Hair', 'Nails',
+      'Teeth', 'Tongue', 'Voice', 'Speech', 'Hearing', 'Vision',
+      'Appetite', 'Thirst', 'Vomiting', 'Nausea', 'Constipation',
+      'Stool', 'Urine', 'Semen', 'Sexual', 'Menstruation',
+      'Leucorrhoea', 'Children', 'Women', 'Men',
+      'Suppression', 'Clinical', 'Keynotes', 'Compare', 'Relationships',
+      'Modalities', 'Summary', 'Dose', 'Caution',
+    ]);
+
+    // Helper: render text with clickable remedy references
+    // Remedy names are capitalized words (Bryonia, Pulsatilla, etc.) — render as blue italic
+    function renderTextWithRefs(text: string): React.ReactNode {
+      // Split by known remedy name patterns (capitalized words 4+ chars)
+      // This is a simplified approach — matches common remedy names
+      const remedyPattern = /\b([A-Z][a-z]{3,}(?:\s+[a-z]+)?)\b/g;
+      const parts: React.ReactNode[] = [];
+      let lastIndex = 0;
+      let match;
+      let partKey = 0;
+
+      while ((match = remedyPattern.exec(text)) !== null) {
+        const word = match[1];
+        // Skip common non-remedy words
+        const nonRemedies = new Set([
+          'The', 'This', 'That', 'These', 'Those', 'There', 'Then', 'They',
+          'When', 'Where', 'What', 'Which', 'Why', 'How', 'Who', 'Will',
+          'Has', 'Have', 'Had', 'Been', 'Being', 'Was', 'Were', 'Are', 'Is',
+          'Can', 'Could', 'Should', 'Would', 'May', 'Might', 'Must', 'Shall',
+          'And', 'But', 'Or', 'Nor', 'Not', 'For', 'Yet', 'So', 'If', 'As',
+          'At', 'By', 'In', 'On', 'To', 'Of', 'Up', 'Out', 'Off', 'Over',
+          'Under', 'Again', 'Further', 'Once', 'Here', 'Now', 'All', 'Any',
+          'Both', 'Each', 'Few', 'More', 'Most', 'Other', 'Some', 'Such',
+          'Only', 'Own', 'Same', 'Than', 'Too', 'Very', 'Just', 'Also',
+          'Because', 'Before', 'After', 'During', 'While', 'Since', 'Until',
+          'Between', 'Through', 'Without', 'Within', 'About', 'Against',
+          'Into', 'From', 'With', 'Upon', 'Toward', 'Towards',
+          'It', 'Its', 'His', 'Her', 'She', 'He', 'We', 'Us', 'Our', 'You', 'Your',
+          'Patient', 'Patients', 'Remedy', 'Remedies', 'Symptom', 'Symptoms',
+          'Case', 'Cases', 'Drug', 'Drugs', 'Medicine', 'Medicines',
+          'Dose', 'Potency', 'Symptoms', 'Mind', 'Head', 'Eyes', 'Ears',
+          'Nose', 'Face', 'Mouth', 'Throat', 'Stomach', 'Abdomen',
+          'Chest', 'Heart', 'Skin', 'Fever', 'Sleep', 'Generalities',
+          'Introduction', 'Marasmus', 'Croup', 'Metastasis', 'Suppression',
+          'Clinical', 'Keynotes', 'Compare', 'Relationships', 'Modalities',
+          'Summary', 'Caution', 'Children', 'Women', 'Men',
+          'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth',
+          'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight',
+          'Nine', 'Ten', 'Eleven', 'Twelve',
+          'Hahnemann', 'Kent', 'Boericke', 'Allen', 'Phatak', 'Dubey',
+          'Chapter', 'Section', 'Part', 'Book', 'Volume',
+          'See', 'See.', 'Like', 'Like.', 'Also.', 'Sometimes',
+          'Many', 'Much', 'Little', 'Small', 'Large', 'Great', 'Old', 'Young',
+          'New', 'Good', 'Bad', 'Better', 'Worse', 'Best', 'Worst',
+          'Morning', 'Evening', 'Night', 'Afternoon', 'Noon', 'Midnight',
+          'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December',
+          'Spring', 'Summer', 'Autumn', 'Winter', 'Fall',
+          'North', 'South', 'East', 'West',
+          'Left', 'Right', 'Upper', 'Lower', 'Inner', 'Outer',
+          'Front', 'Back', 'Side', 'Top', 'Bottom',
+          'Always', 'Never', 'Sometimes', 'Often', 'Rarely', 'Usually',
+          'Generally', 'Particularly', 'Especially', 'Special',
+          'Long', 'Short', 'High', 'Low', 'Deep', 'Shallow',
+          'Hot', 'Cold', 'Warm', 'Cool', 'Wet', 'Dry',
+          'Hard', 'Soft', 'Smooth', 'Rough', 'Sharp', 'Dull',
+          'Light', 'Dark', 'Bright', 'Dim', 'Pale', 'Red', 'Blue',
+          'Black', 'White', 'Green', 'Yellow', 'Brown',
+        ]);
+
+        if (nonRemedies.has(word)) {
+          continue;
+        }
+
+        // Add text before this match
+        if (match.index > lastIndex) {
+          parts.push(text.substring(lastIndex, match.index));
+        }
+
+        // Render as clickable blue italic remedy reference
+        // Try to find the remedy ID — use the word as a search term
+        const searchUrl = `/materia-medica?q=${encodeURIComponent(word)}`;
+        parts.push(
+          <Link
+            key={`ref-${partKey++}`}
+            href={searchUrl}
+            className="text-blue-600 italic hover:underline hover:text-blue-800 cursor-pointer"
+          >
+            {word}
+          </Link>
+        );
+
+        lastIndex = match.index + match[0].length;
+      }
+
+      // Add remaining text
+      if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+      }
+
+      return parts.length > 0 ? parts : text;
+    }
+
+    function flushParagraph() {
+      if (currentParagraph.length > 0) {
+        const paraText = currentParagraph.join(' ').trim();
+        if (paraText) {
+          elements.push(
+            <p key={`p-${keyCounter++}`} className="text-black leading-relaxed mb-4 text-sm md:text-base">
+              {renderTextWithRefs(paraText)}
+            </p>
+          );
+        }
+        currentParagraph = [];
+      }
+    }
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        flushParagraph();
+        continue;
+      }
+
+      // Check if this line is a section heading
+      if (kentHeadings.has(trimmed)) {
+        flushParagraph();
+        elements.push(
+          <h3 key={`h-${keyCounter++}`} className="font-serif text-lg font-bold text-[#6E2A3A] mt-5 mb-2 pb-1 border-b border-[#E8DCC3]">
+            {trimmed}
+          </h3>
+        );
+      } else {
+        currentParagraph.push(trimmed);
+      }
+    }
+    flushParagraph();
+
+    return <div>{elements}</div>;
+  }
+
   // Determine which sections to show — compare at render time, DON'T delete data
   // Keynote is always shown if it has content
   const showKeynote = hasContent(remedy.keynote);
@@ -207,9 +374,9 @@ export default function RemedyDetailPage() {
 
         {/* Title */}
         <div className="bg-white rounded-lg shadow p-6 mb-4">
-          <h1 className="font-serif text-3xl font-bold text-black">{remedy.name}</h1>
+          <h1 className={`font-serif text-3xl font-bold ${remedy.author === 'Kent' ? 'text-[#173B2D] text-center uppercase tracking-wide' : 'text-black'}`}>{remedy.name}</h1>
           {remedy.common && <p className="text-sm italic text-[#7C8F6E] mt-1">{remedy.common}</p>}
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-3 justify-center">
             {remedy.author && <span className="text-xs bg-[#173B2D] text-[#C8A24A] px-2 py-1 rounded font-semibold">{remedy.author}</span>}
             {remedy.chapter && <span className="text-xs bg-[#C8A24A]/20 text-[#a8862f] px-2 py-1 rounded font-semibold">{remedy.chapter}</span>}
             {remedy.organ && <span className="text-xs bg-[#F5EFE0] text-[#173B2D] px-2 py-1 rounded">{remedy.organ}</span>}
@@ -248,12 +415,13 @@ export default function RemedyDetailPage() {
 
         {/* Content sections — show only unique content per section, hide duplicates at render time */}
         <article className="bg-white rounded-lg shadow p-6">
-          {/* For Dubey/Phatak remedies: render structured sections with visual hierarchy
-              - Main section heading = RED + BOLD
-              - Nested sub-labels (detected from "Label :" pattern) = BLACK + BOLD
-              - Body text = BLACK + NORMAL
-          */}
-          {(remedy.author === 'Dubey' || remedy.author === 'Phatak' || remedy.author === 'Allen') && remedy.sections && remedy.sections.length > 0 ? (
+          {/* For Kent remedies: render with section headings (maroon bold) +
+              clickable remedy references (blue italic) */}
+          {remedy.author === 'Kent' && showFull ? (
+            <div>
+              {renderKentText(remedy.full)}
+            </div>
+          ) : (remedy.author === 'Dubey' || remedy.author === 'Phatak' || remedy.author === 'Allen') && remedy.sections && remedy.sections.length > 0 ? (
             <>
               {remedy.sections.map((section, idx) => (
                 <section key={idx} className="mb-6 last:mb-0">
