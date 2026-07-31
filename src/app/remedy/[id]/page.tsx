@@ -318,6 +318,145 @@ export default function RemedyDetailPage() {
     return <div>{elements}</div>;
   }
 
+  // Helper: render Boericke/Phatak-style text with dark red bold headings + clickable refs
+  // Same as Kent rendering but with red headings instead of maroon
+  function renderBoerickePhatakText(text: string): React.ReactNode {
+    if (!text) return null;
+    const lines = text.split('\n');
+    const elements: React.ReactNode[] = [];
+    let currentParagraph: string[] = [];
+    let keyCounter = 0;
+
+    // Known section headings for Boericke/Phatak
+    const sectionHeadings = new Set([
+      'Introduction', 'Mind', 'Head', 'Eyes', 'Ears', 'Nose', 'Face',
+      'Mouth', 'Throat', 'Stomach', 'Abdomen', 'Rectum', 'Urinary Organs',
+      'Male', 'Female', 'Respiratory', 'Chest', 'Heart', 'Back',
+      'Extremities', 'Sleep', 'Fever', 'Skin', 'Generalities',
+      'Modalities', 'Relationships', 'Compare', 'Dose', 'Clinical',
+      'Keynotes', 'Summary', 'Caution', 'Marasmus', 'Croup',
+      'Suppression', 'Metastasis',
+      // Phatak-style headings (ALL CAPS in source)
+      'GENERALITIES', 'MIND', 'HEAD', 'EYES', 'EARS', 'NOSE', 'FACE',
+      'MOUTH', 'THROAT', 'STOMACH', 'ABDOMEN', 'RECTUM', 'URINARY',
+      'MALE', 'FEMALE', 'RESPIRATORY', 'CHEST', 'HEART', 'BACK',
+      'EXTREMITIES', 'SLEEP', 'FEVER', 'SKIN', 'MODALITIES',
+      'RELATIONSHIPS', 'DOSE', 'CLINICAL', 'KEYNOTES',
+    ]);
+
+    // Helper: render text with clickable remedy references (blue italic)
+    function renderTextWithRefs(text: string): React.ReactNode {
+      const remedyPattern = /\b([A-Z][a-z]{3,}(?:\s+[a-z]+)?)\b/g;
+      const parts: React.ReactNode[] = [];
+      let lastIndex = 0;
+      let match;
+      let partKey = 0;
+
+      const nonRemedies = new Set([
+        'The', 'This', 'That', 'These', 'Those', 'There', 'Then', 'They',
+        'When', 'Where', 'What', 'Which', 'Why', 'How', 'Who', 'Will',
+        'Has', 'Have', 'Had', 'Been', 'Being', 'Was', 'Were', 'Are', 'Is',
+        'Can', 'Could', 'Should', 'Would', 'May', 'Might', 'Must', 'Shall',
+        'And', 'But', 'Or', 'Nor', 'Not', 'For', 'Yet', 'So', 'If', 'As',
+        'At', 'By', 'In', 'On', 'To', 'Of', 'Up', 'Out', 'Off', 'Over',
+        'Under', 'Again', 'Further', 'Once', 'Here', 'Now', 'All', 'Any',
+        'Both', 'Each', 'Few', 'More', 'Most', 'Other', 'Some', 'Such',
+        'Only', 'Own', 'Same', 'Than', 'Too', 'Very', 'Just', 'Also',
+        'Because', 'Before', 'After', 'During', 'While', 'Since', 'Until',
+        'Between', 'Through', 'Without', 'Within', 'About', 'Against',
+        'Into', 'From', 'With', 'Upon', 'Toward', 'Towards',
+        'It', 'Its', 'His', 'Her', 'She', 'He', 'We', 'Us', 'Our', 'You', 'Your',
+        'Patient', 'Patients', 'Remedy', 'Remedies', 'Symptom', 'Symptoms',
+        'Case', 'Cases', 'Drug', 'Drugs', 'Medicine', 'Medicines',
+        'Dose', 'Potency', 'Mind', 'Head', 'Eyes', 'Ears',
+        'Nose', 'Face', 'Mouth', 'Throat', 'Stomach', 'Abdomen',
+        'Chest', 'Heart', 'Skin', 'Fever', 'Sleep', 'Generalities',
+        'Introduction', 'Marasmus', 'Croup', 'Metastasis', 'Suppression',
+        'Clinical', 'Keynotes', 'Compare', 'Relationships', 'Modalities',
+        'Summary', 'Caution', 'Children', 'Women', 'Men',
+        'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth',
+        'Hahnemann', 'Kent', 'Boericke', 'Allen', 'Phatak', 'Dubey',
+        'See', 'Like', 'Many', 'Much', 'Little', 'Small', 'Large', 'Great',
+        'Old', 'Young', 'New', 'Good', 'Bad', 'Better', 'Worse', 'Best',
+        'Morning', 'Evening', 'Night', 'Afternoon', 'Noon', 'Midnight',
+        'Always', 'Never', 'Sometimes', 'Often', 'Rarely', 'Usually',
+        'Generally', 'Particularly', 'Especially', 'Special',
+        'Long', 'Short', 'High', 'Low', 'Deep', 'Shallow',
+        'Hot', 'Cold', 'Warm', 'Cool', 'Wet', 'Dry',
+        'Hard', 'Soft', 'Smooth', 'Rough', 'Sharp', 'Dull',
+        'Light', 'Dark', 'Bright', 'Dim', 'Pale', 'Red', 'Blue',
+        'Black', 'White', 'Green', 'Yellow', 'Brown',
+        'Golden', 'Seal', 'Southern', 'Wood', 'Lady', 'Love',
+        'Left', 'Right', 'Upper', 'Lower', 'Inner', 'Outer',
+        'Front', 'Back', 'Side', 'Top', 'Bottom',
+      ]);
+
+      while ((match = remedyPattern.exec(text)) !== null) {
+        const word = match[1];
+        if (nonRemedies.has(word)) continue;
+
+        if (match.index > lastIndex) {
+          parts.push(text.substring(lastIndex, match.index));
+        }
+
+        const searchUrl = `/materia-medica?q=${encodeURIComponent(word)}`;
+        parts.push(
+          <Link
+            key={`ref-${partKey++}`}
+            href={searchUrl}
+            className="text-blue-600 italic hover:underline hover:text-blue-800 cursor-pointer"
+          >
+            {word}
+          </Link>
+        );
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+      }
+
+      return parts.length > 0 ? parts : text;
+    }
+
+    function flushParagraph() {
+      if (currentParagraph.length > 0) {
+        const paraText = currentParagraph.join(' ').trim();
+        if (paraText) {
+          elements.push(
+            <p key={`p-${keyCounter++}`} className="text-black leading-relaxed mb-4 text-sm md:text-base">
+              {renderTextWithRefs(paraText)}
+            </p>
+          );
+        }
+        currentParagraph = [];
+      }
+    }
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        flushParagraph();
+        continue;
+      }
+
+      // Check if this line is a section heading (case-insensitive match)
+      if (sectionHeadings.has(trimmed)) {
+        flushParagraph();
+        elements.push(
+          <h3 key={`h-${keyCounter++}`} className="text-lg font-bold text-red-700 mt-5 mb-2 pb-1 border-b border-[#E8DCC3] tracking-wide">
+            {trimmed}
+          </h3>
+        );
+      } else {
+        currentParagraph.push(trimmed);
+      }
+    }
+    flushParagraph();
+
+    return <div>{elements}</div>;
+  }
+
   // Determine which sections to show — compare at render time, DON'T delete data
   // Keynote is always shown if it has content
   const showKeynote = hasContent(remedy.keynote);
@@ -374,8 +513,8 @@ export default function RemedyDetailPage() {
 
         {/* Title */}
         <div className="bg-white rounded-lg shadow p-6 mb-4">
-          <h1 className={`font-serif text-3xl font-bold ${remedy.author === 'Kent' ? 'text-[#173B2D] text-center uppercase tracking-wide' : 'text-black'}`}>{remedy.name}</h1>
-          {remedy.common && <p className="text-sm italic text-[#7C8F6E] mt-1">{remedy.common}</p>}
+          <h1 className={`font-serif text-3xl font-bold ${remedy.author === 'Kent' || remedy.author === 'Boericke' || remedy.author === 'Phatak' ? 'text-[#173B2D] text-center uppercase tracking-wide' : 'text-black'}`}>{remedy.name}</h1>
+          {remedy.common && <p className={`text-sm italic mt-1 text-center ${remedy.author === 'Boericke' ? 'text-orange-600' : 'text-[#7C8F6E]'}`}>{remedy.common}</p>}
           <div className="flex flex-wrap gap-2 mt-3 justify-center">
             {remedy.author && <span className="text-xs bg-[#173B2D] text-[#C8A24A] px-2 py-1 rounded font-semibold">{remedy.author}</span>}
             {remedy.chapter && <span className="text-xs bg-[#C8A24A]/20 text-[#a8862f] px-2 py-1 rounded font-semibold">{remedy.chapter}</span>}
@@ -420,6 +559,10 @@ export default function RemedyDetailPage() {
           {remedy.author === 'Kent' && showFull ? (
             <div>
               {renderKentText(remedy.full)}
+            </div>
+          ) : (remedy.author === 'Boericke' || remedy.author === 'Phatak') && showFull ? (
+            <div>
+              {renderBoerickePhatakText(remedy.full)}
             </div>
           ) : (remedy.author === 'Dubey' || remedy.author === 'Phatak' || remedy.author === 'Allen') && remedy.sections && remedy.sections.length > 0 ? (
             <>
