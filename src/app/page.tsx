@@ -97,7 +97,7 @@ export default function Home() {
         <div className="relative mb-6">
           <div className="w-24 h-24 rounded-full border-4 border-[#D4AF37]/20"></div>
           <div className="absolute inset-0 w-24 h-24 rounded-full border-4 border-t-[#D4AF37] animate-spin"></div>
-          <img src="/logo-92.png" alt="Pradip's Homoeo" width="48" height="48" className="absolute inset-0 m-auto h-12 w-auto" />
+          <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="48" height="48" className="absolute inset-0 m-auto h-12 w-auto" />
         </div>
         <h1 className="font-serif text-2xl text-[#D4AF37] mb-2 tracking-wide">Pradip&apos;s Homoeo</h1>
         <p className="text-xs text-stone-500 uppercase tracking-[0.2em] mb-4">Personal Digital Library</p>
@@ -122,7 +122,7 @@ export default function Home() {
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
                   <span className="text-xs text-[#D4AF37] font-semibold tracking-wider uppercase">Verified · Accurate · Comprehensive</span>
                 </div>
-                <img src="/logo-120.png" alt="Pradip's Homoeo" width="80" height="80" className="h-16 md:h-20 w-auto mx-auto lg:mx-0 mb-4" />
+                <img src="/logo-v2-120.png" alt="Pradip's Homoeo" width="80" height="80" className="h-16 md:h-20 w-auto mx-auto lg:mx-0 mb-4" />
                 <h1 className="font-serif text-4xl md:text-6xl font-bold text-[#D4AF37] mb-2 tracking-tight">Pradip&apos;s Homoeo</h1>
                 <p className="text-sm md:text-base text-[#C9A23A] uppercase tracking-[0.25em] mb-4 font-semibold">Personal Digital Library</p>
                 <p className="text-sm md:text-base text-stone-300 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-8">
@@ -276,7 +276,7 @@ export default function Home() {
               </div>
               <div className="text-center mt-8">
                 <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30">
-                  <img src="/logo-92.png" alt="Dr. Pradip" width="32" height="32" className="h-8 w-auto rounded-full" />
+                  <img src="/logo-v2-92.png" alt="Dr. Pradip" width="32" height="32" className="h-8 w-auto rounded-full" />
                   <div className="text-left">
                     <div className="text-xs text-[#D4AF37] font-semibold">Dr. Pradip</div>
                     <div className="text-[0.6rem] text-stone-500">Founder & Curator</div>

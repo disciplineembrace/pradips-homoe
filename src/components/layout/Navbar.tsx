@@ -56,7 +56,7 @@ export function Navbar() {
     <header className="bg-[#173B2D] text-stone-100 shadow-lg sticky top-0 z-50 border-b-2 border-[#C8A24A]/40">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2"><img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="40" height="40" className="h-10 w-auto md:h-12" />
             <div className="font-serif italic text-2xl text-[#C8A24A] leading-none">Pradip&apos;s Homoe</div>
             <div className="text-[0.6rem] uppercase tracking-[0.15em] text-stone-400 mt-0.5">Personal Digital Library</div>
           </Link>

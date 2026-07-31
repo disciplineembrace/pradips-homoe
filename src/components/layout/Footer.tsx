@@ -7,7 +7,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <h3 className="font-serif italic text-lg text-amber-200 mb-2 tracking-wide">Pradip&apos;s Homoe</h3>
+            <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="36" height="36" className="h-9 w-auto mb-2" /><h3 className="font-serif italic text-lg text-amber-200 mb-2 tracking-wide">Pradip&apos;s Homoe</h3>
             <p className="text-xs text-stone-400">Personal Digital Homoeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
           </div>
           <div>
