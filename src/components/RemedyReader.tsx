@@ -121,6 +121,15 @@ const KNOWN_HEADINGS = new Set<string>([
   'Aggravations', 'Ameliorations',
   'Clinical Observations', 'Differential Remedies',
   'Concluding Essence', 'Original Source Text',
+  // Murphy-specific section markers (Lotus Materia Medica)
+  'PHARMACY', 'HERBAL', 'HOMEOPATHIC', 'COMMENTS', 'COMMENTARY',
+  'REFERENCES', 'RELATIONS',
+  // Murphy Title Case body parts
+  'Constitutions', 'Causations', 'Sensations', 'Temperature',
+  'Vertigo', 'Food', 'Perspiration', 'Breasts', 'Limbs',
+  'Kidneys', 'Lungs', 'Vision', 'Cough', 'Blood',
+  'Stool', 'Stools', 'Neck', 'Liver', 'Teeth', 'Tongue',
+  'Bladder', 'Pregnancy', 'Expectoration', 'Glands',
 ]);
 
 // Common non-remedy words (for clickable reference detection)
