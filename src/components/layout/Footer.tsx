@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <img src="/logo-v2-92.png" alt="Logo" width="32" height="32" className="h-8 w-8 rounded-full object-cover" />
+              <img src="/logo-v2-92.png" alt="Pradip's Homeo" width="40" height="40" className="h-10 w-10 rounded-full object-cover flex-shrink-0" />
               <h3 className="font-serif italic text-lg text-amber-200 tracking-wide">Pradip&apos;s Homeo</h3>
             </div>
             <p className="text-xs text-stone-400">Personal Digital Homeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
