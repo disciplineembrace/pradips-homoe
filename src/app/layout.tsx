@@ -51,8 +51,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon and app icons */}
-        <link rel="icon" href="/favicon-v2.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/icon-v2-192.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" href="/favicon-v2.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="application-name" content="Pradip's Homeo" />
         <meta name="apple-mobile-web-app-title" content="Pradip's Homeo" />

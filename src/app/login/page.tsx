@@ -100,7 +100,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl p-8 shadow-xl border border-[#E8DCC3] border-t-4 border-t-amber-700">
             <div className="text-center mb-8">
-              <img src="/logo-v2-120.png" alt="Pradip's Homeo" width="64" height="64" className="h-16 w-16 mx-auto mb-3 rounded-full" />
+              <img src="/logo-v2-120.png" alt="Pradip's Homeo" width="120" height="120" className="h-[60px] w-[60px] sm:h-[64px] sm:w-[64px] lg:h-[72px] lg:w-[72px] mx-auto mb-3 rounded-full object-cover" />
               <h1 className="font-serif italic text-3xl text-[#173B2D] mb-1">Pradip&apos;s Homeo</h1>
               <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-2">Sign In</p>
             </div>
