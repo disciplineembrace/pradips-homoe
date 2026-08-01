@@ -11,7 +11,7 @@ const AUTHOR_DISPLAY_NAMES: Record<string, string> = {
   'Kent': 'Kent',
   'Allen': 'Allen',
   'Sankaran': 'Sankaran',
-  'Farrington': 'Farrington',
+  'Farrington': 'E. A. Farrington',
   'Boeger': 'Boeger',
   'Mathur': 'Mathur',
   'Dubey': 'Dubey',
