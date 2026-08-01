@@ -45,7 +45,7 @@ const SOURCE_TITLES: Record<string, string> = {
   'Dubey': "S. K. Dubey's Materia Medica",
   'Murphy': "Robin Murphy's Lotus Materia Medica (3rd Edition)",
   'Farrington': "E. A. Farrington's Clinical Materia Medica",
-  'Boeger': "Boeger's Synoptic Key Materia Medica",
+  'Boeger': "C. M. Boger's Synoptic Key of the Materia Medica",
   'Mathur': "K. N. Mathur's Materia Medica",
   'Sankaran': "Rajan Sankaran's The Soul of Remedies",
 };
@@ -139,6 +139,9 @@ const KNOWN_HEADINGS = new Set<string>([
   'Kidneys', 'Lungs', 'Vision', 'Cough', 'Blood',
   'Stool', 'Stools', 'Neck', 'Liver', 'Teeth', 'Tongue',
   'Bladder', 'Pregnancy', 'Expectoration', 'Glands',
+  // Boger-specific section markers (Synoptic Key of the Materia Medica)
+  'Region', 'Description', 'Symptoms', 'Relations',
+  'Peculiar', 'Clinical', 'Notes',
 ]);
 
 // Common non-remedy words (for clickable reference detection)
