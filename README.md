@@ -1,4 +1,4 @@
-# Pradip's Homoe — Secure Digital Homoeopathy Library
+# Pradip's Homeo — Secure Digital Homoeopathy Library
 
 A production Next.js 16 app with password + 6-digit PIN authentication, role-based access control, and a private homoeopathy library (remedies, rubrics, therapeutics, predictive homeopathy).
 

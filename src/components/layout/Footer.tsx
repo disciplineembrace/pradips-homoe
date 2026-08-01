@@ -9,9 +9,9 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <img src="/logo-v2-92.png" alt="Logo" width="32" height="32" className="h-8 w-8 rounded-full object-cover" />
-              <h3 className="font-serif italic text-lg text-amber-200 tracking-wide">Pradip&apos;s Homoe</h3>
+              <h3 className="font-serif italic text-lg text-amber-200 tracking-wide">Pradip&apos;s Homeo</h3>
             </div>
-            <p className="text-xs text-stone-400">Personal Digital Homoeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
+            <p className="text-xs text-stone-400">Personal Digital Homeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
           </div>
           <div>
             <h4 className="font-serif font-semibold text-sm mb-2 text-amber-200">Quick Links</h4>
@@ -33,7 +33,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-emerald-800 mt-6 pt-4 text-center text-xs text-stone-500">
-          © 2026 Pradip&apos;s Homoe · All access is logged · Unauthorized access prohibited
+          © 2026 Pradip&apos;s Homeo · All access is logged · Unauthorized access prohibited
         </div>
       </div>
     </footer>

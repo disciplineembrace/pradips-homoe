@@ -21,10 +21,21 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Pradip's Homoe — Personal Digital Homeopathy Library",
+  title: "Pradip's Homeo — Personal Digital Homeopathy Library",
   description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
-  keywords: ["homeopathy", "materia medica", "repertory", "therapeutics", "organon", "homoeopathy", "pradip"],
+  keywords: ["homeopathy", "materia medica", "repertory", "therapeutics", "organon", "homoeopathy", "pradip", "homeo"],
   authors: [{ name: "Pradip Sagathiya" }],
+  openGraph: {
+    title: "Pradip's Homeo — Personal Digital Homeopathy Library",
+    description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+    type: "website",
+    siteName: "Pradip's Homeo",
+  },
+  twitter: {
+    card: "summary",
+    title: "Pradip's Homeo — Personal Digital Homeopathy Library",
+    description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+  },
 };
 
 export const viewport = {
@@ -39,6 +50,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Favicon and app icons */}
+        <link rel="icon" href="/favicon-v2.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon-v2-192.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="application-name" content="Pradip's Homeo" />
+        <meta name="apple-mobile-web-app-title" content="Pradip's Homeo" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         {/* Unregister any old service workers from the previous static site */}
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {

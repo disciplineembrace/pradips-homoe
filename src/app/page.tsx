@@ -10,12 +10,12 @@ export default function Home() {
         {/* Hero section */}
         <section className="relative bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950 text-stone-100 py-20 px-4 border-b-2 border-amber-700/60">
           <div className="max-w-5xl mx-auto text-center">
-            <img src="/logo-v2-120.png" alt="Pradip's Homoeo" width="80" height="80" className="h-20 w-20 mx-auto mb-4 rounded-full" />
+            <img src="/logo-v2-120.png" alt="Pradip's Homeo" width="80" height="80" className="h-20 w-20 mx-auto mb-4 rounded-full" />
             <h1 className="font-serif italic text-4xl md:text-6xl text-amber-200 mb-4 tracking-wide">
-              Pradip&apos;s Homoe
+              Pradip&apos;s Homeo
             </h1>
             <p className="text-lg md:text-xl text-stone-300 mb-2 font-serif">
-              Personal Digital Homoeopathy Library
+              Personal Digital Homeopathy Library
             </p>
             <p className="text-sm text-stone-400 max-w-2xl mx-auto mb-8">
               A secure, private collection of homoeopathic materia medica, repertories, therapeutics, and predictive homeopathy — accessible only to authorized users.
