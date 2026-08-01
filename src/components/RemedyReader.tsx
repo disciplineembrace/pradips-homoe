@@ -108,6 +108,19 @@ const KNOWN_HEADINGS = new Set<string>([
   'Suppression', 'Neck', 'Larynx', 'Trachea',
   'Bronchi', 'Lungs', 'Pericardium', 'Arteries', 'Veins',
   'Nerves', 'Muscles', 'Bones', 'Joints',
+  // Sankaran-specific section markers (The Soul of Remedies)
+  'Rubrics', 'Phatak', 'Phatak Rubrics',
+  'Physical concomitants', 'Physical concomitants are',
+  // Sankaran structural headings
+  'Source', 'Kingdom', 'Group', 'Miasm', 'Group Background',
+  'Central Theme', 'Soul of the Remedy', 'Basic Delusion',
+  'Inner Perception', 'Remedy Situation', 'Reaction',
+  'Coping Pattern', 'Emotional State', 'Characteristic Behaviour',
+  'Fears', 'Imaginations', 'Physical Characteristics',
+  'Pathology', 'Desires', 'Cravings', 'Aversions',
+  'Aggravations', 'Ameliorations',
+  'Clinical Observations', 'Differential Remedies',
+  'Concluding Essence', 'Original Source Text',
 ]);
 
 // Common non-remedy words (for clickable reference detection)
@@ -243,6 +256,7 @@ function renderRemedyText(text: string, keyPrefix: string): React.ReactNode {
   const elements: React.ReactNode[] = [];
   let currentParagraph: string[] = [];
   let keyCounter = 0;
+  let quoteRendered = false;
 
   function flushParagraph() {
     if (currentParagraph.length > 0) {
@@ -262,6 +276,21 @@ function renderRemedyText(text: string, keyPrefix: string): React.ReactNode {
     const trimmed = line.trim();
     if (!trimmed) {
       flushParagraph();
+      continue;
+    }
+
+    // Check for italic quote (Sankaran "soul of remedy" quote)
+    // Quotes start with curly quote " or " or straight quote "
+    if (!quoteRendered && (trimmed.startsWith('"') || trimmed.startsWith('"') || trimmed.startsWith('“'))) {
+      flushParagraph();
+      elements.push(
+        <div key={`${keyPrefix}-quote-${keyCounter++}`} className="my-6 text-center">
+          <p className="font-serif italic text-stone-700 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+            {trimmed}
+          </p>
+        </div>
+      );
+      quoteRendered = true;
       continue;
     }
 

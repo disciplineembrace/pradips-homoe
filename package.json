@@ -13,7 +13,6 @@
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {
-    "7zip-bin": "^5.2.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -52,6 +51,7 @@
     "@supabase/supabase-js": "^2.111.0",
     "@tanstack/react-query": "^5.82.0",
     "@tanstack/react-table": "^8.21.3",
+    "7zip-bin": "^5.2.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.2",
     "class-variance-authority": "^0.7.1",

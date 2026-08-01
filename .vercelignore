@@ -62,3 +62,6 @@ vercel-deploy-old-backup/
 git-repo/
 Caddyfile
 push-to-github.sh
+
+# Backup files
+data/remedies_backup_*.json
