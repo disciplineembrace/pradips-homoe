@@ -6,6 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
 import { useBrowseState } from '@/hooks/use-browse-state';
+import { getAuthorDisplayName } from '@/lib/author-names';
 
 type Remedy = {
   id: string;
@@ -139,7 +140,7 @@ function MateriaMedicaPageImpl() {
                   : 'text-[#7C8F6E] hover:bg-[#F5EFE0] hover:text-[#173B2D]'
               }`}
             >
-              {a}
+              {a === 'All' ? 'All' : getAuthorDisplayName(a)}
             </button>
           ))}
         </div>
@@ -174,7 +175,7 @@ function MateriaMedicaPageImpl() {
         {/* Count */}
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm text-[#7C8F6E]">
-            {loading ? 'Searching...' : `${total} remedy${total !== 1 ? 'ies' : ''}${q ? ` matching "${q}"` : ''}${author !== 'All' ? ` from ${author}` : ''}${letter ? ` starting with "${letter}"` : ''}`}
+            {loading ? 'Searching...' : `${total} remedy${total !== 1 ? 'ies' : ''}${q ? ` matching "${q}"` : ''}${author !== 'All' ? ` from ${getAuthorDisplayName(author)}` : ''}${letter ? ` starting with "${letter}"` : ''}`}
           </div>
         </div>
 
@@ -211,7 +212,7 @@ function MateriaMedicaPageImpl() {
                   </div>
                   {r.common && <p className="text-xs italic text-[#7C8F6E] mb-2">{r.common}</p>}
                   <div className="flex flex-wrap gap-2 mb-2">
-                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#C8A24A]">{r.author}</span>
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#C8A24A]">{getAuthorDisplayName(r.author)}</span>
                     {r.chapter && <span className="text-[0.65rem] text-[#7C8F6E]">· {r.chapter}</span>}
                   </div>
                   {r.keynote && (
