@@ -2,6 +2,11 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import {
+  Home, BookOpen, Library, Pill, Stethoscope, Search,
+  ScrollText, Brain, FlaskConical, Puzzle, BarChart3,
+  GraduationCap, BookMarked, IdCard, Phone, UserCog, LogOut, X, Menu as MenuIcon
+} from 'lucide-react';
 
 export function Navbar() {
   const router = useRouter();
@@ -14,16 +19,11 @@ export function Navbar() {
     fetch('/api/auth/session').then(r => r.json()).then(d => setSession(d)).catch(() => setSession({ authenticated: false }));
   }, [pathname]);
 
-  // Close menu on route change
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  // Lock body scroll when menu open
   useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (menuOpen) { document.body.style.overflow = 'hidden'; }
+    else { document.body.style.overflow = ''; }
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
@@ -43,22 +43,24 @@ export function Navbar() {
     }
   }
 
+  const iconClass = 'w-4 h-4 flex-shrink-0';
+
   const menuItems = [
-    { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/materia-medica', label: 'Materia Medica', icon: '📚' },
-    { href: '/repertory', label: 'Repertory', icon: '📖' },
-    { href: '/therapeutics', label: 'Therapeutics', icon: '💊' },
-    { href: '/clinical', label: 'Clinical', icon: '🩺' },
-    { href: '/quick-clinical-search', label: 'Quick Search', icon: '⚡' },
-    { href: '/organon', label: 'Organon', icon: '📘' },
-    { href: '/segal', label: 'Segal', icon: '🧠' },
-    { href: '/predictive', label: 'Predictive', icon: '🔬' },
-    { href: '/synthesis', label: 'Synthesis', icon: '🔬' },
-    { href: '/analysis', label: 'Analysis', icon: '📊' },
-    { href: '/books', label: 'Books', icon: '📚' },
-    { href: '/question-bank', label: 'Question Bank', icon: '❓' },
-    { href: '/about', label: 'About', icon: 'ℹ' },
-    { href: '/contact', label: 'Contact', icon: '📞' },
+    { href: '/', label: 'Home', Icon: Home },
+    { href: '/materia-medica', label: 'Materia Medica', Icon: BookOpen },
+    { href: '/repertory', label: 'Repertory', Icon: Library },
+    { href: '/therapeutics', label: 'Therapeutics', Icon: Pill },
+    { href: '/clinical', label: 'Clinical', Icon: Stethoscope },
+    { href: '/quick-clinical-search', label: 'Quick Search', Icon: Search },
+    { href: '/organon', label: 'Organon', Icon: ScrollText },
+    { href: '/segal', label: 'Segal Homeopathy', Icon: Brain },
+    { href: '/predictive', label: 'Predictive Homeopathy', Icon: FlaskConical },
+    { href: '/synthesis', label: 'Synthesis Updated', Icon: Puzzle },
+    { href: '/analysis', label: 'Analysis Tools', Icon: BarChart3 },
+    { href: '/question-bank', label: 'Question Bank', Icon: GraduationCap },
+    { href: '/books', label: 'Books', Icon: BookMarked },
+    { href: '/about', label: 'About', Icon: IdCard },
+    { href: '/contact', label: 'Contact', Icon: Phone },
   ];
 
   function isActive(href: string): boolean {
@@ -71,7 +73,7 @@ export function Navbar() {
       <header className="bg-[#173B2D] text-stone-100 shadow-lg sticky top-0 z-50 border-b-2 border-[#C8A24A]/40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16 gap-3">
-            {/* Logo + Brand — subtitle BELOW name */}
+            {/* Logo + Brand */}
             <Link href="/" className="flex-shrink-0 flex items-center gap-2">
               <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="36" height="36" className="h-9 w-9 rounded-full object-cover flex-shrink-0" />
               <div className="flex flex-col">
@@ -82,16 +84,19 @@ export function Navbar() {
 
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-0.5 flex-1 overflow-x-auto">
-              {menuItems.map(it => (
+              {menuItems.map(({ href, label, Icon }) => (
                 <Link
-                  key={it.label}
-                  href={it.href}
-                  className={`px-2.5 py-2 text-[0.7rem] font-semibold uppercase tracking-wider rounded transition-colors whitespace-nowrap ${
-                    isActive(it.href)
+                  key={label}
+                  href={href}
+                  className={`flex items-center gap-1.5 px-2.5 py-2 text-[0.7rem] font-semibold uppercase tracking-wider rounded transition-colors whitespace-nowrap ${
+                    isActive(href)
                       ? 'bg-[#C8A24A] text-[#173B2D]'
                       : 'text-stone-200 hover:bg-[#2a5443] hover:text-[#C8A24A]'
                   }`}
-                >{it.label}</Link>
+                >
+                  <Icon className={iconClass} />
+                  {label}
+                </Link>
               ))}
             </nav>
 
@@ -105,7 +110,7 @@ export function Navbar() {
                   placeholder="Quick search..."
                   className="w-40 px-3 py-1.5 pr-8 text-xs bg-[#0f2a20] border border-[#C8A24A]/30 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-[#C8A24A]"
                 />
-                <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-[#C8A24A]">🔍</button>
+                <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-[#C8A24A]"><Search className="w-3.5 h-3.5" /></button>
               </form>
               {session?.authenticated ? (
                 <>
@@ -113,24 +118,26 @@ export function Navbar() {
                     {session?.name?.split(' ')[0] || 'Account'}
                   </Link>
                   {session?.role === 'admin' && (
-                    <Link href="/admin" className="text-xs bg-[#C8A24A]/20 text-[#C8A24A] px-2 py-1 rounded font-semibold hover:bg-[#C8A24A]/30">Admin</Link>
+                    <Link href="/admin" className="flex items-center gap-1 text-xs bg-[#C8A24A]/20 text-[#C8A24A] px-2 py-1 rounded font-semibold hover:bg-[#C8A24A]/30">
+                      <UserCog className="w-3.5 h-3.5" /> Admin
+                    </Link>
                   )}
-                  <button onClick={logout} className="text-xs bg-[#6E2A3A] hover:bg-[#8a3548] px-3 py-1.5 rounded font-semibold">Logout</button>
+                  <button onClick={logout} className="flex items-center gap-1 text-xs bg-[#6E2A3A] hover:bg-[#8a3548] px-3 py-1.5 rounded font-semibold">
+                    <LogOut className="w-3.5 h-3.5" /> Logout
+                  </button>
                 </>
               ) : (
                 <Link href="/login" className="text-xs bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] px-4 py-1.5 rounded font-bold uppercase tracking-wider">Login</Link>
               )}
             </div>
 
-            {/* Mobile hamburger button */}
+            {/* Mobile hamburger */}
             <button
               onClick={() => setMenuOpen(true)}
               className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded border border-[#C8A24A]/40 text-[#C8A24A] hover:bg-[#C8A24A]/10 transition-colors"
               aria-label="Open menu"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <MenuIcon className="w-5 h-5" />
               <span className="text-xs font-semibold uppercase tracking-wider">Menu</span>
             </button>
           </div>
@@ -140,23 +147,12 @@ export function Navbar() {
       {/* SIDE DRAWER MOBILE MENU */}
       {menuOpen && (
         <>
-          {/* Overlay */}
-          <div
-            className="lg:hidden fixed inset-0 bg-black/50 z-[99]"
-            onClick={() => setMenuOpen(false)}
-          />
-
-          {/* Drawer — slides from right */}
+          <div className="lg:hidden fixed inset-0 bg-black/50 z-[99]" onClick={() => setMenuOpen(false)} />
           <div
             className="lg:hidden fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-[#173B2D] z-[100] flex flex-col overflow-y-auto"
             style={{ animation: 'slideIn 0.3s ease-out' }}
           >
-            <style>{`
-              @keyframes slideIn {
-                from { transform: translateX(100%); }
-                to { transform: translateX(0); }
-              }
-            `}</style>
+            <style>{`@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-[#C8A24A]/30 flex-shrink-0">
@@ -169,10 +165,10 @@ export function Navbar() {
               </div>
               <button
                 onClick={() => setMenuOpen(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-[#C8A24A]/30 text-[#C8A24A] hover:bg-[#C8A24A]/10 transition-colors text-xl"
+                className="w-10 h-10 flex items-center justify-center rounded-full border border-[#C8A24A]/30 text-[#C8A24A] hover:bg-[#C8A24A]/10 transition-colors"
                 aria-label="Close menu"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -186,41 +182,52 @@ export function Navbar() {
                   placeholder="Search remedies, rubrics..."
                   className="w-full px-4 py-2.5 pr-10 text-sm bg-[#0f2a20] border border-[#C8A24A]/30 rounded-lg text-stone-100 placeholder-stone-500 focus:outline-none focus:border-[#C8A24A]"
                 />
-                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C8A24A]">🔍</button>
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C8A24A]"><Search className="w-4 h-4" /></button>
               </form>
             </div>
 
-            {/* Menu items */}
+            {/* Menu items — single column with Lucide icons */}
             <div className="flex-1 px-3 pb-2">
-              <div className="grid grid-cols-2 gap-1.5">
-                {menuItems.map(it => (
+              <div className="flex flex-col gap-0.5">
+                {menuItems.map(({ href, label, Icon }) => (
                   <Link
-                    key={it.label}
-                    href={it.href}
+                    key={label}
+                    href={href}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wide transition-colors ${
-                      isActive(it.href)
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold uppercase tracking-wide transition-colors ${
+                      isActive(href)
                         ? 'bg-[#C8A24A] text-[#173B2D]'
-                        : 'text-stone-200 hover:bg-[#2a5443]'
+                        : 'text-stone-200 hover:bg-[#2a5443] hover:text-[#C8A24A]'
                     }`}
                   >
-                    <span className="text-sm">{it.icon}</span>
-                    <span>{it.label}</span>
+                    <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                    <span>{label}</span>
                   </Link>
                 ))}
-              </div>
 
-              {/* Admin link */}
-              {session?.authenticated && session?.role === 'admin' && (
-                <Link
-                  href="/admin"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 mt-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-[#C8A24A]/20 text-[#C8A24A] w-full"
-                >
-                  <span className="text-sm">👤</span>
-                  <span>Admin Panel</span>
-                </Link>
-              )}
+                {/* Admin Panel — auth + admin only */}
+                {session?.authenticated && session?.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 mt-1 rounded-lg text-sm font-semibold uppercase tracking-wide bg-[#C8A24A]/20 text-[#C8A24A]"
+                  >
+                    <UserCog className="w-[18px] h-[18px] flex-shrink-0" />
+                    <span>Admin Panel</span>
+                  </Link>
+                )}
+
+                {/* Logout */}
+                {session?.authenticated && (
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-3 px-3 py-3 mt-1 rounded-lg text-sm font-semibold uppercase tracking-wide text-red-300 hover:bg-[#6E2A3A]/30 transition-colors w-full text-left"
+                  >
+                    <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
+                    <span>Logout</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* User section */}
@@ -236,9 +243,6 @@ export function Navbar() {
                       <div className="text-[0.6rem] text-stone-400 capitalize">{session.role || 'user'}</div>
                     </div>
                   </div>
-                  <button onClick={logout} className="text-xs bg-[#6E2A3A] hover:bg-[#8a3548] text-white px-3 py-1.5 rounded font-semibold flex-shrink-0">
-                    Logout
-                  </button>
                 </div>
               ) : (
                 <Link
