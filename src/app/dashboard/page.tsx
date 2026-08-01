@@ -59,7 +59,7 @@ export default function DashboardPage() {
   const cabinet = [
     { name: 'Boericke', desc: 'Pocket manual · concise keynotes', count: '688', href: '/materia-medica' },
     { name: 'Phatak', desc: 'Comparative concordance style', count: '420', href: '/materia-medica' },
-    { name: 'Murphy', desc: 'Modern clinical repertorial notes', count: '1,383', href: '/materia-medica' },
+    { name: 'Murphy', desc: 'Lotus Materia Medica · 3rd Ed.', count: '1,403', href: '/materia-medica' },
     { name: 'Kent', desc: 'Lectures on Homoeopathic MM', count: '70', href: '/materia-medica' },
     { name: 'Allen', desc: 'Key Notes', count: '186', href: '/materia-medica' },
     { name: 'Sankaran', desc: 'Soul of Remedies', count: '99', href: '/materia-medica' },
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
           {cabinet.map(c => (
             <Link key={c.name} href={c.href} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow border-l-4 border-[#173B2D]">
-              <h3 className="font-serif text-lg text-[#173B2D] mb-1">{c.name}</h3>
+              <h3 className="font-serif text-lg text-[#173B2D] mb-1">{c.name === 'Murphy' ? 'Robin Murphy' : c.name}</h3>
               <p className="text-xs text-[#7C8F6E] mb-2">{c.desc}</p>
               <div className="text-xs text-[#C8A24A] font-semibold">{c.count} entries</div>
             </Link>

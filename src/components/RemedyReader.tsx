@@ -39,19 +39,28 @@ type Remedy = {
 // ============================================================
 const SOURCE_TITLES: Record<string, string> = {
   'Allen': "Allen's Keynotes and Characteristics",
-  'Phatak': "S. R. Phatak's Concise Materia Medica",
+  'Phatak': "S. R. Phatak's Materia Medica of Homoeopathic Medicines",
   'Kent': "Kent's Lectures on Homoeopathic Materia Medica",
   'Boericke': "Pocket Manual of Homoeopathic Materia Medica by William Boericke",
   'Dubey': "S. K. Dubey's Materia Medica",
-  'Murphy': "Robin Murphy's Lotus Materia Medica",
+  'Murphy': "Robin Murphy's Lotus Materia Medica (3rd Edition)",
   'Farrington': "E. A. Farrington's Clinical Materia Medica",
   'Boeger': "Boeger's Synoptic Key Materia Medica",
   'Mathur': "K. N. Mathur's Materia Medica",
   'Sankaran': "Rajan Sankaran's The Soul of Remedies",
 };
 
+// Author display names (what users see in the UI)
+const AUTHOR_DISPLAY_NAMES: Record<string, string> = {
+  'Murphy': 'Robin Murphy',
+};
+
 function getSourceTitle(author: string): string {
   return SOURCE_TITLES[author] || `${author} Materia Medica`;
+}
+
+function getAuthorDisplayName(author: string): string {
+  return AUTHOR_DISPLAY_NAMES[author] || author;
 }
 
 // ============================================================
@@ -319,18 +328,67 @@ function renderRemedyText(text: string, keyPrefix: string): React.ReactNode {
         </h3>
       );
     } else {
-      // Check for sub-label pattern: "Label: text" or "Label :" at start
-      const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
-      if (labelMatch && !isHeading(trimmed)) {
-        flushParagraph();
-        elements.push(
-          <div key={`${keyPrefix}-sl-${keyCounter++}`} className="mb-3">
-            <span className="text-sm font-bold text-[#1a1a1a]">{labelMatch[1]}</span>{' '}
-            <span className="text-sm text-[#2C2C2C] leading-[1.7]">{labelMatch[2]}</span>
-          </div>
-        );
+      // Check for Murphy-style "HEADING - content" pattern (dash separator)
+      // Murphy uses: "PHARMACY - content", "CLINICAL - content", "Head - content", etc.
+      const dashMatch = trimmed.match(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\s*-\s+(.+)$/s);
+      if (dashMatch) {
+        const potentialHeading = dashMatch[1].trim();
+        const restContent = dashMatch[2].trim();
+        // Check if it's a known heading (uppercase or title case)
+        const isKnownHeading = KNOWN_HEADINGS.has(potentialHeading) ||
+                               KNOWN_HEADINGS.has(potentialHeading.toUpperCase()) ||
+                               KNOWN_HEADINGS.has(potentialHeading.toLowerCase());
+        if (isKnownHeading) {
+          flushParagraph();
+          // Normalize heading for display
+          let displayHeading = potentialHeading;
+          if (displayHeading === displayHeading.toUpperCase() && displayHeading.length > 3) {
+            displayHeading = displayHeading.split(' ').map(w =>
+              w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+            ).join(' ');
+          }
+          elements.push(
+            <h3 key={`${keyPrefix}-h-${keyCounter++}`} className="font-serif text-lg font-bold text-[#8B0000] mt-6 mb-3 pb-1 border-b border-[#E8DCC3] tracking-wide">
+              {displayHeading}
+            </h3>
+          );
+          // Add the content after the heading as a paragraph
+          if (restContent) {
+            elements.push(
+              <p key={`${keyPrefix}-p-${keyCounter++}`} className="text-[#2C2C2C] leading-[1.7] mb-4 text-sm md:text-[15px]">
+                {renderTextWithRefs(restContent, `${keyPrefix}-${keyCounter}`)}
+              </p>
+            );
+          }
+        } else {
+          // Check for sub-label pattern: "Label: text" or "Label :" at start
+          const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
+          if (labelMatch && !isHeading(trimmed)) {
+            flushParagraph();
+            elements.push(
+              <div key={`${keyPrefix}-sl-${keyCounter++}`} className="mb-3">
+                <span className="text-sm font-bold text-[#1a1a1a]">{labelMatch[1]}</span>{' '}
+                <span className="text-sm text-[#2C2C2C] leading-[1.7]">{labelMatch[2]}</span>
+              </div>
+            );
+          } else {
+            currentParagraph.push(trimmed);
+          }
+        }
       } else {
-        currentParagraph.push(trimmed);
+        // Check for sub-label pattern: "Label: text" or "Label :" at start
+        const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
+        if (labelMatch && !isHeading(trimmed)) {
+          flushParagraph();
+          elements.push(
+            <div key={`${keyPrefix}-sl-${keyCounter++}`} className="mb-3">
+              <span className="text-sm font-bold text-[#1a1a1a]">{labelMatch[1]}</span>{' '}
+              <span className="text-sm text-[#2C2C2C] leading-[1.7]">{labelMatch[2]}</span>
+            </div>
+          );
+        } else {
+          currentParagraph.push(trimmed);
+        }
       }
     }
   }
