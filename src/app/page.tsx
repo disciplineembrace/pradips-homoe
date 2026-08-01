@@ -21,8 +21,8 @@ function useCountUp(target: number, duration: number = 2000, start: boolean = fa
   return count;
 }
 
-// Fade-in on scroll hook
-function useScrollReveal() {
+// Scroll reveal wrapper component (NOT a hook called in map)
+function RevealCard({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -30,52 +30,78 @@ function useScrollReveal() {
       ([entry]) => { if (entry.isIntersecting) setVisible(true); },
       { threshold: 0.1 }
     );
-    if (ref.current) observer.observe(ref.current);
-    return () => { if (ref.current) observer.disconnect(); };
+    const el = ref.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.disconnect(); };
   }, []);
-  return { ref, visible };
+  return (
+    <div ref={ref} className={`transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
 }
 
-function StatCard({ value, label, suffix, delay }: { value: number; label: string; suffix?: string; delay: number }) {
-  const { ref, visible } = useScrollReveal();
+function StatCard({ value, label, delay }: { value: number; label: string; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   const count = useCountUp(value, 2000, visible);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.1 }
+    );
+    const el = ref.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.disconnect(); };
+  }, []);
   return (
     <div ref={ref} className={`text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${delay}ms` }}>
-      <div className="font-serif text-3xl md:text-4xl font-bold text-[#D4AF37]">{count.toLocaleString()}{suffix}</div>
+      <div className="font-serif text-3xl md:text-4xl font-bold text-[#D4AF37]">{count.toLocaleString()}</div>
       <div className="text-xs md:text-sm text-stone-400 mt-1 uppercase tracking-wider">{label}</div>
     </div>
   );
 }
 
 function FeatureCard({ icon, title, desc, delay }: { icon: string; title: string; desc: string; delay: number }) {
-  const { ref, visible } = useScrollReveal();
   return (
-    <div ref={ref} className={`bg-[#12392C]/80 backdrop-blur-sm border border-[#D4AF37]/20 rounded-xl p-5 transition-all duration-500 hover:border-[#D4AF37]/50 hover:shadow-lg hover:shadow-[#D4AF37]/5 hover:-translate-y-1 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${delay}ms` }}>
+    <RevealCard delay={delay} className="bg-[#12392C]/80 backdrop-blur-sm border border-[#D4AF37]/20 rounded-xl p-5 transition-all duration-500 hover:border-[#D4AF37]/50 hover:shadow-lg hover:shadow-[#D4AF37]/5 hover:-translate-y-1">
       <div className="text-2xl mb-3">{icon}</div>
       <h3 className="font-serif text-base text-[#D4AF37] mb-1.5 font-semibold">{title}</h3>
       <p className="text-xs text-stone-400 leading-relaxed">{desc}</p>
-    </div>
+    </RevealCard>
   );
 }
 
 function CollectionCard({ icon, title, desc, stat, delay }: { icon: string; title: string; desc: string; stat: string; delay: number }) {
-  const { ref, visible } = useScrollReveal();
   return (
-    <div ref={ref} className={`bg-gradient-to-br from-[#12392C] to-[#0B2E22] border border-[#D4AF37]/25 rounded-2xl p-6 transition-all duration-500 hover:border-[#D4AF37]/60 hover:shadow-xl hover:shadow-[#D4AF37]/10 hover:-translate-y-1.5 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${delay}ms` }}>
+    <RevealCard delay={delay} className="bg-gradient-to-br from-[#12392C] to-[#0B2E22] border border-[#D4AF37]/25 rounded-2xl p-6 transition-all duration-500 hover:border-[#D4AF37]/60 hover:shadow-xl hover:shadow-[#D4AF37]/10 hover:-translate-y-1.5">
       <div className="flex items-center gap-3 mb-3">
         <div className="text-3xl">{icon}</div>
         <h3 className="font-serif text-lg text-[#D4AF37] font-bold">{title}</h3>
       </div>
       <p className="text-xs text-stone-400 leading-relaxed mb-3">{desc}</p>
       <div className="text-xs text-[#C9A23A] font-semibold border-t border-[#D4AF37]/15 pt-2">{stat}</div>
-    </div>
+    </RevealCard>
+  );
+}
+
+function WhyChooseCard({ icon, title, desc, delay }: { icon: string; title: string; desc: string; delay: number }) {
+  return (
+    <RevealCard delay={delay}>
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 mb-3">
+          <span className="text-xl">{icon}</span>
+        </div>
+        <h3 className="text-xs md:text-sm font-semibold text-[#D4AF37] mb-1">{title}</h3>
+        <p className="text-[0.65rem] text-stone-500 leading-relaxed">{desc}</p>
+      </div>
+    </RevealCard>
   );
 }
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadingText, setLoadingText] = useState('Preparing Digital Library...');
-  const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const texts = ['Preparing Digital Library...', 'Authenticating Resources...', 'Loading Verified Database...'];
@@ -87,17 +113,17 @@ export default function Home() {
     const timer = setTimeout(() => {
       setLoading(false);
       clearInterval(interval);
-    }, 2400);
+    }, 2000);
     return () => { clearTimeout(timer); clearInterval(interval); };
   }, []);
 
   if (loading) {
     return (
       <div className="fixed inset-0 bg-[#0B2E22] flex flex-col items-center justify-center z-[9999]">
-        <div className="relative mb-6">
-          <div className="w-24 h-24 rounded-full border-4 border-[#D4AF37]/20"></div>
-          <div className="absolute inset-0 w-24 h-24 rounded-full border-4 border-t-[#D4AF37] animate-spin"></div>
-          <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="48" height="48" className="absolute inset-0 m-auto h-12 w-auto" />
+        <div className="relative mb-6 w-24 h-24">
+          <div className="absolute inset-0 rounded-full border-4 border-[#D4AF37]/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-[#D4AF37] animate-spin"></div>
+          <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="48" height="48" className="absolute inset-0 m-auto h-12 w-12 rounded-full object-cover" />
         </div>
         <h1 className="font-serif text-2xl text-[#D4AF37] mb-2 tracking-wide">Pradip&apos;s Homoeo</h1>
         <p className="text-xs text-stone-500 uppercase tracking-[0.2em] mb-4">Personal Digital Library</p>
@@ -112,17 +138,16 @@ export default function Home() {
       <main className="flex-1">
 
         {/* HERO SECTION */}
-        <section ref={heroRef} className="relative overflow-hidden bg-gradient-to-br from-[#0B2E22] via-[#12392C] to-[#0B2E22] py-16 md:py-24 px-4 border-b border-[#D4AF37]/20">
+        <section className="relative overflow-hidden bg-gradient-to-br from-[#0B2E22] via-[#12392C] to-[#0B2E22] py-16 md:py-24 px-4 border-b border-[#D4AF37]/20">
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #D4AF37 0%, transparent 50%)' }}></div>
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              {/* Left */}
               <div className="text-center lg:text-left">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 mb-6">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
                   <span className="text-xs text-[#D4AF37] font-semibold tracking-wider uppercase">Verified · Accurate · Comprehensive</span>
                 </div>
-                <img src="/logo-v2-120.png" alt="Pradip's Homoeo" width="80" height="80" className="h-16 md:h-20 w-auto mx-auto lg:mx-0 mb-4" />
+                <img src="/logo-v2-120.png" alt="Pradip's Homoeo" width="80" height="80" className="h-16 md:h-20 w-auto mx-auto lg:mx-0 mb-4 rounded-full" />
                 <h1 className="font-serif text-4xl md:text-6xl font-bold text-[#D4AF37] mb-2 tracking-tight">Pradip&apos;s Homoeo</h1>
                 <p className="text-sm md:text-base text-[#C9A23A] uppercase tracking-[0.25em] mb-4 font-semibold">Personal Digital Library</p>
                 <p className="text-sm md:text-base text-stone-300 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-8">
@@ -132,7 +157,6 @@ export default function Home() {
                   <Link href="/login" className="bg-[#D4AF37] hover:bg-[#C9A23A] text-[#0B2E22] font-bold px-6 py-3 rounded-lg text-sm transition-all shadow-lg hover:shadow-[#D4AF37]/30 hover:-translate-y-0.5">Login to Access Library →</Link>
                   <Link href="/about" className="border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 px-6 py-3 rounded-lg text-sm font-semibold transition-all">Explore Features</Link>
                 </div>
-                {/* Animated stats */}
                 <div className="grid grid-cols-4 gap-4 mt-10">
                   <StatCard value={4493} label="Remedies" delay={0} />
                   <StatCard value={81463} label="Rubrics" delay={100} />
@@ -140,27 +164,26 @@ export default function Home() {
                   <StatCard value={23} label="Chapters" delay={300} />
                 </div>
               </div>
-              {/* Right — luxury composition */}
               <div className="hidden lg:flex justify-center">
                 <div className="relative w-full max-w-md aspect-square">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#D4AF37]/10 to-transparent blur-3xl"></div>
                   <div className="relative grid grid-cols-2 gap-4 p-8">
-                    <div className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl">
+                    <RevealCard delay={0} className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl">
                       <span className="text-4xl mb-2">📖</span>
                       <span className="text-xs text-[#D4AF37] font-semibold uppercase tracking-wider">Materia Medica</span>
-                    </div>
-                    <div className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl mt-8">
+                    </RevealCard>
+                    <RevealCard delay={100} className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl mt-8">
                       <span className="text-4xl mb-2">🔬</span>
                       <span className="text-xs text-[#D4AF37] font-semibold uppercase tracking-wider">Repertory</span>
-                    </div>
-                    <div className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl">
+                    </RevealCard>
+                    <RevealCard delay={200} className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl">
                       <span className="text-4xl mb-2">🌿</span>
                       <span className="text-xs text-[#D4AF37] font-semibold uppercase tracking-wider">Therapeutics</span>
-                    </div>
-                    <div className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl mt-8">
+                    </RevealCard>
+                    <RevealCard delay={300} className="bg-[#12392C] border border-[#D4AF37]/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-xl mt-8">
                       <span className="text-4xl mb-2">⚗️</span>
                       <span className="text-xs text-[#D4AF37] font-semibold uppercase tracking-wider">Organon</span>
-                    </div>
+                    </RevealCard>
                   </div>
                 </div>
               </div>
@@ -228,27 +251,14 @@ export default function Home() {
               <div className="w-16 h-0.5 bg-[#D4AF37] mx-auto mb-3"></div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {[
-                { icon: '✅', title: '100% Verified Database', desc: 'Every remedy verified against original source' },
-                { icon: '📋', title: 'OCR Clean Data', desc: 'Structured, clean OCR with no artifacts' },
-                { icon: '🛡️', title: 'No Data Loss', desc: 'Complete preservation of source content' },
-                { icon: '🎨', title: 'Professional UI', desc: 'Premium design for medical professionals' },
-                { icon: '⚕️', title: 'Clinical Focus', desc: 'Built for real-world homeopathic practice' },
-                { icon: '©️', title: 'Copyright Protected', desc: 'All content is protected and authenticated' },
-                { icon: '🔄', title: 'Continuous Updates', desc: 'Regularly updated with new verified content' },
-                { icon: '⚡', title: 'Fast Performance', desc: 'Optimized for quick loading and search' },
-              ].map((item, i) => {
-                const { ref, visible } = useScrollReveal();
-                return (
-                  <div key={i} ref={ref} className={`text-center transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${i * 50}ms` }}>
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 mb-3">
-                      <span className="text-xl">{item.icon}</span>
-                    </div>
-                    <h3 className="text-xs md:text-sm font-semibold text-[#D4AF37] mb-1">{item.title}</h3>
-                    <p className="text-[0.65rem] text-stone-500 leading-relaxed">{item.desc}</p>
-                  </div>
-                );
-              })}
+              <WhyChooseCard icon="✅" title="100% Verified Database" desc="Every remedy verified against original source" delay={0} />
+              <WhyChooseCard icon="📋" title="OCR Clean Data" desc="Structured, clean OCR with no artifacts" delay={50} />
+              <WhyChooseCard icon="🛡️" title="No Data Loss" desc="Complete preservation of source content" delay={100} />
+              <WhyChooseCard icon="🎨" title="Professional UI" desc="Premium design for medical professionals" delay={150} />
+              <WhyChooseCard icon="⚕️" title="Clinical Focus" desc="Built for real-world homeopathic practice" delay={200} />
+              <WhyChooseCard icon="©️" title="Copyright Protected" desc="All content is protected and authenticated" delay={250} />
+              <WhyChooseCard icon="🔄" title="Continuous Updates" desc="Regularly updated with new verified content" delay={300} />
+              <WhyChooseCard icon="⚡" title="Fast Performance" desc="Optimized for quick loading and search" delay={350} />
             </div>
           </div>
         </section>
@@ -256,7 +266,7 @@ export default function Home() {
         {/* ABOUT SECTION */}
         <section className="py-16 md:py-20 px-4 bg-[#12392C]">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-[#0B2E22] to-[#12392C] border border-[#D4AF37]/25 rounded-2xl p-8 md:p-12 shadow-2xl">
+            <RevealCard className="bg-gradient-to-br from-[#0B2E22] to-[#12392C] border border-[#D4AF37]/25 rounded-2xl p-8 md:p-12 shadow-2xl">
               <div className="text-center mb-6">
                 <h2 className="font-serif text-3xl text-[#D4AF37] font-bold mb-2">About the Library</h2>
                 <div className="w-16 h-0.5 bg-[#D4AF37] mx-auto"></div>
@@ -276,14 +286,14 @@ export default function Home() {
               </div>
               <div className="text-center mt-8">
                 <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30">
-                  <img src="/logo-v2-92.png" alt="Dr. Pradip" width="32" height="32" className="h-8 w-auto rounded-full" />
+                  <img src="/logo-v2-92.png" alt="Dr. Pradip" width="32" height="32" className="h-8 w-8 rounded-full object-cover" />
                   <div className="text-left">
                     <div className="text-xs text-[#D4AF37] font-semibold">Dr. Pradip</div>
                     <div className="text-[0.6rem] text-stone-500">Founder & Curator</div>
                   </div>
                 </div>
               </div>
-            </div>
+            </RevealCard>
           </div>
         </section>
 
