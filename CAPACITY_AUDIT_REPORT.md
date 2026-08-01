@@ -1,5 +1,5 @@
 # Website Capacity, Performance & Stability Audit Report
-## Pradip's Homoeo — Personal Digital Library
+## Pradip's Homeo — Personal Digital Library
 
 **Date:** 2026-07-30
 **Commit audited:** `653e130` (latest on `main`)

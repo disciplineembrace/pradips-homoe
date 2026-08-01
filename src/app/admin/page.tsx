@@ -65,7 +65,7 @@ export default function AdminHomePage() {
       <header className="bg-[#173B2D] text-stone-100 shadow border-b-2 border-[#C8A24A]/40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="font-serif italic text-xl text-[#C8A24A] tracking-wide">Pradip&apos;s Homoe — Admin</h1>
+            <h1 className="font-serif italic text-xl text-[#C8A24A] tracking-wide">Pradip&apos;s Homeo — Admin</h1>
             <p className="text-xs text-stone-400">{session?.name} · {session.user?.role}</p>
           </div>
           <div className="flex gap-2">

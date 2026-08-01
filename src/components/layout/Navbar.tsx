@@ -75,9 +75,9 @@ export function Navbar() {
           <div className="flex items-center justify-between h-16 gap-3">
             {/* Logo + Brand */}
             <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="36" height="36" className="h-9 w-9 rounded-full object-cover flex-shrink-0" />
+              <img src="/logo-v2-92.png" alt="Pradip's Homeo" width="36" height="36" className="h-9 w-9 rounded-full object-cover flex-shrink-0" />
               <div className="flex flex-col">
-                <span className="font-serif italic text-xl text-[#C8A24A] leading-none">Pradip&apos;s Homoe</span>
+                <span className="font-serif italic text-xl text-[#C8A24A] leading-none">Pradip&apos;s Homeo</span>
                 <span className="text-[0.55rem] uppercase tracking-[0.15em] text-stone-400 mt-0.5">Personal Digital Library</span>
               </div>
             </Link>
@@ -157,9 +157,9 @@ export function Navbar() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-[#C8A24A]/30 flex-shrink-0">
               <div className="flex items-center gap-2.5">
-                <img src="/logo-v2-92.png" alt="Pradip's Homoeo" width="36" height="36" className="h-9 w-9 rounded-full object-cover" />
+                <img src="/logo-v2-92.png" alt="Pradip's Homeo" width="36" height="36" className="h-9 w-9 rounded-full object-cover" />
                 <div className="flex flex-col">
-                  <span className="font-serif italic text-lg text-[#C8A24A] leading-none">Pradip&apos;s Homoe</span>
+                  <span className="font-serif italic text-lg text-[#C8A24A] leading-none">Pradip&apos;s Homeo</span>
                   <span className="text-[0.5rem] uppercase tracking-[0.15em] text-stone-400 mt-0.5">Personal Digital Library</span>
                 </div>
               </div>

@@ -6,7 +6,7 @@ export default function AboutPage() {
     <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-12">
-        <h1 className="font-serif text-4xl text-[#173B2D] mb-2">About Pradip&apos;s Homoe</h1>
+        <h1 className="font-serif text-4xl text-[#173B2D] mb-2">About Pradip&apos;s Homeo</h1>
         <div className="w-16 h-0.5 bg-amber-700 mb-4" />
         <p className="text-[#5a6b50] mb-8">A personal digital homoeopathy library built for practitioners, students, and serious learners.</p>
 
@@ -14,7 +14,7 @@ export default function AboutPage() {
           <section className="bg-white rounded-lg shadow p-6">
             <h2 className="font-serif text-2xl text-[#173B2D] mb-3">Our Mission</h2>
             <p className="text-stone-700 leading-relaxed">
-              Pradip&apos;s Homoe is a private digital library dedicated to preserving and providing secure access to classical homoeopathic literature. The platform brings together materia medica, repertories, therapeutics, and predictive homeopathy teachings from renowned authors — all in one searchable, readable interface.
+              Pradip&apos;s Homeo is a private digital library dedicated to preserving and providing secure access to classical homoeopathic literature. The platform brings together materia medica, repertories, therapeutics, and predictive homeopathy teachings from renowned authors — all in one searchable, readable interface.
             </p>
             <p className="text-stone-700 leading-relaxed mt-3">
               Unlike public resources, this library is access-controlled. Only users created by the administrator can login, ensuring the content reaches the intended audience while maintaining privacy and audit trails.
