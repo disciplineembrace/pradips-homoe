@@ -327,11 +327,11 @@ function RepertoryPageImpl() {
                   {/* Main rubric header */}
                   <div
                     className="flex items-start gap-2 p-4 cursor-pointer hover:bg-[#F5EFE0]/30 transition-colors"
-                    onClick={() => node.hasChildren && toggleNode(node.id)}
+                    onClick={() => toggleNode(node.id)}
                   >
                     {/* Expand/collapse icon */}
                     <div className="mt-1 flex-shrink-0">
-                      {node.hasChildren ? (
+                      {(node.hasChildren || (node.ownRemedies && node.ownRemedies.length > 0)) ? (
                         <span className={`text-[#173B2D] transition-transform inline-block ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
                       ) : (
                         <span className="text-[#7C8F6E]">•</span>
