@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export function Navbar() {
   const router = useRouter();
@@ -64,8 +65,9 @@ export function Navbar() {
             {session?.authenticated && session?.role === 'admin' && adminItems.map(it => navLink(it.href, it.label))}
           </nav>
 
-          {/* Auth button */}
+          {/* Auth button + Language Switcher */}
           <div className="hidden md:flex items-center gap-2">
+            <LanguageSwitcher />
             {session?.authenticated ? (
               <>
                 <span className="text-xs text-stone-400 hidden lg:inline">
@@ -122,6 +124,15 @@ export function Navbar() {
             ) : (
               <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded bg-amber-700 text-white text-center font-semibold">Login →</Link>
             )}
+            {/* Language switcher for mobile */}
+            <div className="px-3 py-2 border-t border-stone-700/50 mt-2">
+              <div className="text-[0.6rem] uppercase tracking-wider text-stone-500 mb-1.5">Language</div>
+              <div className="flex gap-2">
+                <button onClick={() => { localStorage.setItem('ph_lang', 'en'); window.location.reload(); }} className="px-2 py-1 text-xs rounded bg-stone-800 text-stone-300">🇬🇧 EN</button>
+                <button onClick={() => { localStorage.setItem('ph_lang', 'gu'); window.location.reload(); }} className="px-2 py-1 text-xs rounded bg-stone-800 text-stone-300">🇮🇳 ગુ</button>
+                <button onClick={() => { localStorage.setItem('ph_lang', 'hi'); window.location.reload(); }} className="px-2 py-1 text-xs rounded bg-stone-800 text-stone-300">🇮🇳 हि</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
