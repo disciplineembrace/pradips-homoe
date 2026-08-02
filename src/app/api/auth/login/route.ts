@@ -16,6 +16,7 @@ import {
   logLogin, logPin, getClientIp, getUserAgent,
   isPinLocked, recordPinFailure, recordPinSuccess,
   PIN_LIMIT, PIN_LOCK_MS,
+  createDeviceSession,
 } from '@/lib/auth';
 
 export const runtime = 'nodejs';
@@ -93,16 +94,29 @@ export async function POST(req: NextRequest) {
     await logPin({ userId: user.id, name: user.name, event: 'pin_success', ip, userAgent: ua });
     await logLogin({ userId: user.id, name: user.name, event: 'login_success', ip, userAgent: ua });
 
+    // Create device session (invalidates old sessions - one device rule)
+    const deviceId = await createDeviceSession(user.id, ua, ip);
+
     await setSessionCookie({
       userId: user.id,
       name: user.name,
       role: user.role as 'admin' | 'staff' | 'user',
-    });
+      deviceId,
+    }, deviceId);
+
+    // Check if admin has WebAuthn credentials registered
+    let requiresBiometric = false;
+    if (user.role === 'admin') {
+      const creds = await db.webAuthnCredential.findMany({ where: { userId: user.id } });
+      requiresBiometric = creds.length > 0;
+    }
 
     return NextResponse.json({
       success: true,
       redirect: user.role === 'admin' ? '/admin' : '/dashboard',
       user: { name: user.name, email: user.email, role: user.role },
+      deviceId,
+      requiresBiometric,
     });
   } catch (err: any) {
     console.error('Login error:', err);
