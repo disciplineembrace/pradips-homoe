@@ -1,16 +1,9 @@
-/** GET /api/rubrics/tree — hierarchical rubric tree (main rubric → sub-rubrics)
+/** GET /api/rubrics/tree — universal hierarchical rubric tree
  *
- * Builds a proper hierarchy using the "level" and "chapter" fields in each rubric.
- * Level 0 = main rubric, Level 1 = sub-rubric, Level 2 = sub-sub-rubric, etc.
+ * Uses parentId field for proper parent-child hierarchy.
+ * Supports unlimited nesting levels.
  *
- * Returns: chapters → main rubrics → sub-rubrics → sub-sub-rubrics with remedies.
- *
- * Query params:
- *   author     — filter by author (Kent, Phatak, Murphy, Boericke)
- *   chapter    — filter by chapter/path (e.g., Mind, MIND)
- *   q          — search query (matches title or remedy)
- *   page       — pagination (1-based)
- *   pageSize   — items per page (default 20, max 100)
+ * Remedy format: "name|grade" (grade 1=bold, 2=italic, 3=plain)
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getRubrics } from '@/lib/data';
@@ -21,34 +14,49 @@ export const dynamic = 'force-dynamic';
 
 interface RubricRecord {
   id: string;
-  path: string;
+  parentId: string | null;
+  source: string;
+  chapter: string;
   title: string;
-  author: string;
+  fullPath?: string;
+  level: number;
   remedies: string[];
-  chapter?: string;
-  level?: number;
-  cross_references?: string[];
+  crossReferences?: string[];
+}
+
+interface RemedyEntry {
+  name: string;
+  grade: number;
 }
 
 interface SubRubric {
   id: string;
-  title: string;       // full title (main → sub)
-  subTitle: string;    // just the sub part
-  remedies: string[];
+  title: string;
+  subTitle: string;
+  remedies: RemedyEntry[];
   level: number;
-  subRubrics?: SubRubric[];  // nested children
+  subRubrics?: SubRubric[];
   crossReferences?: string[];
 }
 
 interface MainRubricNode {
-  id: string;          // synthetic: author:chapter:mainSlug
-  main: string;        // main rubric name
+  id: string;
+  main: string;
   chapter: string;
   author: string;
   subRubrics: SubRubric[];
-  totalRemedies: number;    // distinct remedies across all sub-rubrics + itself
+  totalRemedies: number;
   hasChildren: boolean;
-  ownRemedies?: string[];   // remedies directly on this main rubric (if level 0 with remedies)
+  ownRemedies?: RemedyEntry[];
+  crossReferences?: string[];
+}
+
+function parseRemedy(rem: string): RemedyEntry {
+  const parts = rem.split('|');
+  return {
+    name: parts[0],
+    grade: parts.length > 1 ? parseInt(parts[1], 10) : 3,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -64,132 +72,76 @@ export async function GET(req: NextRequest) {
 
   let rubrics: RubricRecord[] = await getRubrics();
 
-  // Filter by author
-  if (author) rubrics = rubrics.filter(r => r.author === author);
-  // Filter by chapter (check both "path" and "chapter" fields)
+  // Filter by author (check both "source" and "author" fields)
+  if (author) {
+    rubrics = rubrics.filter(r => r.source === author || (r as any).author === author);
+  }
+  // Filter by chapter
   if (chapter) {
-    rubrics = rubrics.filter(r => r.path === chapter || r.chapter === chapter);
+    rubrics = rubrics.filter(r => r.chapter === chapter || (r as any).path === chapter);
   }
 
   // Search filter
   if (q) {
-    rubrics = rubrics.filter(r =>
-      (r.title + ' ' + (r.path || '') + ' ' + (r.chapter || '') + ' ' + ((r.remedies || []).join(' '))).toLowerCase().includes(q)
-    );
+    rubrics = rubrics.filter(r => {
+      const remedyText = (r.remedies || []).map(rem => rem.split('|')[0]).join(' ');
+      return (r.title + ' ' + r.chapter + ' ' + remedyText).toLowerCase().includes(q);
+    });
   }
 
-  // Build hierarchy using level field
-  // Group rubrics by their main rubric (level 0)
-  // Then attach level 1+ rubrics as children
+  // Build hierarchy using parentId
+  // Level 0 (parentId === null) = main rubrics
+  // Level 1+ (parentId set) = sub-rubrics
 
-  // First, identify main rubrics (level 0 or no level field)
-  // For rubrics without level field, try to parse from title
-  const mainRubricsMap = new Map<string, MainRubricNode>();
-  const allRubricsByKey = new Map<string, RubricRecord[]>();
+  const mainRubrics = rubrics.filter(r => !r.parentId || r.level === 0);
+  const subRubrics = rubrics.filter(r => r.parentId && r.level > 0);
 
-  for (const r of rubrics) {
-    // Determine the main rubric name
-    // If level field exists and is 0, the title IS the main rubric
-    // If level > 0, we need to extract the main rubric from the title or full_path
-    let mainName: string;
-    let subTitle: string;
-    let level: number;
-
-    if (r.level !== undefined) {
-      level = r.level;
-      if (level === 0) {
-        mainName = r.title;
-        subTitle = '';
-      } else {
-        // For level > 0, extract main name from title
-        // Title format: "MAIN - sub - subsub" or "MAIN — sub"
-        const title = r.title || '';
-        // Try em-dash first (old format), then regular dash (new format)
-        let dashIdx = title.indexOf(' — ');
-        if (dashIdx === -1) dashIdx = title.indexOf(' - ');
-        if (dashIdx > 0) {
-          mainName = title.slice(0, dashIdx).trim();
-          subTitle = title.slice(dashIdx + 3).trim();
-        } else {
-          // No separator - treat as main rubric
-          mainName = title;
-          subTitle = '';
-          level = 0;
-        }
-      }
-    } else {
-      // No level field - parse from title
-      const title = r.title || '';
-      let dashIdx = title.indexOf(' — ');
-      if (dashIdx === -1) dashIdx = title.indexOf(' - ');
-      if (dashIdx > 0) {
-        mainName = title.slice(0, dashIdx).trim();
-        subTitle = title.slice(dashIdx + 3).trim();
-        level = subTitle ? 1 : 0;
-      } else {
-        mainName = title;
-        subTitle = '';
-        level = 0;
-      }
+  // Index sub-rubrics by parentId for fast lookup
+  const subByParent = new Map<string, SubRubric[]>();
+  for (const r of subRubrics) {
+    const parentId = r.parentId!;
+    if (!subByParent.has(parentId)) {
+      subByParent.set(parentId, []);
     }
-
-    const chapterName = r.chapter || r.path || 'UNKNOWN';
-    const key = `${r.author}:${chapterName}:${mainName}`;
-
-    if (!mainRubricsMap.has(key)) {
-      mainRubricsMap.set(key, {
-        id: key.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-        main: mainName,
-        chapter: chapterName,
-        author: r.author,
-        subRubrics: [],
-        totalRemedies: 0,
-        hasChildren: false,
-        ownRemedies: [],
-      });
-    }
-
-    const node = mainRubricsMap.get(key)!;
-
-    if (level === 0 && subTitle === '') {
-      // This is the main rubric itself - add its remedies
-      if (r.remedies && r.remedies.length > 0) {
-        node.ownRemedies = node.ownRemedies || [];
-        node.ownRemedies.push(...r.remedies);
-      }
-    } else {
-      // This is a sub-rubric
-      node.subRubrics.push({
-        id: r.id,
-        title: r.title,
-        subTitle: subTitle || r.title,
-        remedies: r.remedies || [],
-        level: level,
-        crossReferences: r.cross_references || [],
-      });
-      node.hasChildren = true;
-    }
+    const remedies = (r.remedies || []).map(parseRemedy);
+    subByParent.get(parentId)!.push({
+      id: r.id,
+      title: r.fullPath || r.title,
+      subTitle: r.title,
+      remedies,
+      level: r.level,
+      crossReferences: r.crossReferences,
+    });
   }
 
-  // Calculate total remedies and sort sub-rubrics
+  // Build main rubric nodes
   const allNodes: MainRubricNode[] = [];
-  for (const [, node] of mainRubricsMap) {
+
+  for (const r of mainRubrics) {
+    const subs = subByParent.get(r.id) || [];
+    const ownRemedies = (r.remedies || []).map(parseRemedy);
+
+    // Collect all remedies (own + sub-rubric)
     const remedySet = new Set<string>();
-
-    // Add own remedies
-    if (node.ownRemedies) {
-      for (const rem of node.ownRemedies) remedySet.add(rem);
+    for (const rem of ownRemedies) remedySet.add(rem.name);
+    for (const sub of subs) {
+      for (const rem of sub.remedies) remedySet.add(rem.name);
     }
 
-    // Add sub-rubric remedies
-    for (const s of node.subRubrics) {
-      for (const rem of s.remedies) remedySet.add(rem);
-    }
+    // Sort sub-rubrics alphabetically
+    subs.sort((a, b) => a.subTitle.localeCompare(b.subTitle));
 
-    node.totalRemedies = remedySet.size;
-    node.subRubrics.sort((a, b) => a.subTitle.localeCompare(b.subTitle));
-
-    allNodes.push(node);
+    allNodes.push({
+      id: r.id,
+      main: r.title,
+      chapter: r.chapter,
+      author: r.source,
+      subRubrics: subs,
+      totalRemedies: remedySet.size,
+      hasChildren: subs.length > 0,
+      ownRemedies: ownRemedies.length > 0 ? ownRemedies : undefined,
+      crossReferences: r.crossReferences,
+    });
   }
 
   // Sort main rubrics alphabetically

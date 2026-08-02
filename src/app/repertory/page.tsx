@@ -15,11 +15,18 @@ type Rubric = {
   remedies?: string[];
 };
 
+type RemedyEntry = {
+  name: string;
+  grade: number;
+};
+
 type SubRubric = {
   id: string;
   title: string;
   subTitle: string;
-  remedies: string[];
+  remedies: RemedyEntry[];
+  level?: number;
+  crossReferences?: string[];
 };
 
 type MainRubricNode = {
@@ -30,7 +37,8 @@ type MainRubricNode = {
   subRubrics: SubRubric[];
   totalRemedies: number;
   hasChildren: boolean;
-  ownRemedies?: string[];
+  ownRemedies?: RemedyEntry[];
+  crossReferences?: string[];
 };
 
 type Chapter = {
@@ -43,6 +51,14 @@ const PAGE_SIZE = 20;
 
 function RepertoryPageImpl()
 
+// Grade color mapping: 1=bold(red), 2=italic(blue), 3=plain(gray)
+const gradeStyles: Record<number, string> = {
+  1: "bg-[#6E2A3A]/10 text-[#6E2A3A] font-bold border-[#6E2A3A]/20",
+  2: "bg-blue-50 text-blue-700 italic border-blue-200",
+  3: "bg-[#F5EFE0] text-[#173B2D] border-[#E8DCC3]",
+};
+
+
 export default function RepertoryPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -52,6 +68,14 @@ export default function RepertoryPage() {
 }
 
 function RepertoryPageImpl() {
+
+// Grade color mapping: 1=bold(red), 2=italic(blue), 3=plain(gray)
+const gradeStyles: Record<number, string> = {
+  1: "bg-[#6E2A3A]/10 text-[#6E2A3A] font-bold border-[#6E2A3A]/20",
+  2: "bg-blue-50 text-blue-700 italic border-blue-200",
+  3: "bg-[#F5EFE0] text-[#173B2D] border-[#E8DCC3]",
+};
+
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [rubricNodes, setRubricNodes] = useState<MainRubricNode[]>([]);
@@ -286,8 +310,8 @@ function RepertoryPageImpl() {
                     <div className="border-t border-[#E8DCC3] bg-[#F5EFE0]/20 p-3">
                       <div className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#7C8F6E] mb-2">Main Rubric Remedies ({node.ownRemedies.length})</div>
                       <div className="flex flex-wrap gap-1.5">
-                        {node.ownRemedies.map((rm, i) => (
-                          <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
+                        {node.ownRemedies.map((rm: RemedyEntry, i: number) => (
+                          <span key={i} className={`text-[0.7rem] px-2 py-0.5 rounded border ${gradeStyles[rm.grade] || gradeStyles[3]}`}>{rm.name}</span>
                         ))}
                       </div>
                     </div>
@@ -322,8 +346,8 @@ function RepertoryPageImpl() {
                                 <div className="px-3 pb-3 pt-1 border-t border-[#E8DCC3]/50">
                                   {sub.remedies.length > 0 ? (
                                     <div className="flex flex-wrap gap-1.5 mt-2">
-                                      {sub.remedies.map((rm, i) => (
-                                        <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
+                                      {sub.remedies.map((rm: RemedyEntry, i: number) => (
+                                        <span key={i} className={`text-[0.7rem] px-2 py-0.5 rounded border ${gradeStyles[rm.grade] || gradeStyles[3]}`}>{rm.name}</span>
                                       ))}
                                     </div>
                                   ) : (
@@ -342,8 +366,8 @@ function RepertoryPageImpl() {
                   {isExpanded && !node.hasChildren && node.ownRemedies && node.ownRemedies.length > 0 && (
                     <div className="border-t border-[#E8DCC3] p-3 bg-[#F5EFE0]/20">
                       <div className="flex flex-wrap gap-1.5">
-                        {node.ownRemedies.map((rm, i) => (
-                          <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
+                        {node.ownRemedies.map((rm: RemedyEntry, i: number) => (
+                          <span key={i} className={`text-[0.7rem] px-2 py-0.5 rounded border ${gradeStyles[rm.grade] || gradeStyles[3]}`}>{rm.name}</span>
                         ))}
                       </div>
                     </div>
