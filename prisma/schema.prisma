@@ -1,5 +1,4 @@
-// Prisma schema for Pradip's Homoe — PIN-only auth system
-// No passwords. Login is purely via unique 6-digit PIN.
+// Prisma schema for Pradip's Homoe — PIN-only auth + One-Device-Per-User + Admin Biometric
 
 generator client {
   provider = "prisma-client-js"
@@ -12,34 +11,65 @@ datasource db {
 
 model User {
   id         String   @id @default(cuid())
-  name       String                         // required — display name
-  email      String   @unique               // required — for user lookup at login
-  pinHash    String                         // bcrypt hash of 6-digit PIN (slow, for verification)
-  role       String   @default("user")      // "admin" | "staff" | "user"
-  status     String   @default("active")    // "active" | "disabled"
-  // PIN lockout tracking (5 wrong attempts → 15 min lock)
+  name       String
+  email      String   @unique
+  pinHash    String
+  role       String   @default("user")
+  status     String   @default("active")
   pinFailCount   Int      @default(0)
   pinLockedUntil DateTime?
-  // Login tracking
   lastLoginAt    DateTime?
   lastPinAt      DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  loginLogs LoginLog[]
-  pinLogs   PinLog[]
-  auditLogs AuditLog[]
+  loginLogs     LoginLog[]
+  pinLogs       PinLog[]
+  auditLogs     AuditLog[]
+  deviceSessions DeviceSession[]
+  webauthnCreds  WebAuthnCredential[]
 
   @@index([email])
   @@index([role])
   @@index([status])
 }
 
+model DeviceSession {
+  id              String   @id @default(cuid())
+  userId          String
+  deviceId        String   @unique  // unique per device session
+  deviceInfo      String?  // browser/OS info
+  ip              String?
+  loginAt         DateTime @default(now())
+  lastActivityAt  DateTime @default(now())
+  isActive        Boolean  @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([isActive])
+}
+
+model WebAuthnCredential {
+  id              String   @id @default(cuid())
+  userId          String
+  credentialId    String   @unique  // base64url encoded
+  publicKey       String             // base64url encoded COSE key
+  counter         Int      @default(0)
+  deviceType      String?  // platform/cross-platform
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model LoginLog {
   id        String   @id @default(cuid())
   userId    String?
-  name      String                         // name attempted (for log even if user not found)
-  event     String                         // "login_success" | "login_fail" | "logout"
+  name      String
+  event     String
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
@@ -55,7 +85,7 @@ model PinLog {
   id        String   @id @default(cuid())
   userId    String?
   name      String
-  event     String   // "pin_success" | "pin_fail" | "pin_locked" | "pin_reset" | "pin_unlocked"
+  event     String
   failCount Int?
   ip        String?
   userAgent String?
@@ -70,9 +100,9 @@ model PinLog {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String?  // actor (admin)
-  action    String   // "user_create" | "user_delete" | "user_disable" | "user_enable" | "role_change" | "pin_reset" | "pin_unlock"
-  targetId  String?  // user the action was performed on
+  userId    String?
+  action    String
+  targetId  String?
   detail    String?
   ip        String?
   createdAt DateTime @default(now())
