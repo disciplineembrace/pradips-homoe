@@ -31,14 +31,14 @@ export async function GET(req: NextRequest) {
   if (subject === 'all' || subject === 'materia-medica') {
     remedies = await getRemedies();
     if (source !== 'all') {
-      remedies = remedies.filter(r => r.author === source);
+      remedies = remedies.filter(r => (r.source || r.author) === source);
     }
   }
   
   if (subject === 'all' || subject === 'repertory') {
     rubrics = await getRubrics();
     if (source !== 'all') {
-      rubrics = rubrics.filter(r => r.author === source);
+      rubrics = rubrics.filter(r => (r.source || r.author) === source);
     }
   }
   

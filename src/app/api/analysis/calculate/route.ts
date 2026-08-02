@@ -69,16 +69,25 @@ export async function POST(req: NextRequest) {
   for (const rubric of selectedRubrics) {
     const intensity = intensityMultiplier[rubric.intensity] || 1;
     const catWeight = categoryWeight[rubric.category] || 1;
-    const source = rubric.author;
+    // Handle both 'author' and 'source' fields (new data format uses 'source')
+    const source = rubric.author || (rubric as any).source || 'Unknown';
 
     for (let i = 0; i < (rubric.remedies || []).length; i++) {
-      const remedyName = rubric.remedies[i];
-      const key = remedyName.toLowerCase();
-
-      // Infer grade from position: first 3 = grade 3, next 5 = grade 2, rest = grade 1
+      let remedyName = rubric.remedies[i];
       let grade = 1;
-      if (i < 3) grade = 3;
-      else if (i < 8) grade = 2;
+
+      // Handle "name|grade" format (new data format)
+      if (typeof remedyName === 'string' && remedyName.includes('|')) {
+        const parts = remedyName.split('|');
+        remedyName = parts[0];
+        grade = parseInt(parts[1], 10) || 1;
+      } else {
+        // Infer grade from position: first 3 = grade 3, next 5 = grade 2, rest = grade 1
+        if (i < 3) grade = 3;
+        else if (i < 8) grade = 2;
+      }
+
+      const key = remedyName.toLowerCase();
 
       const baseScore = grade * intensity * catWeight;
 
