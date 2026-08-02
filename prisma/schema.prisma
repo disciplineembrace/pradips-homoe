@@ -12,15 +12,13 @@ datasource db {
 
 model User {
   id         String   @id @default(cuid())
-  name       String                         // required — display name
-  email      String   @unique               // required — for user lookup at login
-  pinHash    String                         // bcrypt hash of 6-digit PIN (slow, for verification)
-  role       String   @default("user")      // "admin" | "staff" | "user"
-  status     String   @default("active")    // "active" | "disabled"
-  // PIN lockout tracking (5 wrong attempts → 15 min lock)
+  name       String
+  email      String   @unique
+  pinHash    String
+  role       String   @default("user")
+  status     String   @default("active")
   pinFailCount   Int      @default(0)
   pinLockedUntil DateTime?
-  // Login tracking
   lastLoginAt    DateTime?
   lastPinAt      DateTime?
   createdAt      DateTime @default(now())
@@ -38,8 +36,8 @@ model User {
 model LoginLog {
   id        String   @id @default(cuid())
   userId    String?
-  name      String                         // name attempted (for log even if user not found)
-  event     String                         // "login_success" | "login_fail" | "logout"
+  name      String
+  event     String
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
@@ -55,7 +53,7 @@ model PinLog {
   id        String   @id @default(cuid())
   userId    String?
   name      String
-  event     String   // "pin_success" | "pin_fail" | "pin_locked" | "pin_reset" | "pin_unlocked"
+  event     String
   failCount Int?
   ip        String?
   userAgent String?
@@ -70,9 +68,9 @@ model PinLog {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String?  // actor (admin)
-  action    String   // "user_create" | "user_delete" | "user_disable" | "user_enable" | "role_change" | "pin_reset" | "pin_unlock"
-  targetId  String?  // user the action was performed on
+  userId    String?
+  action    String
+  targetId  String?
   detail    String?
   ip        String?
   createdAt DateTime @default(now())
