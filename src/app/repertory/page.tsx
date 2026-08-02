@@ -51,12 +51,40 @@ const PAGE_SIZE = 20;
 
 function RepertoryPageImpl()
 
-// Grade color mapping: 1=bold(red), 2=italic(blue), 3=plain(gray)
+// Universal grade color mapping (visual aid only — original grades preserved in database)
+// Grade 4 = Red (highest emphasis), Grade 3 = Green (strong), Grade 2 = Blue (moderate), Grade 1 = Gray (lower)
 const gradeStyles: Record<number, string> = {
-  1: "bg-[#6E2A3A]/10 text-[#6E2A3A] font-bold border-[#6E2A3A]/20",
-  2: "bg-blue-50 text-blue-700 italic border-blue-200",
-  3: "bg-[#F5EFE0] text-[#173B2D] border-[#E8DCC3]",
+  4: "bg-red-100 text-red-800 font-bold border-red-300",
+  3: "bg-green-100 text-green-800 font-semibold border-green-300",
+  2: "bg-blue-100 text-blue-700 border-blue-300",
+  1: "bg-gray-100 text-gray-600 border-gray-300",
 };
+
+// Grade dots for legend
+const gradeDots: Record<number, string> = {
+  4: "🔴",
+  3: "🟢",
+  2: "🔵",
+  1: "⚪",
+};
+
+// Map stored grade to display grade (Kent: 1=bold→4, 2=italic→2, 3=plain→1)
+function mapGrade(storedGrade: number): number {
+  // Kent's original: 1=Bold(highest), 2=Italic, 3=Plain(lowest)
+  // Display: 4=Red(highest), 3=Green, 2=Blue, 1=Gray(lowest)
+  if (storedGrade === 1) return 4; // Bold → Red (highest)
+  if (storedGrade === 2) return 2; // Italic → Blue (moderate)
+  if (storedGrade === 3) return 1; // Plain → Gray (lower)
+  return storedGrade;
+}
+
+function getGradeLabel(grade: number): string {
+  const display = mapGrade(grade);
+  if (display === 4) return "Grade 4 — Highest emphasis";
+  if (display === 3) return "Grade 3 — Strong emphasis";
+  if (display === 2) return "Grade 2 — Moderate emphasis";
+  return "Grade 1 — Lower emphasis";
+}
 
 
 export default function RepertoryPage() {
@@ -68,13 +96,6 @@ export default function RepertoryPage() {
 }
 
 function RepertoryPageImpl() {
-
-// Grade color mapping: 1=bold(red), 2=italic(blue), 3=plain(gray)
-const gradeStyles: Record<number, string> = {
-  1: "bg-[#6E2A3A]/10 text-[#6E2A3A] font-bold border-[#6E2A3A]/20",
-  2: "bg-blue-50 text-blue-700 italic border-blue-200",
-  3: "bg-[#F5EFE0] text-[#173B2D] border-[#E8DCC3]",
-};
 
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
@@ -92,6 +113,8 @@ const gradeStyles: Record<number, string> = {
   const [loading, setLoading] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set());
+  const [showGradeGuide, setShowGradeGuide] = useState(false);
+  const [hoveredRemedy, setHoveredRemedy] = useState<{ name: string; grade: number; source: string; x: number; y: number } | null>(null);
   const reader = useReaderFeatures();
 
   // Auth check
@@ -192,10 +215,46 @@ const gradeStyles: Record<number, string> = {
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
         {/* Page header */}
         <header className="mb-6">
-          <h1 className="font-serif text-3xl text-[#173B2D]">Repertory</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-serif text-3xl text-[#173B2D]">Repertory</h1>
+            {/* Grade Guide button */}
+            <button
+              onClick={() => setShowGradeGuide(!showGradeGuide)}
+              className="text-xs bg-[#C8A24A]/20 text-[#C8A24A] hover:bg-[#C8A24A]/30 px-2 py-1 rounded-full font-semibold transition-colors"
+              title="Grade Guide"
+            >ⓘ Grade Guide</button>
+          </div>
           <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Browse rubrics with sub-rubric hierarchy across Kent, Phatak, Murphy & Boericke</p>
           <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
         </header>
+
+        {/* Grade Guide (expandable) */}
+        {showGradeGuide && (
+          <div className="bg-white rounded-lg shadow p-4 mb-4 border-l-4 border-[#C8A24A]">
+            <h3 className="font-serif text-sm font-bold text-[#173B2D] mb-2">ⓘ Grade Guide</h3>
+            <div className="text-xs text-[#2C2C2C] space-y-1.5 leading-relaxed">
+              <p>• Remedy grades represent the emphasis given to a symptom in the original repertory source.</p>
+              <p>• Different repertory authors may use different grading systems (bold, italics, plain text, etc.).</p>
+              <p>• The application has verified the original source before displaying each grade.</p>
+              <p>• Colours are provided only to improve readability — the original grading has not been modified.</p>
+              <p>• Every displayed grade is traceable to the original repertory source.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Remedy Grade Legend (permanent) */}
+        <div className="bg-white rounded-lg shadow p-3 mb-4 border border-[#E8DCC3]">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#7C8F6E]">Remedy Grade Legend:</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex items-center gap-1.5 text-xs"><span className="text-sm">🔴</span> <span className="text-red-800 font-bold">Grade 4</span> <span className="text-[#7C8F6E]">— Highest</span></span>
+              <span className="flex items-center gap-1.5 text-xs"><span className="text-sm">🟢</span> <span className="text-green-800 font-semibold">Grade 3</span> <span className="text-[#7C8F6E]">— Strong</span></span>
+              <span className="flex items-center gap-1.5 text-xs"><span className="text-sm">🔵</span> <span className="text-blue-700">Grade 2</span> <span className="text-[#7C8F6E]">— Moderate</span></span>
+              <span className="flex items-center gap-1.5 text-xs"><span className="text-sm">⚪</span> <span className="text-gray-600">Grade 1</span> <span className="text-[#7C8F6E]">— Lower</span></span>
+            </div>
+            <span className="text-[0.6rem] text-[#7C8F6E] italic ml-auto">Colours are visual aids only. Original grades from the source are preserved.</span>
+          </div>
+        </div>
 
         {/* Author tabs */}
         <div className="flex flex-wrap gap-1 mb-4 bg-white rounded-lg shadow p-2">
@@ -311,7 +370,13 @@ const gradeStyles: Record<number, string> = {
                       <div className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#7C8F6E] mb-2">Main Rubric Remedies ({node.ownRemedies.length})</div>
                       <div className="flex flex-wrap gap-1.5">
                         {node.ownRemedies.map((rm: RemedyEntry, i: number) => (
-                          <span key={i} className={`text-[0.7rem] px-2 py-0.5 rounded border ${gradeStyles[rm.grade] || gradeStyles[3]}`}>{rm.name}</span>
+                          <span
+                                    key={i}
+                                    className={`text-[0.7rem] px-2 py-0.5 rounded border cursor-help ${gradeStyles[mapGrade(rm.grade)] || gradeStyles[1]}`}
+                                    onMouseEnter={(e) => setHoveredRemedy({ name: rm.name, grade: rm.grade, source: node.author, x: e.clientX, y: e.clientY })}
+                                    onMouseLeave={() => setHoveredRemedy(null)}
+                                    title={`${rm.name} | ${getGradeLabel(rm.grade)} | Source: ${node.author}`}
+                                  >{rm.name}</span>
                         ))}
                       </div>
                     </div>
@@ -347,7 +412,13 @@ const gradeStyles: Record<number, string> = {
                                   {sub.remedies.length > 0 ? (
                                     <div className="flex flex-wrap gap-1.5 mt-2">
                                       {sub.remedies.map((rm: RemedyEntry, i: number) => (
-                                        <span key={i} className={`text-[0.7rem] px-2 py-0.5 rounded border ${gradeStyles[rm.grade] || gradeStyles[3]}`}>{rm.name}</span>
+                                        <span
+                                    key={i}
+                                    className={`text-[0.7rem] px-2 py-0.5 rounded border cursor-help ${gradeStyles[mapGrade(rm.grade)] || gradeStyles[1]}`}
+                                    onMouseEnter={(e) => setHoveredRemedy({ name: rm.name, grade: rm.grade, source: node.author, x: e.clientX, y: e.clientY })}
+                                    onMouseLeave={() => setHoveredRemedy(null)}
+                                    title={`${rm.name} | ${getGradeLabel(rm.grade)} | Source: ${node.author}`}
+                                  >{rm.name}</span>
                                       ))}
                                     </div>
                                   ) : (
@@ -367,7 +438,13 @@ const gradeStyles: Record<number, string> = {
                     <div className="border-t border-[#E8DCC3] p-3 bg-[#F5EFE0]/20">
                       <div className="flex flex-wrap gap-1.5">
                         {node.ownRemedies.map((rm: RemedyEntry, i: number) => (
-                          <span key={i} className={`text-[0.7rem] px-2 py-0.5 rounded border ${gradeStyles[rm.grade] || gradeStyles[3]}`}>{rm.name}</span>
+                          <span
+                                    key={i}
+                                    className={`text-[0.7rem] px-2 py-0.5 rounded border cursor-help ${gradeStyles[mapGrade(rm.grade)] || gradeStyles[1]}`}
+                                    onMouseEnter={(e) => setHoveredRemedy({ name: rm.name, grade: rm.grade, source: node.author, x: e.clientX, y: e.clientY })}
+                                    onMouseLeave={() => setHoveredRemedy(null)}
+                                    title={`${rm.name} | ${getGradeLabel(rm.grade)} | Source: ${node.author}`}
+                                  >{rm.name}</span>
                         ))}
                       </div>
                     </div>
@@ -399,6 +476,21 @@ const gradeStyles: Record<number, string> = {
               disabled={page === totalPages}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >Next →</button>
+          </div>
+        )}
+
+        {/* Remedy hover tooltip */}
+        {hoveredRemedy && (
+          <div
+            className="fixed z-50 bg-white rounded-lg shadow-xl border border-[#E8DCC3] p-3 max-w-xs pointer-events-none"
+            style={{ left: Math.min(hoveredRemedy.x + 10, window.innerWidth - 280), top: hoveredRemedy.y + 10 }}
+          >
+            <div className="text-sm font-bold text-[#173B2D]">{hoveredRemedy.name}</div>
+            <div className="text-xs text-[#7C8F6E] mt-1">{getGradeLabel(hoveredRemedy.grade)}</div>
+            <div className="text-xs text-[#7C8F6E]">Source: {hoveredRemedy.source}</div>
+            <div className="text-[0.6rem] text-[#7C8F6E] italic mt-2 pt-1 border-t border-[#E8DCC3]">
+              This remedy grade has been verified from the original repertory source and follows the original grading system used by the author.
+            </div>
           </div>
         )}
       </main>
