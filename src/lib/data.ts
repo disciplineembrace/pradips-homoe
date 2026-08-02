@@ -5,10 +5,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-// On Vercel, process.cwd() is the project root. In dev, it's /home/z/my-project.
-// data/ folder lives inside the project, so this works in both environments.
 const DATA_DIR = path.join(process.cwd(), 'data');
-// Fallback for dev environment where cwd might be different
 const DATA_DIR_ALT = '/home/z/my-project/data';
 
 let _remedies: any[] | null = null;
@@ -23,7 +20,6 @@ async function readJson(p: string): Promise<any> {
     return JSON.parse(buf.toString('utf-8'));
   } catch (e1: any) {
     if (e1.code === 'ENOENT' && p !== DATA_DIR_ALT) {
-      // Try alt path
       const altP = path.join(DATA_DIR_ALT, path.basename(p));
       const buf = await fs.readFile(altP);
       return JSON.parse(buf.toString('utf-8'));
@@ -78,12 +74,22 @@ export async function getSearchIndex() {
     });
   }
   for (const r of rubrics) {
+    // Handle new data format: source field instead of author, remedies as "name|grade" strings
+    const author = r.source || r.author || '';
+    const title = r.title || r.main || '';
+    const remedies = (r.remedies || []).map((rem: any) => {
+      if (typeof rem === 'string') {
+        // Handle "name|grade" format - extract just the name
+        return rem.split('|')[0];
+      }
+      return typeof rem === 'object' && rem?.name ? rem.name : String(rem);
+    });
     _searchIndex.push({
       type: 'rubric',
       id: r.id,
-      name: r.title,
-      author: r.author || '',
-      text: (r.title + ' ' + (r.path || '') + ' ' + ((r.remedies || []).join(' '))).toLowerCase(),
+      name: title,
+      author,
+      text: (title + ' ' + (r.chapter || r.path || '') + ' ' + remedies.join(' ')).toLowerCase(),
     });
   }
   return _searchIndex;
