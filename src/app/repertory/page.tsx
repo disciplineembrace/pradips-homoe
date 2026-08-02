@@ -30,6 +30,7 @@ type MainRubricNode = {
   subRubrics: SubRubric[];
   totalRemedies: number;
   hasChildren: boolean;
+  ownRemedies?: string[];
 };
 
 type Chapter = {
@@ -280,6 +281,18 @@ function RepertoryPageImpl() {
                     </div>
                   </div>
 
+                  {/* Main rubric's own remedies (if it has remedies directly) */}
+                  {isExpanded && node.ownRemedies && node.ownRemedies.length > 0 && (
+                    <div className="border-t border-[#E8DCC3] bg-[#F5EFE0]/20 p-3">
+                      <div className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#7C8F6E] mb-2">Main Rubric Remedies ({node.ownRemedies.length})</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {node.ownRemedies.map((rm, i) => (
+                          <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Sub-rubrics (expandable) */}
                   {isExpanded && node.hasChildren && (
                     <div className="border-t border-[#E8DCC3] bg-[#F5EFE0]/20">
@@ -307,11 +320,15 @@ function RepertoryPageImpl() {
                               {/* Sub-rubric remedies (expandable) */}
                               {subExpanded && (
                                 <div className="px-3 pb-3 pt-1 border-t border-[#E8DCC3]/50">
-                                  <div className="flex flex-wrap gap-1.5 mt-2">
-                                    {sub.remedies.map((rm, i) => (
-                                      <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
-                                    ))}
-                                  </div>
+                                  {sub.remedies.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                      {sub.remedies.map((rm, i) => (
+                                        <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-[#7C8F6E] italic mt-2">No remedies listed for this sub-rubric.</p>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -321,10 +338,21 @@ function RepertoryPageImpl() {
                     </div>
                   )}
 
-                  {/* If no sub-rubrics but has remedies, show them directly (rare case) */}
-                  {!node.hasChildren && node.totalRemedies > 0 && (
+                  {/* If no sub-rubrics but has own remedies, show them when expanded */}
+                  {isExpanded && !node.hasChildren && node.ownRemedies && node.ownRemedies.length > 0 && (
                     <div className="border-t border-[#E8DCC3] p-3 bg-[#F5EFE0]/20">
-                      <p className="text-xs text-[#7C8F6E] italic">No sub-rubrics. See individual rubric entries for remedies.</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {node.ownRemedies.map((rm, i) => (
+                          <span key={i} className="text-[0.7rem] bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded border border-[#E8DCC3]">{rm}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* If no sub-rubrics and no own remedies */}
+                  {isExpanded && !node.hasChildren && (!node.ownRemedies || node.ownRemedies.length === 0) && (
+                    <div className="border-t border-[#E8DCC3] p-3 bg-[#F5EFE0]/20">
+                      <p className="text-xs text-[#7C8F6E] italic">No remedies or sub-rubrics for this entry.</p>
                     </div>
                   )}
                 </article>
