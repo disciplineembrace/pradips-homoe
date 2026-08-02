@@ -20,8 +20,25 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai.",
+  title: "Pradip's Homeo — Personal Digital Homeopathy Library",
+  description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+  keywords: ["homeopathy", "materia medica", "repertory", "therapeutics", "organon", "homoeopathy", "pradip", "homeo"],
+  authors: [{ name: "Pradip Sagathiya" }],
+  openGraph: {
+    title: "Pradip's Homeo — Personal Digital Homeopathy Library",
+    description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+    type: "website",
+    siteName: "Pradip's Homeo",
+  },
+  twitter: {
+    card: "summary",
+    title: "Pradip's Homeo — Personal Digital Homeopathy Library",
+    description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+  },
+};
+
+export const viewport = {
+  themeColor: "#173B2D",
 };
 
 export default function RootLayout({
@@ -31,12 +48,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Favicon and app icons */}
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" href="/favicon-v2.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="application-name" content="Pradip's Homeo" />
+        <meta name="apple-mobile-web-app-title" content="Pradip's Homeo" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-[#F5EFE0] text-[#2B2420]`}
       >
         {children}
         <Toaster />
       </body>
     </html>
-    );
+  );
 }
