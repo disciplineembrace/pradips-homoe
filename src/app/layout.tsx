@@ -1,1 +1,42 @@
-aW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gIm5leHQiOwppbXBvcnQgeyBHZWlzdCwgR2Vpc3RfTW9ubywgRnJhdW5jZXMgfSBmcm9tICJuZXh0L2ZvbnQvZ29vZ2xlIjsKaW1wb3J0ICcuL2dsb2JhbHMuY3NzJzsKaW1wb3J0IHsgVG9hc3RlciB9IGZyb20gIkAvY29tcG9uZW50cy91aS90b2FzdGVyIjsKCmNvbnN0IGdlaXN0U2FucyA9IEdlaXN0KHsKICB2YXJpYWJsZTogIi0tZm9udC1nZWlzdC1zYW5zIiwKICBzdWJzZXRzOiBbImxhdGluIl0sCn0pOwoKY29uc3QgZ2Vpc3RNb25vID0gR2Vpc3RfTW9ubyh7CiAgdmFyaWFibGU6ICItLWZvbnQtZ2Vpc3QtbW9ubyIsCiAgc3Vic2V0czogWyJsYXRpbiJdLAp9KTsKCmNvbnN0IGZyYXVuY2VzID0gRnJhdW5jZXMKHsKICB2YXJpYWJsZTogIi0tZm9udC1mcmF1bmNlcyIsCiAgc3Vic2V0czogWyJsYXRpbiJdLAogIGRpc3BsYXk6ICJzd2FwIiwKfSk7CgpleHBvcnQgY29uc3QgbWV0YWRhdGE6IE1ldGFkYXRhID0gewogIHRpdGxlOiAiWi5haSBDb2RlIFNjYWZmb2xkIC0gQUktUG93ZXJlZCBEZXZlbG9wbWVudCIsCiAgZGVzY3JpcHRpb246ICJNb2Rlcm4gTmV4dC5qcyBzY2FmZm9sZCBvcHRpbWl6ZWQgZm9yIEFJLXBvd2VyZWQgZGV2ZWxvcG1lbnQgd2l0aCBaLmFpLiIsCn07CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBSb290TGF5b3V0KHsKICBjaGlsZHJlbiwKfTogUmVhZG9ubHk8ewogIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7Cn0+KSB7CiAgcmV0dXJuICgKICAgIDxodG1sIGxhbmc9ImVuIiBzdXBwcmVzc0h5ZHJhdGlvbldhcm5pbmc+CiAgICAgIDxib2R5CiAgICAgICAgY2xhc3NOYW1lPXtgJHtnZWlzdFNhbnMudmFyaWFibGV9ICR7Z2Vpc3RNb25vLnZhcmlhYmxlfSAke2ZyYXVuY2VzLnZhcmlhYmxlfSBhbnRpYWxpYXNlZCBiZy1iYWNrZ3JvdW5kIHRleHQtZm9yZWdyb3VuZGB9CiAgICAgID4KICAgICAgICB7Y2hpbGRyZW59CiAgICAgICAgPFRvYXN0ZXIgLz4KICAgICAgPC9ib2R5PgogICAgPC9odG1sPgogICk7Cn0K
+import type { Metadata } from "next";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Z.ai Code Scaffold - AI-Powered Development",
+  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
+      >
+        {children}
+        <Toaster />
+      </body>
+    </html>
+    );
+}
