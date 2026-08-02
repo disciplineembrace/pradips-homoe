@@ -1,0 +1,3 @@
+{
+  "/api/admin/users/[id]/pin-reset/route": "app/api/admin/users/[id]/pin-reset/route.js"
+}

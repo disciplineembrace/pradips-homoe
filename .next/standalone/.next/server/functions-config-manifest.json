@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/admin/logs": {},
+    "/api/admin/users": {},
+    "/api/admin/users/[id]": {},
+    "/api/admin/users/[id]/pin-reset": {},
+    "/api/admin/users/[id]/unlock": {},
+    "/api/ai/suggest-rubrics": {},
+    "/api/analysis/calculate": {},
+    "/api/auth/login": {},
+    "/api/auth/logout": {},
+    "/api/auth/session": {},
+    "/api/clinical-search": {},
+    "/api/me": {},
+    "/api/predictive": {},
+    "/api/remedies": {},
+    "/api/remedies/[id]": {},
+    "/api/rubrics": {},
+    "/api/search": {},
+    "/api/therapeutics": {}
+  }
+}
