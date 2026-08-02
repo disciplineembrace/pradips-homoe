@@ -1,0 +1,1470 @@
+# ============================================================
+# STRICT WEBSITE SECURITY HARDENING TASK
+# PRADIP'S HOMOEO — PERSONAL DIGITAL LIBRARY
+# ============================================================
+
+MAIN OBJECTIVE:
+
+Perform a complete SECURITY AUDIT and SECURITY HARDENING of my EXISTING
+website without changing its current design, clinical content, navigation,
+database meaning, or normal user workflow.
+
+The objective is to strongly protect:
+
+- Website database
+- Synthesis Repertory data
+- Other Repertory data
+- Materia Medica data
+- OCR/book data
+- Uploaded source files
+- Remedy data
+- Rubric data
+- Remedy grades
+- Search database
+- User accounts
+- Saved cases
+- Case history
+- Notes
+- Admin functions
+- Backend APIs
+- Storage
+- Source files
+- Server credentials
+- API secrets
+
+IMPORTANT:
+
+No website can make browser-delivered frontend code literally invisible.
+
+Therefore DO NOT implement fake security such as relying only on:
+
+- Disable right click
+- Disable F12
+- Disable text selection
+- Hide source
+- JavaScript obfuscation
+
+These may discourage casual copying but are NOT real security.
+
+Build actual SERVER-SIDE protection.
+
+
+============================================================
+1. ZERO UI / STRUCTURE CHANGES
+============================================================
+
+SECURITY WORK ONLY.
+
+DO NOT redesign:
+
+- Website Dashboard
+- Website layout
+- Header
+- Menu / Menubar
+- Mobile menu
+- Desktop menu
+- Synthesis UI
+- Materia Medica UI
+- Repertory UI
+- Existing sections
+- Existing colour combinations
+- Existing typography
+- Existing navigation structure
+
+The website should look and work normally after security hardening.
+
+
+============================================================
+2. DO NOT DAMAGE DATA
+============================================================
+
+DO NOT:
+
+- delete database records
+- re-import books
+- re-OCR data
+- alter remedy text
+- alter rubrics
+- alter grades
+- alter book content
+- merge databases
+- remove images
+- modify verified clinical content
+
+Before any schema/security migration:
+
+CREATE A VERIFIED BACKUP.
+
+All migrations must be reversible where practical.
+
+
+============================================================
+3. FIRST — SECURITY AUDIT
+============================================================
+
+Before changing code, inspect the complete application architecture.
+
+Identify:
+
+- frontend framework
+- backend framework
+- authentication system
+- database
+- storage provider
+- deployment platform
+- APIs
+- server functions
+- environment variables
+- public assets
+- private assets
+- source PDFs/books
+- OCR datasets
+- JSON datasets
+- database access rules
+- admin routes
+- user routes
+- API routes
+- search endpoints
+- file endpoints
+- CORS configuration
+- cookies/sessions
+- logging
+- backups
+
+Create an internal security findings list.
+
+Then fix vulnerabilities carefully.
+
+
+============================================================
+4. CRITICAL — SEARCH FOR EXPOSED SECRETS
+============================================================
+
+Audit the repository/build/deployment for exposed:
+
+- Database passwords
+- Database connection strings
+- Private API keys
+- Service-role keys
+- Admin secrets
+- JWT signing secrets
+- Storage secrets
+- Cloud credentials
+- SMTP credentials
+- Private tokens
+
+Check:
+
+source code
+frontend bundles
+configuration files
+committed .env files
+build output
+public directories
+client-side JavaScript
+
+NO SECRET may be accessible from the browser.
+
+If an actual secret has already been exposed:
+
+ROTATE/REVOKE IT.
+
+Do not merely remove it from the latest source code.
+
+
+============================================================
+5. ENVIRONMENT VARIABLES
+============================================================
+
+Move sensitive credentials to secure SERVER-SIDE environment variables or
+the deployment platform's secret-management system.
+
+Never expose server secrets through:
+
+window.*
+public configuration
+HTML
+client-side JavaScript
+public JSON
+frontend environment variables intended for browser delivery
+
+Only intentionally public client identifiers may reach the frontend.
+
+
+============================================================
+6. DATABASE MUST NOT BE DIRECTLY EXPOSED
+============================================================
+
+The browser must not receive unrestricted database access.
+
+Preferred architecture:
+
+USER BROWSER
+       ↓
+AUTHENTICATED / AUTHORIZED API
+       ↓
+SERVER
+       ↓
+DATABASE
+
+
+Do not expose powerful database credentials to frontend code.
+
+
+============================================================
+7. PROTECT COMPLETE MEDICAL DATASETS
+============================================================
+
+Inspect whether the application currently sends complete datasets such as:
+
+synthesis.json
+materia-medica.json
+rubrics.json
+remedies.json
+ocr-data.json
+books.json
+
+to the browser.
+
+If yes, redesign DATA DELIVERY ONLY so that complete protected datasets are
+not downloaded to every user's browser.
+
+For example:
+
+User searches:
+"headache"
+
+Server should return only the authorized search results required for that request.
+
+Do NOT send the entire repertory database merely to perform a client-side search.
+
+
+============================================================
+8. SERVER-SIDE SEARCH
+============================================================
+
+Where practical, perform large-data search server-side.
+
+Architecture:
+
+Search Query
+     ↓
+Authenticated API
+     ↓
+Validate Query
+     ↓
+Database Search
+     ↓
+Permission Check
+     ↓
+Limited Results
+     ↓
+Frontend
+
+
+Keep existing search UI unchanged.
+
+
+============================================================
+9. PAGINATION
+============================================================
+
+Every large-data endpoint must enforce server-side limits.
+
+Example principle:
+
+reasonable default page size
++
+strict maximum page size
+
+
+Do not allow clients to bypass this using parameters such as:
+
+limit=999999999
+
+
+Validate page size server-side.
+
+
+============================================================
+10. BULK SCRAPING PROTECTION
+============================================================
+
+Add reasonable protection against automated bulk extraction.
+
+Protect high-value endpoints such as:
+
+Rubric Search
+Remedy Search
+Materia Medica Search
+Synthesis hierarchy
+Book/OCR retrieval
+Cross-reference APIs
+Remedy relationship APIs
+
+Implement appropriate:
+
+- rate limiting
+- request quotas where suitable
+- pagination
+- maximum response sizes
+- abnormal request detection
+- server logging
+
+Do not make normal doctor/student usage frustrating.
+
+
+============================================================
+11. AUTHENTICATION
+============================================================
+
+Audit the existing authentication system.
+
+Ensure protected content requires a valid authenticated session where the
+website's access model requires login.
+
+Server must verify authentication.
+
+Never trust only a frontend variable such as:
+
+isLoggedIn = true
+
+
+Frontend state is not security.
+
+
+============================================================
+12. AUTHORIZATION
+============================================================
+
+Authentication answers:
+
+"Who is this user?"
+
+Authorization answers:
+
+"What is this user allowed to access?"
+
+
+Implement SERVER-SIDE authorization.
+
+Possible roles if already relevant:
+
+User
+Premium User
+Admin
+
+
+Do not trust role information supplied by the browser without server verification.
+
+
+============================================================
+13. ADMIN SECURITY
+============================================================
+
+Protect every admin operation on the SERVER.
+
+Never rely on:
+
+hidden admin buttons
+hidden routes
+frontend route guards alone
+
+Every admin API must independently verify admin authorization.
+
+Where supported, enable MFA for administrator accounts.
+
+
+============================================================
+14. PREVENT IDOR
+============================================================
+
+Audit for Insecure Direct Object Reference vulnerabilities.
+
+Example attack:
+
+/case/100
+
+changed manually to:
+
+/case/101
+
+
+must NOT allow one user to access another user's private case.
+
+Server must verify ownership/authorization for:
+
+Cases
+History
+Notes
+Bookmarks
+Private uploads
+Account data
+Other private user resources
+
+
+============================================================
+15. SAVED CASE PRIVACY
+============================================================
+
+Saved repertorization cases and notes must be private to their authorized owner
+unless an explicit sharing feature exists.
+
+Never return another user's:
+
+Case name
+Rubrics
+Notes
+Results
+History
+
+through predictable IDs.
+
+
+============================================================
+16. SECURE PASSWORD HANDLING
+============================================================
+
+If the application itself stores passwords:
+
+NEVER store plaintext passwords.
+
+Use the established secure authentication framework/provider and modern
+password hashing.
+
+Do not invent a custom password-encryption algorithm.
+
+
+============================================================
+17. SESSION SECURITY
+============================================================
+
+Harden authentication sessions.
+
+Where cookie-based sessions are used, configure appropriately:
+
+HttpOnly
+Secure
+SameSite
+
+Use secure session expiration/rotation appropriate to the framework.
+
+Invalidate sessions correctly after logout where supported.
+
+
+============================================================
+18. CSRF PROTECTION
+============================================================
+
+For state-changing cookie-authenticated requests, implement the framework's
+appropriate CSRF protection.
+
+Protect operations such as:
+
+Save
+Delete
+Account change
+Admin operation
+Case modification
+Bookmark modification
+
+
+============================================================
+19. XSS PROTECTION
+============================================================
+
+Audit all user-controlled content.
+
+Especially:
+
+Case Name
+Notes
+Search values
+Profile fields
+Uploaded metadata
+Admin-entered text
+
+Do not inject untrusted content into raw HTML.
+
+Use framework escaping/sanitization appropriately.
+
+
+============================================================
+20. SQL / DATABASE INJECTION
+============================================================
+
+Never concatenate raw user input into database queries.
+
+Use:
+
+parameterized queries
+prepared statements
+safe ORM/query builder
+
+Validate inputs.
+
+Audit:
+
+Search
+Filters
+Sorting
+Pagination
+IDs
+Admin endpoints
+
+
+============================================================
+21. FILE UPLOAD SECURITY
+============================================================
+
+If website allows uploads:
+
+validate uploads SERVER-SIDE.
+
+Check:
+
+Allowed file type
+Actual content/MIME where practical
+File size
+Safe generated filename
+Storage location
+Authorization
+
+Do not trust the file extension alone.
+
+Do not allow uploaded executable content to become server-executable.
+
+
+============================================================
+22. PRIVATE SOURCE BOOK STORAGE
+============================================================
+
+Original protected:
+
+PDFs
+Books
+OCR source files
+Database exports
+Internal datasets
+
+must NOT accidentally live in a publicly browsable static directory.
+
+Move protected source files to private storage where architecture permits.
+
+
+============================================================
+23. SIGNED / CONTROLLED FILE ACCESS
+============================================================
+
+If users legitimately need access to a private file:
+
+authorize the request first.
+
+Then use an appropriate mechanism such as:
+
+short-lived signed URL
+
+or
+
+authorized server streaming.
+
+
+Do not expose permanent unrestricted private-file URLs unnecessarily.
+
+
+============================================================
+24. DIRECTORY LISTING
+============================================================
+
+Disable directory listing on production servers/storage where applicable.
+
+Users must not be able to browse folders such as:
+
+/uploads/
+/books/
+/database/
+/backup/
+/ocr/
+/private/
+
+
+============================================================
+25. BACKUP FILE EXPOSURE
+============================================================
+
+Search public directories/deployment output for dangerous files such as:
+
+database.sql
+backup.zip
+site-backup.zip
+dump.sql
+old-database.json
+.env
+.env.backup
+config.old
+source.zip
+
+
+These must never be publicly downloadable.
+
+
+============================================================
+26. DATABASE BACKUPS
+============================================================
+
+Create automated encrypted backups appropriate to the database/provider.
+
+Maintain a practical retention strategy.
+
+Most importantly:
+
+TEST RESTORE PROCEDURE.
+
+A backup that cannot be restored is not sufficient.
+
+
+============================================================
+27. DATABASE PERMISSIONS
+============================================================
+
+Apply least privilege.
+
+Application database credentials should receive only permissions required by
+the application.
+
+Do not use unnecessarily powerful root/superuser credentials for normal
+application requests.
+
+
+============================================================
+28. ROW-LEVEL SECURITY
+============================================================
+
+If the database/platform supports Row-Level Security or equivalent policies,
+use it appropriately for private user data.
+
+Examples:
+
+User A can access User A's cases.
+
+User B cannot access User A's cases.
+
+Admin access should follow explicit policy.
+
+
+Do not enable RLS blindly without testing existing functionality.
+
+
+============================================================
+29. API AUTHORIZATION
+============================================================
+
+Audit EVERY sensitive API endpoint.
+
+For each endpoint ask:
+
+Does it require authentication?
+
+Does it require a specific role?
+
+Does it require resource ownership?
+
+Can the client request unlimited records?
+
+Can IDs be manipulated?
+
+Can filters bypass access control?
+
+
+Fix each problem SERVER-SIDE.
+
+
+============================================================
+30. API RESPONSE MINIMIZATION
+============================================================
+
+Return only fields required by the UI.
+
+Example:
+
+If rubric search requires:
+
+rubric ID
+path
+remedy count
+
+do not automatically return:
+
+internal database metadata
+private source paths
+unused book content
+administrative fields
+
+
+Minimize exposed data.
+
+
+============================================================
+31. RATE LIMITING
+============================================================
+
+Implement sensible server-side rate limits for:
+
+Login
+Password reset
+Search
+API requests
+Large data queries
+File access
+Admin-sensitive operations
+
+Use different limits where appropriate.
+
+Do not use one crude limit that breaks normal clinical usage.
+
+
+============================================================
+32. LOGIN ATTACK PROTECTION
+============================================================
+
+Protect login against brute-force attacks using the capabilities of the
+authentication platform.
+
+Possible controls:
+
+rate limiting
+progressive delay
+temporary throttling
+MFA for administrators
+suspicious-login monitoring
+
+
+Avoid exposing whether a specific account exists unnecessarily.
+
+
+============================================================
+33. SECURITY HEADERS
+============================================================
+
+Configure appropriate production security headers.
+
+Evaluate and implement as applicable:
+
+Content-Security-Policy
+X-Content-Type-Options
+Referrer-Policy
+Permissions-Policy
+Strict-Transport-Security
+
+Use modern clickjacking protection via CSP frame-ancestors where appropriate.
+
+
+Do not add headers blindly if they break required functionality.
+
+Test them.
+
+
+============================================================
+34. HTTPS ONLY
+============================================================
+
+Production must use HTTPS.
+
+Redirect HTTP to HTTPS.
+
+Do not transmit:
+
+passwords
+sessions
+private data
+admin operations
+
+over insecure HTTP.
+
+
+============================================================
+35. CORS
+============================================================
+
+Audit CORS.
+
+Do NOT blindly use:
+
+Access-Control-Allow-Origin: *
+
+for sensitive authenticated APIs.
+
+Allow only the origins genuinely required by the application.
+
+
+============================================================
+36. ERROR MESSAGE SECURITY
+============================================================
+
+Production users should NOT receive:
+
+database passwords
+SQL queries
+filesystem paths
+stack traces
+environment variables
+internal server details
+
+
+Show safe generic error messages to users.
+
+Keep detailed diagnostics in protected server logs.
+
+
+============================================================
+37. PRODUCTION DEBUG MODE
+============================================================
+
+Disable development/debug functionality in production where the framework
+requires it.
+
+Do not expose:
+
+debug panels
+development routes
+test endpoints
+database explorers
+internal API documentation
+
+unless explicitly protected and required.
+
+
+============================================================
+38. LOGGING
+============================================================
+
+Log important security events.
+
+Examples:
+
+Repeated failed login
+Authorization failure
+Admin action
+Unusual search volume
+Large sequential data extraction
+Suspicious file access
+Rate-limit trigger
+
+
+Do NOT log:
+
+passwords
+session tokens
+private keys
+full authentication secrets
+
+
+============================================================
+39. AUDIT LOG FOR ADMIN
+============================================================
+
+For sensitive admin changes, maintain an audit trail where practical.
+
+Record:
+
+authorized account
+action
+timestamp
+target resource
+result
+
+
+Protect audit logs from ordinary users.
+
+
+============================================================
+40. SCRAPING DETECTION
+============================================================
+
+Detect patterns such as:
+
+hundreds/thousands of sequential rubric requests
+automated alphabet traversal
+rapid enumeration of remedy IDs
+repeated large search pagination
+unusual 24/7 extraction behaviour
+
+
+Rate-limit or challenge suspicious traffic according to the deployment platform.
+
+Do not permanently block legitimate users based on one noisy request.
+
+
+============================================================
+41. BOT PROTECTION
+============================================================
+
+Where needed, use the hosting/CDN/provider's established bot and abuse
+protection.
+
+Apply stronger protection particularly to:
+
+Login
+Registration
+Password Reset
+High-volume Search
+Bulk-content endpoints
+
+
+Do not add CAPTCHA to every normal click.
+
+
+============================================================
+42. FRONTEND CODE REALITY
+============================================================
+
+Do NOT claim frontend source code can be made completely invisible.
+
+Anything delivered to the browser can ultimately be inspected.
+
+Therefore:
+
+KEEP SECRETS AND PROTECTED BUSINESS LOGIC SERVER-SIDE.
+
+
+Production minification/build optimization is fine, but:
+
+MINIFICATION ≠ SECURITY.
+
+OBFUSCATION ≠ SECURITY.
+
+
+============================================================
+43. DO NOT RELY ON F12 BLOCKING
+============================================================
+
+Do NOT use disabling:
+
+F12
+Right Click
+View Source
+Text Selection
+
+as the main security mechanism.
+
+These controls are trivial to bypass.
+
+If optional copy deterrence already exists, it may remain only if it does not
+harm accessibility or normal functionality.
+
+Actual protection must remain server-side.
+
+
+============================================================
+44. SOURCE MAPS
+============================================================
+
+Review production source-map exposure.
+
+Do not publicly expose unnecessary production source maps if they reveal
+original proprietary frontend source and they are not required for public use.
+
+If error monitoring requires source maps, upload/store them privately using the
+supported deployment/error-monitoring mechanism.
+
+
+============================================================
+45. PROTECT BUSINESS LOGIC
+============================================================
+
+Where proprietary algorithms or sensitive data-processing logic do not need
+to execute in the browser, keep them server-side.
+
+For example, where practical:
+
+Repertorization calculation
+Premium entitlement validation
+Bulk database searching
+Private dataset access
+
+should be controlled by the backend.
+
+Do not trust client-calculated entitlement/security decisions.
+
+
+============================================================
+46. PREMIUM / ACCESS CONTROL
+============================================================
+
+If some content/features are premium:
+
+the SERVER must verify entitlement.
+
+Do not implement premium protection only as:
+
+if (isPremium) showContent()
+
+
+because browser state can be modified.
+
+The API itself must reject unauthorized access.
+
+
+============================================================
+47. PROTECT SYNTHESIS DATA
+============================================================
+
+Specifically audit Synthesis Repertory.
+
+Do not send the entire protected Synthesis dataset to every browser if it can
+be queried securely server-side.
+
+Protect:
+
+Rubric hierarchy
+Rubric-remedy relationships
+Remedy grades
+Authors
+Cross references
+Search index
+Case data
+
+
+Maintain all existing Synthesis functionality and UI.
+
+
+============================================================
+48. PROTECT MATERIA MEDICA DATA
+============================================================
+
+Apply the same security principles to Materia Medica.
+
+Avoid unnecessarily exposing entire book databases as downloadable client-side
+JSON/static files.
+
+Retrieve only what the authorized user needs.
+
+
+Do NOT alter book content.
+
+
+============================================================
+49. PROTECT OCR DATA
+============================================================
+
+OCR data and original source files must not become publicly enumerable.
+
+Protect:
+
+OCR JSON
+OCR text files
+Original PDFs
+Images
+Book exports
+Processing artifacts
+
+
+Do not expose internal storage paths.
+
+
+============================================================
+50. DATA EXPORT ENDPOINTS
+============================================================
+
+Search for hidden/unintended export endpoints such as:
+
+/export
+/download-all
+/api/all
+/api/dump
+/backup
+/debug
+/database
+
+Remove or strictly authorize them if unnecessary/exposed.
+
+
+============================================================
+51. DEPENDENCY SECURITY
+============================================================
+
+Audit application dependencies for known vulnerabilities using the ecosystem's
+standard tooling.
+
+Upgrade vulnerable packages carefully.
+
+Do not perform uncontrolled major-version upgrades that could break the site.
+
+Test after updates.
+
+
+============================================================
+52. SERVER / HOST SECURITY
+============================================================
+
+If server configuration is under project control:
+
+Expose only required services/ports.
+
+Keep:
+
+OS/runtime
+web server
+database
+framework
+
+patched.
+
+Database should not be publicly reachable unless architecture explicitly
+requires it and access is securely restricted.
+
+
+============================================================
+53. CLOUD STORAGE SECURITY
+============================================================
+
+Audit every storage bucket/container.
+
+Classify:
+
+PUBLIC ASSETS
+
+vs
+
+PRIVATE DATA.
+
+
+Public examples:
+
+logo
+public UI icons
+
+
+Private examples:
+
+source books
+private uploads
+database exports
+protected OCR files
+
+
+Do not use one unrestricted public bucket for everything.
+
+
+============================================================
+54. CACHE SECURITY
+============================================================
+
+Ensure private/authenticated content is not accidentally cached publicly by:
+
+CDN
+reverse proxy
+browser shared cache
+
+Use appropriate cache headers for private responses.
+
+
+============================================================
+55. SECURITY TESTS
+============================================================
+
+After implementation test:
+
+Unauthenticated API access
+
+Unauthorized user access
+
+Admin endpoint access as normal user
+
+Changing resource IDs manually
+
+Very large page size requests
+
+Rapid repeated search requests
+
+Direct private file URLs
+
+Expired session
+
+Logged-out session
+
+XSS payload in notes
+
+SQL/database injection attempts
+
+Malicious upload filename
+
+Wrong MIME upload
+
+CORS from unauthorized origin
+
+Missing CSRF protection where relevant
+
+Public backup-file access
+
+Public source-map exposure
+
+
+============================================================
+56. DATA SCRAPING TEST
+============================================================
+
+Simulate an automated client attempting to enumerate:
+
+all chapters
+all rubrics
+all remedies
+all book pages
+
+rapidly.
+
+Verify:
+
+pagination is enforced
+rate limits activate appropriately
+requests are logged
+private bulk endpoints do not exist
+normal application usage still works
+
+
+============================================================
+57. REGRESSION TEST
+============================================================
+
+After security changes verify that all existing legitimate functionality still works.
+
+Especially:
+
+Main Dashboard
+Menu/Menubar
+Materia Medica
+Synthesis
+Other Repertories
+Search
+Rubric hierarchy
+Remedy grades
+Cases
+History
+MCQ
+Books
+Images
+OCR content
+Login
+Premium functionality if present
+
+
+============================================================
+58. SECURITY MUST NOT CHANGE DESIGN
+============================================================
+
+After completion, visually compare before and after.
+
+There should be NO unauthorized redesign.
+
+SECURITY CHANGES SHOULD MOSTLY OCCUR IN:
+
+backend
+API
+authentication
+authorization
+database rules
+storage rules
+server configuration
+security headers
+rate limiting
+monitoring
+
+
+not in the visual website design.
+
+
+============================================================
+59. DO NOT BREAK SEO / PERFORMANCE BLINDLY
+============================================================
+
+Apply security controls carefully.
+
+Do not:
+
+block required application assets
+break legitimate API calls
+break images
+break mobile UI
+block legitimate users
+make every click require CAPTCHA
+
+Balance protection with normal usability.
+
+
+============================================================
+60. FINAL SECURITY ARCHITECTURE
+============================================================
+
+TARGET ARCHITECTURE:
+
+USER
+ ↓
+HTTPS
+ ↓
+FRONTEND
+ ↓
+AUTHENTICATED REQUEST
+ ↓
+RATE LIMIT / ABUSE PROTECTION
+ ↓
+SERVER-SIDE AUTHORIZATION
+ ↓
+INPUT VALIDATION
+ ↓
+BACKEND API
+ ↓
+LEAST-PRIVILEGE DATABASE/STORAGE ACCESS
+ ↓
+ONLY REQUIRED DATA RETURNED TO USER
+
+
+NOT:
+
+USER
+ ↓
+FRONTEND
+ ↓
+DOWNLOAD COMPLETE DATABASE
+
+
+============================================================
+61. FINAL ACCEPTANCE REQUIREMENTS
+============================================================
+
+Task is complete only when:
+
+1. No server secret is exposed to browser.
+
+2. No database password is present in frontend code.
+
+3. Protected database cannot be directly accessed without authorization.
+
+4. Sensitive APIs enforce server-side authentication/authorization.
+
+5. Users cannot access another user's private cases.
+
+6. Admin APIs reject normal users.
+
+7. Protected source files are not publicly enumerable.
+
+8. Full protected datasets are not unnecessarily downloaded to browser.
+
+9. Search APIs enforce pagination.
+
+10. Bulk scraping receives appropriate rate limiting/protection.
+
+11. SQL/database injection protections exist.
+
+12. XSS protections exist.
+
+13. CSRF is addressed where applicable.
+
+14. Sessions/cookies are securely configured.
+
+15. HTTPS is enforced.
+
+16. CORS is appropriately restricted.
+
+17. Security headers are configured and tested.
+
+18. Production debug exposure is disabled.
+
+19. Backup files are not publicly exposed.
+
+20. Private storage is actually private.
+
+21. Backups exist and restore has been tested.
+
+22. Suspicious activity is logged.
+
+23. Dependencies have been security audited.
+
+24. Synthesis data remains intact.
+
+25. Materia Medica remains intact.
+
+26. OCR/books remain intact.
+
+27. Main Dashboard remains unchanged.
+
+28. Menubar remains unchanged.
+
+29. Website layout remains unchanged.
+
+30. Existing legitimate functionality still works.
+
+
+============================================================
+62. FINAL STRICT COMMAND
+============================================================
+
+DO NOT ATTEMPT TO "SECURE" THE WEBSITE BY ONLY HIDING FRONTEND CODE.
+
+BUILD REAL SERVER-SIDE SECURITY.
+
+PROTECT:
+
+DATABASE
+APIs
+SOURCE BOOKS
+OCR DATA
+SYNTHESIS DATA
+MATERIA MEDICA DATA
+USER CASES
+ADMIN FUNCTIONS
+STORAGE
+SECRETS
+
+
+ASSUME THAT AN ATTACKER CAN:
+
+OPEN DEVTOOLS
+READ FRONTEND JAVASCRIPT
+INSPECT NETWORK REQUESTS
+CHANGE REQUEST PARAMETERS
+CALL APIs DIRECTLY
+CHANGE RESOURCE IDs
+AUTOMATE REQUESTS
+
+
+THE SYSTEM MUST REMAIN SECURE EVEN UNDER THOSE CONDITIONS.
+
+
+NO DATA LOSS.
+NO CLINICAL DATA CHANGE.
+NO WEBSITE REDESIGN.
+NO DASHBOARD CHANGE.
+NO MENUBAR CHANGE.
+NO LAYOUT CHANGE.
+NO UNRELATED SECTION CHANGE.
+
+
+FIRST:
+AUDIT.
+
+SECOND:
+BACKUP.
+
+THIRD:
+FIX SECURITY ISSUES IN SMALL SAFE STEPS.
+
+FOURTH:
+TEST AUTHORIZATION AND SCRAPING RESISTANCE.
+
+FIFTH:
+RUN FULL REGRESSION TESTS.
+
+
+FINAL GOAL:
+
+A user may use the website normally,
+but inspecting the frontend must NOT reveal server secrets or provide
+unrestricted access to the protected database.
+
+A user must NOT be able to bypass authorization simply by changing frontend
+code, URLs, IDs, API parameters or browser state.
+
+A scraper must NOT be able to request the complete protected library through
+one unrestricted endpoint.
+
+ALL SECURITY ENFORCEMENT MUST ULTIMATELY BE TRUSTED SERVER-SIDE.
