@@ -51,7 +51,8 @@ export async function POST(req: NextRequest) {
   const scored: { rubric: any; score: number; matchedWords: string[] }[] = [];
 
   for (const r of rubrics) {
-    if (!allowedSources.includes(r.author)) continue;
+    const rubricSource = r.source || r.author || '';
+    if (!allowedSources.includes(rubricSource)) continue;
 
     const titleLower = (r.title || '').toLowerCase();
     const pathLower = (r.path || '').toLowerCase();
@@ -67,7 +68,10 @@ export async function POST(req: NextRequest) {
       } else if (pathLower.includes(word)) {
         score += 2; // Path match
         matched.push(word);
-      } else if (r.remedies && r.remedies.some((rem: string) => rem.toLowerCase().includes(word))) {
+      } else if (r.remedies && r.remedies.some((rem: string) => {
+          const remName = typeof rem === 'string' ? rem.split('|')[0] : rem;
+          return remName.toLowerCase().includes(word);
+        })) {
         score += 1; // Remedy name match (weaker)
         matched.push(word);
       }
@@ -79,7 +83,7 @@ export async function POST(req: NextRequest) {
           id: r.id,
           title: r.title,
           path: r.path,
-          author: r.author,
+          author: r.source || r.author || '',
           remedies: (r.remedies || []).slice(0, 20), // Limit remedies shown
           remedyCount: (r.remedies || []).length,
         },
@@ -96,7 +100,7 @@ export async function POST(req: NextRequest) {
   // Group by source for the response
   const bySource: Record<string, any[]> = {};
   for (const item of topResults) {
-    const src = item.rubric.author;
+    const src = item.rubric.author || item.rubric.source || '';
     if (!bySource[src]) bySource[src] = [];
     bySource[src].push({
       ...item.rubric,
