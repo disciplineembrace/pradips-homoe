@@ -1,12 +1,11 @@
 /**
- * Auth library — PIN-only auth + One-Device-Per-User + Admin Biometric
+ * Auth library — PIN-only authentication
  *
- * Features:
- * - PIN authentication (bcrypt 12 rounds)
- * - JWT sessions (httpOnly cookie, 8h expiry)
- * - One device per user (new login invalidates old session)
- * - Device session tracking in database
- * - Admin WebAuthn/FIDO2 biometric support
+ * - No passwords. Login is purely via unique 6-digit PIN.
+ * - PIN is hashed with bcrypt (12 rounds) for verification (pinHash)
+ * - PIN is also hashed with SHA-256 for O(1) user lookup (pinLookup)
+ * - 5 wrong PIN attempts → 15-minute lock
+ * - Sessions managed with JWT (httpOnly cookie)
  */
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -16,7 +15,6 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production-min-32-chars';
 const SESSION_COOKIE = 'ph_session';
-const DEVICE_COOKIE = 'ph_device';
 const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours
 const PIN_MAX_ATTEMPTS = 5;
 const PIN_LOCK_MINUTES = 15;
@@ -25,7 +23,6 @@ export type SessionPayload = {
   userId: string;
   name: string;
   role: 'admin' | 'staff' | 'user';
-  deviceId?: string; // device session ID for one-device-per-user
 };
 
 // ============ PIN HASHING ============
@@ -45,81 +42,7 @@ export function isValidPin(pin: string): boolean {
   return /^\d{6}$/.test(pin);
 }
 
-// ============ DEVICE SESSION MANAGEMENT ============
-
-/**
- * Create a new device session for a user.
- * Invalidates all previous active sessions for this user (one-device rule).
- */
-export async function createDeviceSession(userId: string, deviceInfo: string, ip: string): Promise<string> {
-  // Generate unique device ID
-  const deviceId = crypto.randomUUID();
-
-  // Invalidate all previous active sessions for this user
-  await db.deviceSession.updateMany({
-    where: { userId, isActive: true },
-    data: { isActive: false },
-  });
-
-  // Create new active session
-  await db.deviceSession.create({
-    data: {
-      userId,
-      deviceId,
-      deviceInfo,
-      ip,
-      isActive: true,
-    },
-  });
-
-  return deviceId;
-}
-
-/**
- * Verify that the given device session is the current active one.
- * Returns true if this device is the active session, false otherwise.
- */
-export async function verifyDeviceSession(userId: string, deviceId: string): Promise<boolean> {
-  const session = await db.deviceSession.findFirst({
-    where: { userId, deviceId, isActive: true },
-  });
-  return !!session;
-}
-
-/**
- * Update last activity time for a device session.
- */
-export async function updateDeviceActivity(deviceId: string): Promise<void> {
-  try {
-    await db.deviceSession.update({
-      where: { deviceId },
-      data: { lastActivityAt: new Date() },
-    });
-  } catch { /* non-fatal */ }
-}
-
-/**
- * Invalidate all device sessions for a user (force logout all devices).
- */
-export async function invalidateAllDeviceSessions(userId: string): Promise<void> {
-  await db.deviceSession.updateMany({
-    where: { userId },
-    data: { isActive: false },
-  });
-}
-
-/**
- * Get all active device sessions (for admin panel).
- */
-export async function getActiveDeviceSessions(): Promise<any[]> {
-  return db.deviceSession.findMany({
-    where: { isActive: true },
-    include: { user: { select: { name: true, email: true, role: true } } },
-    orderBy: { loginAt: 'desc' },
-  });
-}
-
-// ============ SESSION (JWT) ============
+// ============ SESSION ============
 export function createSessionToken(payload: SessionPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: SESSION_MAX_AGE });
 }
@@ -139,15 +62,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   return verifySessionToken(token);
 }
 
-/**
- * Get the device ID from the cookie.
- */
-export async function getDeviceId(): Promise<string | null> {
-  const store = await cookies();
-  return store.get(DEVICE_COOKIE)?.value || null;
-}
-
-export async function setSessionCookie(payload: SessionPayload, deviceId?: string): Promise<void> {
+export async function setSessionCookie(payload: SessionPayload): Promise<void> {
   const store = await cookies();
   const token = createSessionToken(payload);
   store.set(SESSION_COOKIE, token, {
@@ -157,26 +72,14 @@ export async function setSessionCookie(payload: SessionPayload, deviceId?: strin
     path: '/',
     maxAge: SESSION_MAX_AGE,
   });
-  // Set device cookie if provided
-  if (deviceId) {
-    store.set(DEVICE_COOKIE, deviceId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-      maxAge: SESSION_MAX_AGE,
-    });
-  }
 }
 
 export async function clearSessionCookie(): Promise<void> {
   const store = await cookies();
   store.set(SESSION_COOKIE, '', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 0 });
-  store.set(DEVICE_COOKIE, '', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 0 });
 }
 
 export const SESSION_COOKIE_NAME = SESSION_COOKIE;
-export const DEVICE_COOKIE_NAME = DEVICE_COOKIE;
 export const PIN_LIMIT = PIN_MAX_ATTEMPTS;
 export const PIN_LOCK_MS = PIN_LOCK_MINUTES * 60 * 1000;
 
