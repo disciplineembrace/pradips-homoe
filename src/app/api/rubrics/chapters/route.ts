@@ -1,6 +1,8 @@
-/** GET /api/rubrics/chapters — list chapters (paths) for a given author
+/** GET /api/rubrics/chapters — list chapters for a given author
  *
- * Returns: { items: [{ name: 'MIND', rubricCount: 3754 }, ...] }
+ * Returns: { items: [{ name: 'Mind', rubricCount: 3754 }, ...] }
+ *
+ * Uses the "chapter" field if available, falls back to "path" field.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getRubrics } from '@/lib/data';
@@ -20,15 +22,16 @@ export async function GET(req: NextRequest) {
   if (author) rubrics = rubrics.filter(r => r.author === author);
 
   // Count rubrics per chapter
+  // Use "chapter" field if available, otherwise "path" field
   const chapterCounts = new Map<string, number>();
   for (const r of rubrics) {
-    const ch = r.path || 'UNKNOWN';
+    const ch = r.chapter || r.path || 'UNKNOWN';
     chapterCounts.set(ch, (chapterCounts.get(ch) || 0) + 1);
   }
 
   const items = Array.from(chapterCounts.entries())
     .map(([name, rubricCount]) => ({ name, rubricCount }))
-    .sort((a, b) => b.rubricCount - a.rubricCount);
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json({ items, total: items.length });
 }
