@@ -1,34 +1,25 @@
 # Files/dirs to exclude from Vercel deployment
-# These are not needed in production and would bloat the deployment
-
-# Upload folder (source PDFs - 567 MB)
 upload/
-
-# Skills (Z.ai internal - 61 MB)
 skills/
-
-# Scripts (dev/seed scripts)
 scripts/
-
-# Download folder
 download/
-
-# Local SQLite db
 db/
-
-# Work directory (OCR output)
 work/
-
-# Backups
 backups/
 data/backups/
 
-# Intermediate/build files (not used at runtime)
+# Backup files
+data/remedies_backup_*.json
+
+# Intermediate/build files
 data/kent-remedies-fresh.json
 data/kent-remedies-final.json
 data/phatak-remedies-fresh.json
 data/boericke-repertory.json
-data/predictive_chapters.json
+data/phatak-biochem-repertory.json
+
+# Old synthesis placeholder
+data/synthesis_rubrics.json
 
 # Local env files
 .env
@@ -52,8 +43,6 @@ Thumbs.db
 # Misc
 README.md
 worklog.md
-SECURITY_AUDIT_REPORT.md
-PERFORMANCE_AUDIT_REPORT.md
 CAPACITY_AUDIT_REPORT.md
 agent-ctx/
 mini-services/
@@ -62,17 +51,4 @@ vercel-deploy-old-backup/
 git-repo/
 Caddyfile
 push-to-github.sh
-
-# Backup files
-data/remedies_backup_*.json
-data/remedies_backup_pre_murphy_rebuild.json
-data/remedies_backup_pre_farrington_rebuild.json
-data/remedies_backup_pre_boger_rebuild.json
-data/remedies_backup_pre_boger_rebuild.json
-data/remedies_backup_pre_farrington_rebuild.json
-data/remedies_backup_pre_murphy_rebuild.json
-data/remedies_backup_pre_rebuild.json
-data/kent-remedies-fresh.json
-data/phatak-remedies-fresh.json
-data/phatak-biochem-repertory.json
-data/synthesis
+tool-results/
