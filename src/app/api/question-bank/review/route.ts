@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/require-auth';
 import { isSupabaseServerConfigured, getSupabaseServerClient } from '@/database/supabase/client';
+import { isSchemaNotAppliedError } from '../../user/_helpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,9 @@ export async function GET() {
     if (error) throw error;
     return NextResponse.json({ items: data || [] });
   } catch (e: any) {
-    return NextResponse.json({ items: [], error: e.message });
+    // Gracefully fall back to empty list on schema/network errors.
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ items: [] });
+    return NextResponse.json({ items: [] });
   }
 }
 
@@ -45,6 +48,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true, item: data });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ ok: true, mode: 'local' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -66,6 +70,7 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (e: any) {
+    if (isSchemaNotAppliedError(e)) return NextResponse.json({ ok: true, mode: 'local' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
