@@ -10,6 +10,7 @@ import { isSupabaseServerConfigured } from '@/database/supabase/client';
 import {
   BookmarksRepo, FavoritesRepo, NotesRepo, HistoryRepo, HighlightsRepo,
 } from '@/database/supabase/repositories';
+import { isSchemaNotAppliedError } from '../_helpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,17 +43,13 @@ export async function GET() {
       highlights,
     });
   } catch (e: any) {
-    // If Supabase tables don't exist yet (schema not applied), gracefully
-    // fall back to localStorage mode so the UI continues working.
-    const msg = String(e?.message || e);
-    if (
-      msg.includes('Could not find the table') ||
-      msg.includes('schema cache') ||
-      msg.includes('relation') && msg.includes('does not exist')
-    ) {
-      return NextResponse.json({ enabled: false, reason: 'schema-not-applied' });
+    // Use the shared helper to detect schema-not-applied AND network errors.
+    // In any of these failure modes, gracefully fall back to localStorage
+    // mode so the UI continues working without visible errors.
+    if (isSchemaNotAppliedError(e)) {
+      return NextResponse.json({ enabled: false, reason: 'schema-not-applied-or-network' });
     }
     // For any other error, also fall back to localStorage (don't break UI).
-    return NextResponse.json({ enabled: false, error: msg });
+    return NextResponse.json({ enabled: false, reason: 'unknown-error' });
   }
 }
