@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,25 +20,56 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Pradip's Homeo — Personal Digital Homeopathy Library",
-  description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
-  keywords: ["homeopathy", "materia medica", "repertory", "therapeutics", "organon", "homoeopathy", "pradip", "homeo"],
-  authors: [{ name: "Pradip Sagathiya" }],
+  title: "Pradip's Homoe - Personal Digital Homoeopathy Library",
+  description: "A secure, private collection of homoeopathic materia medica, repertories, therapeutics, and predictive homeopathy — accessible only to authorized users.",
+  keywords: ["homeopathy", "homoeopathy", "materia medica", "repertory", "therapeutics", "Pradip's Homoe", "Hahnemann", "organon"],
+  authors: [{ name: "Pradip's Homoe" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      { url: "/logo.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Pradip's Homoe",
+  },
   openGraph: {
-    title: "Pradip's Homeo — Personal Digital Homeopathy Library",
-    description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+    title: "Pradip's Homoe - Personal Digital Homoeopathy Library",
+    description: "A secure, private collection of homoeopathic materia medica, repertories, therapeutics, and predictive homeopathy.",
+    url: "https://pradips-homoe.vercel.app",
+    siteName: "Pradip's Homoe",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Pradip's Homoe",
+      },
+    ],
     type: "website",
-    siteName: "Pradip's Homeo",
   },
   twitter: {
-    card: "summary",
-    title: "Pradip's Homeo — Personal Digital Homeopathy Library",
-    description: "A premium digital homeopathy library with materia medica, repertory, therapeutics, organon, predictive homeopathy, and more.",
+    card: "summary_large_image",
+    title: "Pradip's Homoe",
+    description: "Personal Digital Homoeopathy Library",
+    images: ["/og-image.png"],
   },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: "#173B2D",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -49,20 +80,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Favicon and app icons */}
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" href="/favicon-v2.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="application-name" content="Pradip's Homeo" />
-        <meta name="apple-mobile-web-app-title" content="Pradip's Homeo" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-[#F5EFE0] text-[#2B2420]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />
