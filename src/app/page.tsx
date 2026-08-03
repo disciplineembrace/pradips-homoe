@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -10,12 +11,19 @@ export default function Home() {
         {/* Hero section */}
         <section className="relative bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950 text-stone-100 py-20 px-4 border-b-2 border-amber-700/60">
           <div className="max-w-5xl mx-auto text-center">
-            <img src="/logo-v2-120.png" alt="Pradip's Homeo" width="120" height="120" className="h-[60px] w-[60px] sm:h-[72px] sm:w-[72px] lg:h-[80px] lg:w-[80px] mx-auto mb-4 rounded-full object-cover" />
+            <Image
+              src="/logo.png"
+              alt="Pradip's Homoe"
+              width={120}
+              height={120}
+              priority
+              className="h-[80px] sm:h-[100px] md:h-[120px] w-auto object-contain mx-auto mb-6 drop-shadow-2xl"
+            />
             <h1 className="font-serif italic text-4xl md:text-6xl text-amber-200 mb-4 tracking-wide">
-              Pradip&apos;s Homeo
+              Pradip&apos;s Homoe
             </h1>
             <p className="text-lg md:text-xl text-stone-300 mb-2 font-serif">
-              Personal Digital Homeopathy Library
+              Personal Digital Homoeopathy Library
             </p>
             <p className="text-sm text-stone-400 max-w-2xl mx-auto mb-8">
               A secure, private collection of homoeopathic materia medica, repertories, therapeutics, and predictive homeopathy — accessible only to authorized users.
@@ -38,8 +46,8 @@ export default function Home() {
             <div className="w-16 h-0.5 bg-amber-700 mx-auto mb-8" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { num: '4,416', label: 'Remedies', desc: 'From 9 authors' },
-                { num: '81,463', label: 'Rubrics', desc: 'Kent, Phatak, Murphy, Boericke + Biochemic' },
+                { num: '3,471', label: 'Remedies', desc: 'From 9 authors' },
+                { num: '79,706', label: 'Rubrics', desc: 'Kent, Phatak, Murphy' },
                 { num: '408', label: 'Therapeutic Formulas', desc: 'Disease-wise' },
                 { num: '23', label: 'Predictive Chapters', desc: 'Dr. Prafull Vijayakar' },
               ].map((s, i) => (
