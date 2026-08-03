@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Footer() {
   return (
@@ -7,11 +8,17 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <img src="/logo-v2-92.png" alt="Pradip's Homeo" width="40" height="40" className="h-10 w-10 rounded-full object-cover flex-shrink-0" />
-              <h3 className="font-serif italic text-lg text-amber-200 tracking-wide">Pradip&apos;s Homeo</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Image
+                src="/logo.png"
+                alt="Pradip's Homoe"
+                width={46}
+                height={46}
+                className="h-[40px] w-auto object-contain"
+              />
+              <h3 className="font-serif italic text-lg text-amber-200 tracking-wide">Pradip&apos;s Homoe</h3>
             </div>
-            <p className="text-xs text-stone-400">Personal Digital Homeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
+            <p className="text-xs text-stone-400">Personal Digital Homoeopathy Library — secure access to remedies, rubrics, therapeutics, and predictive homeopathy books.</p>
           </div>
           <div>
             <h4 className="font-serif font-semibold text-sm mb-2 text-amber-200">Quick Links</h4>
@@ -25,15 +32,15 @@ export function Footer() {
           <div>
             <h4 className="font-serif font-semibold text-sm mb-2 text-amber-200">Library Stats</h4>
             <ul className="space-y-1 text-xs text-stone-400">
-              <li>4,493 remedies</li>
-              <li>81,463 rubrics</li>
+              <li>3,471 remedies</li>
+              <li>79,706 rubrics</li>
               <li>408 therapeutic formulas</li>
               <li>23 predictive chapters</li>
             </ul>
           </div>
         </div>
         <div className="border-t border-emerald-800 mt-6 pt-4 text-center text-xs text-stone-500">
-          © 2026 Pradip&apos;s Homeo · All access is logged · Unauthorized access prohibited
+          © 2026 Pradip&apos;s Homoe · All access is logged · Unauthorized access prohibited
         </div>
       </div>
     </footer>
