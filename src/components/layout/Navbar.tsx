@@ -1,9 +1,7 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { BrandLogo } from '@/components/brand/BrandLogo';
 
 export function Navbar() {
   const router = useRouter();
@@ -54,8 +52,8 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2" aria-label="Pradip's Homoe home">
-            <BrandLogo priority />
+          <Link href="/" className="flex items-center gap-2">
+            <span className="font-serif italic text-xl text-amber-200 tracking-wide">Pradip&apos;s Homoe</span>
             <span className="text-xs text-stone-400 hidden sm:inline">Personal Digital Library</span>
           </Link>
 
