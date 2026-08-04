@@ -1,3 +1,7 @@
+/**
+ * Data loader for books.
+ * Books live in /data/books/*.json (server-side only).
+ */
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -32,7 +36,8 @@ export async function getBook(id: string): Promise<any> {
 }
 
 export async function getAllBooks(): Promise<any[]> {
-  const bookIds: string[] = [];
+  // List of available book IDs (add more as they're added to /data/books/)
+  const bookIds = ['farokh-master'];
   const books = [];
   for (const id of bookIds) {
     const book = await getBook(id);
@@ -45,7 +50,6 @@ export async function getAllBooks(): Promise<any[]> {
         category: book.category,
         description: book.description,
         totalChapters: book.totalChapters,
-        chapters: (book.chapters || []).map((c: any) => ({ id: c.id, title: c.title })),
       });
     }
   }
