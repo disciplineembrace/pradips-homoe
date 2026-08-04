@@ -19,6 +19,7 @@ import {
 import { ProfileSettings } from './profile-settings';
 import { CasePaper } from './case-paper';
 import { ReportSheet } from './report-sheet';
+import { StepGuide } from './step-guide';
 
 // ============================================================
 // MAIN COMPONENT
@@ -75,6 +76,9 @@ export default function SynthesisPage() {
 
   // Report
   const [showReport, setShowReport] = useState(false);
+
+  // Step guide
+  const [showStepGuide, setShowStepGuide] = useState(false);
 
   // Error
   const [error, setError] = useState('');
@@ -417,25 +421,54 @@ export default function SynthesisPage() {
             </button>
 
             {/* Navigation Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
+                { label: 'How It Works', icon: '📚', onClick: () => setShowStepGuide(true), desc: '9-step workflow guide' },
                 { label: 'Chapters', icon: '📖', view: 'browse' as const, desc: 'Browse rubric hierarchy' },
                 { label: 'Search', icon: '🔍', view: 'search' as const, desc: 'Search 180K+ rubrics' },
                 { label: `Case Paper${selectedRubrics.length > 0 ? ` (${enabledCount})` : ''}`, icon: '📋', view: 'case' as const, desc: 'Patient details & rubrics' },
                 { label: `History (${loadCases().length})`, icon: '📂', view: 'history' as const, desc: 'Saved cases' },
                 { label: 'Profile', icon: '👤', view: 'profile' as const, desc: 'Doctor/Clinic branding' },
                 { label: 'Report', icon: '📄', onClick: () => results.length > 0 && setShowReport(true), desc: 'View repertorization report' },
+                { label: 'New Case', icon: '➕', onClick: () => handleNewCase(), desc: 'Start fresh repertorization' },
               ].map(item => (
                 <button
                   key={item.label}
                   onClick={() => item.onClick ? item.onClick() : setView(item.view)}
-                  className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 text-left hover:shadow-md hover:border-[#C8A24A] transition-all"
+                  className={`bg-white rounded-lg shadow-sm border p-4 text-left transition-all ${
+                    item.label === 'How It Works'
+                      ? 'border-[#C8A24A] hover:bg-[#FFF8E7] hover:border-[#C8A24A]'
+                      : 'border-stone-200 hover:shadow-md hover:border-[#C8A24A]'
+                  }`}
                 >
                   <div className="text-2xl mb-1">{item.icon}</div>
                   <div className="text-sm font-semibold text-[#173B2D]">{item.label}</div>
                   <div className="text-xs text-stone-500">{item.desc}</div>
                 </button>
               ))}
+            </div>
+
+            {/* Workflow Steps Preview */}
+            <div className="mt-6 bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Workflow Steps</h3>
+                <button
+                  onClick={() => setShowStepGuide(true)}
+                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  View Full Guide →
+                </button>
+              </div>
+              <div className="flex items-center gap-1 overflow-x-auto pb-2">
+                {['🏠 Dashboard', '🔍 Search', '📋 Select', '📄 Case Paper', '⚙️ Repertorize', '📊 Results', '💊 Details', '🔄 Compare', '💾 Save'].map((s, idx) => (
+                  <div key={idx} className="flex items-center gap-1 flex-shrink-0">
+                    <div className="px-2.5 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-stone-600 whitespace-nowrap">
+                      {idx + 1}. {s}
+                    </div>
+                    {idx < 8 && <span className="text-stone-300 text-xs">→</span>}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -812,6 +845,16 @@ export default function SynthesisPage() {
           results={results}
           profile={profile}
           onClose={() => setShowReport(false)}
+        />
+      )}
+
+      {showStepGuide && (
+        <StepGuide
+          onClose={() => setShowStepGuide(false)}
+          onStartWorkflow={() => {
+            setShowStepGuide(false);
+            handleNewCase();
+          }}
         />
       )}
 
