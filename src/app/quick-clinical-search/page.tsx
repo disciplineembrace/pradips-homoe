@@ -49,11 +49,34 @@ const SOURCES_BY_SUBJECT: Record<string, { value: string; label: string }[]> = {
   ],
 };
 
-const MATCH_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  exact: { label: 'EXACT MATCH', color: 'text-green-800', bg: 'bg-green-100' },
-  close: { label: 'CLOSE MATCH', color: 'text-blue-800', bg: 'bg-blue-100' },
-  related: { label: 'RELATED INDICATION', color: 'text-amber-800', bg: 'bg-amber-100' },
+const MATCH_STYLES: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  exact: { label: 'EXACT MATCH', color: 'text-red-800', bg: 'bg-red-50', border: 'border-red-400' },
+  close: { label: 'CLOSE MATCH', color: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-400' },
+  related: { label: 'RELATED', color: 'text-green-800', bg: 'bg-green-50', border: 'border-green-400' },
 };
+
+// Highlight matched words in snippet text
+function highlightMatch(text: string, query: string): React.ReactNode {
+  if (!query || !text) return text;
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (words.length === 0) return text;
+
+  // Build regex for all query words (case-insensitive)
+  const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+
+  const parts = text.split(regex);
+  return parts.map((part, idx) => {
+    if (words.some(w => part.toLowerCase() === w)) {
+      return (
+        <mark key={idx} className="bg-[#C8A24A]/30 text-[#173B2D] font-semibold rounded px-0.5">
+          {part}
+        </mark>
+      );
+    }
+    return part;
+  });
+}
 
 function QuickClinicalSearchImpl() {
   const router = useRouter();
@@ -227,16 +250,22 @@ function QuickClinicalSearchImpl() {
                             <Link
                               key={`${r.id}-${idx}`}
                               href={r.href}
-                              className="block bg-white rounded-lg shadow hover:shadow-md p-4 transition-shadow border-l-4 border-[#173B2D]"
+                              className={`block bg-white rounded-lg shadow hover:shadow-md p-4 transition-shadow border-l-4 ${matchStyle.border} ${matchStyle.bg}`}
                             >
-                              {/* Match type badge */}
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${matchStyle.bg} ${matchStyle.color}`}>
+                              {/* Match type badge with grade color */}
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${matchStyle.color} bg-white border ${matchStyle.border}`}>
                                   {matchStyle.label}
                                 </span>
                                 <span className="text-xs text-[#7C8F6E]">{r.matchText}</span>
+                                {r.type === 'remedy' && (
+                                  <span className="text-xs text-stone-400">· Materia Medica</span>
+                                )}
+                                {r.type === 'rubric' && (
+                                  <span className="text-xs text-stone-400">· Repertory</span>
+                                )}
                               </div>
-                              
+
                               {/* Source + Remedy info */}
                               <div className="flex flex-wrap items-center gap-2 mb-2">
                                 <span className="text-xs font-semibold bg-[#173B2D] text-[#C8A24A] px-2 py-0.5 rounded">{r.author}</span>
@@ -248,11 +277,11 @@ function QuickClinicalSearchImpl() {
                                   <span className="text-xs text-[#7C8F6E]">Page: {r.sourcePages}</span>
                                 )}
                               </div>
-                              
-                              {/* Source text snippet */}
+
+                              {/* Source text snippet — highlighted */}
                               {r.snippet && (
-                                <p className="text-sm text-stone-600 leading-relaxed bg-[#F5EFE0] p-2 rounded italic">
-                                  {r.snippet}
+                                <p className="text-sm text-stone-700 leading-relaxed bg-white p-3 rounded border border-stone-200">
+                                  {highlightMatch(r.snippet, q)}
                                 </p>
                               )}
                             </Link>
