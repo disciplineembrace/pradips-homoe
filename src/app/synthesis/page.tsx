@@ -389,20 +389,22 @@ export default function SynthesisPage() {
         {/* ===== DASHBOARD VIEW ===== */}
         {view === 'dashboard' && (
           <div>
-            {/* Hero */}
+            {/* Hero — matches uploaded design */}
             <div className="bg-[#173B2D] rounded-xl p-6 md:p-8 text-center mb-6">
               <h2 className="font-serif text-xl md:text-2xl text-[#C8A24A] mb-1">Synthesis Repertory</h2>
               <p className="text-sm text-stone-300">Professional Repertorization Engine</p>
               <p className="text-xs text-stone-400 mt-1">Updated by Dr Pradip</p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {/* Stats Grid — 2x3 grid matching uploaded design */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
               {[
                 { label: 'Rubrics', value: stats.rubrics.toLocaleString(), icon: '📋' },
                 { label: 'Remedies', value: stats.remedies.toLocaleString(), icon: '💊' },
+                { label: 'Relationships', value: '1,156,961', icon: '🔗' },
+                { label: 'Authors', value: '933', icon: '✍️' },
                 { label: 'Chapters', value: stats.chapters, icon: '📖' },
-                { label: 'Cross Refs', value: stats.crossRefs.toLocaleString(), icon: '🔗' },
+                { label: 'Cross Refs', value: stats.crossRefs.toLocaleString(), icon: '🔀' },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 text-center">
                   <div className="text-2xl mb-1">{s.icon}</div>
@@ -476,6 +478,11 @@ export default function SynthesisPage() {
         {/* ===== BROWSE VIEW (Chapter → Rubric → Sub-rubric) ===== */}
         {view === 'browse' && (
           <div>
+            {/* Step badge */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+              <span className="text-sm font-semibold text-[#173B2D]">Browse Chapters & Rubrics</span>
+            </div>
             {/* Breadcrumb */}
             {breadcrumb.length > 0 && (
               <div className="mb-3 p-2 bg-white rounded-lg border border-stone-200 flex items-center gap-1 text-sm overflow-x-auto">
@@ -663,6 +670,11 @@ export default function SynthesisPage() {
         {/* ===== SEARCH VIEW ===== */}
         {view === 'search' && (
           <div>
+            {/* Step badge */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+              <span className="text-sm font-semibold text-[#173B2D]">Search Rubric</span>
+            </div>
             <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 mb-4">
               <div className="flex gap-2">
                 <input
@@ -723,7 +735,7 @@ export default function SynthesisPage() {
         )}
 
         {/* ===== CASE VIEW ===== */}
-        {view === 'case' && (
+        {view === 'case' && !repertorizing && (
           <CasePaper
             patient={patient}
             rubrics={selectedRubrics}
@@ -737,6 +749,114 @@ export default function SynthesisPage() {
             onSaveCase={handleSaveCase}
             repertorizing={repertorizing}
           />
+        )}
+
+        {/* ===== REPERTORIZATION PROGRESS VIEW (Step 4) ===== */}
+        {view === 'case' && repertorizing && (
+          <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden max-w-lg mx-auto">
+            {/* Step header with blue badge */}
+            <div className="px-4 py-3 border-b border-stone-200 bg-stone-50 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+              <h2 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Repertorization in Progress</h2>
+            </div>
+            <div className="p-6 md:p-8">
+              {/* Progress checklist */}
+              <div className="space-y-3 mb-6">
+                {[
+                  { label: 'Reading selected rubrics', done: true },
+                  { label: 'Fetching remedy data', done: true },
+                  { label: 'Reading remedy grades', done: true },
+                  { label: 'Applying rubric weights', done: true },
+                  { label: 'Calculating scores', done: true },
+                  { label: 'Sorting remedies', done: false },
+                  { label: 'Finalizing results', done: false },
+                ].map((step, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      step.done ? 'bg-green-500 text-white' : 'bg-stone-200 text-stone-400'
+                    }`}>
+                      {step.done ? '✓' : idx + 1}
+                    </div>
+                    <span className={`text-sm ${step.done ? 'text-stone-700' : 'text-stone-400'}`}>{step.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Circular progress */}
+              <div className="flex flex-col items-center my-6">
+                <div className="relative w-24 h-24">
+                  <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" strokeWidth="8" />
+                    <circle
+                      cx="50" cy="50" r="45" fill="none" stroke="#173B2D" strokeWidth="8"
+                      strokeDasharray="282.6" strokeDashoffset="70.65"
+                      strokeLinecap="round"
+                      className="transition-all duration-500"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-[#173B2D]">75%</span>
+                  </div>
+                </div>
+                <p className="text-sm text-stone-500 mt-3">Please wait...</p>
+                <p className="text-xs text-stone-400">Calculating best matches</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== RESULTS VIEW (Step 5) — shown when results are available ===== */}
+        {view === 'case' && !repertorizing && results.length > 0 && (
+          <div className="mt-4 bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-stone-200 bg-stone-50 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+              <h2 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Remedy Ranking</h2>
+              <button
+                onClick={() => setShowReport(true)}
+                className="ml-auto px-3 py-1 text-xs bg-[#173B2D] text-white rounded font-semibold hover:bg-[#0f2a20]"
+              >
+                Report Preview
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-stone-100">
+                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold w-12">Rank</th>
+                    <th className="border border-stone-200 px-3 py-2 text-left text-stone-600 font-semibold">Remedy</th>
+                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold">Score</th>
+                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold">Coverage</th>
+                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold">Σ Sym</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.slice(0, 25).map((r, idx) => (
+                    <tr key={r.abbrev} className={idx < 3 ? 'bg-stone-50' : 'hover:bg-stone-50'}>
+                      <td className="border border-stone-200 px-3 py-2 text-center font-mono text-stone-500">{idx + 1}</td>
+                      <td className="border border-stone-200 px-3 py-2">
+                        <span className="font-mono font-bold text-[#173B2D]">{r.abbrev}</span>
+                        <span className="text-stone-400 ml-1 text-xs">{r.full}</span>
+                      </td>
+                      <td className="border border-stone-200 px-3 py-2 text-center font-bold text-[#173B2D]">{r.totalScore}</td>
+                      <td className="border border-stone-200 px-3 py-2 text-center">
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          r.coverageCount === r.coverageTotal ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-600'
+                        }`}>{r.coverage}</span>
+                      </td>
+                      <td className="border border-stone-200 px-3 py-2 text-center text-stone-600">{r.coverageCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Grade legend */}
+            <div className="px-4 py-2 border-t border-stone-200 bg-stone-50 flex gap-3 flex-wrap text-xs">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500"></span> Grade 4</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-700"></span> Grade 3</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-700"></span> Grade 2</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-stone-400"></span> Grade 1</span>
+            </div>
+          </div>
         )}
 
         {/* ===== HISTORY VIEW ===== */}
@@ -829,6 +949,30 @@ export default function SynthesisPage() {
         )}
 
       </main>
+
+      {/* ===== BOTTOM NAVIGATION BAR (Synthesis-specific) ===== */}
+      <div className="sticky bottom-0 z-20 bg-[#173B2D] border-t border-[#C8A24A]/30 lg:hidden">
+        <div className="flex items-center justify-around py-2">
+          {[
+            { label: 'Home', icon: '🏠', view: 'dashboard' as const, active: view === 'dashboard' },
+            { label: 'Chapters', icon: '📖', view: 'browse' as const, active: view === 'browse' },
+            { label: 'Search', icon: '🔍', view: 'search' as const, active: view === 'search' },
+            { label: 'Case', icon: '📋', view: 'case' as const, active: view === 'case' },
+            { label: 'More', icon: '⋯', view: 'history' as const, active: view === 'history' || view === 'profile' },
+          ].map(item => (
+            <button
+              key={item.label}
+              onClick={() => setView(item.view)}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
+                item.active ? 'text-[#C8A24A]' : 'text-stone-400 hover:text-stone-200'
+              }`}
+            >
+              <span className="text-lg leading-none">{item.icon}</span>
+              <span className="text-[0.65rem] font-medium">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ===== MODALS ===== */}
       {showProfileSettings && (
