@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -85,7 +86,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <Sidebar />
+        {/* Main content area — offset for desktop sidebar (w-64 = 16rem = 256px) */}
+        <div className="lg:ml-64 min-h-screen flex flex-col">
+          {children}
+        </div>
         <Toaster />
       </body>
     </html>
