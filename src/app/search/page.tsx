@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { useBrowseState } from '@/hooks/use-browse-state';
 
 type Result = { type: 'remedy' | 'rubric'; id: string; name: string; author: string };
 type Filter = 'All' | 'Remedies' | 'Rubrics';
