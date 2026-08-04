@@ -8,6 +8,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [session, setSession] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => setSession(d)).catch(() => setSession({ authenticated: false }));
@@ -19,112 +20,132 @@ export function Navbar() {
     router.push('/');
   }
 
-  // Public menu items
-  const publicItems = [
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setMenuOpen(false);
+    }
+  }
+
+  const menuItems = [
     { href: '/', label: 'Home' },
+    { href: '/materia-medica', label: 'Materia Medica' },
+    { href: '/repertory', label: 'Repertory' },
+    { href: '/therapeutics', label: 'Therapeutics' },
+    { href: '/organon', label: 'Organon' },
+    { href: '/segal', label: 'Segal' },
+    { href: '/predictive', label: 'Predictive' },
+    { href: '/synthesis', label: 'Synthesis' },
+    { href: '/analysis', label: 'Analysis' },
+    { href: '/books', label: 'Books' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ];
-  // Protected items (require login) — show but redirect to /login if clicked without auth
-  const protectedItems = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/data', label: 'Data' },
-    { href: '/accounts', label: 'My Account' },
-  ];
-  // Admin-only item
-  const adminItems = [
-    { href: '/admin', label: 'Admin Panel' },
-  ];
 
-  function navLink(href: string, label: string) {
-    const isActive = pathname === href;
-    return (
-      <Link
-        key={href}
-        href={href}
-        className={`px-3 py-2 text-sm rounded-md transition-colors ${isActive ? 'bg-emerald-800 text-amber-200 font-semibold' : 'text-stone-200 hover:bg-emerald-800 hover:text-white'}`}
-      >{label}</Link>
-    );
+  function isActive(href: string): boolean {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(href + '/');
   }
 
   return (
-    <header className="bg-emerald-950 text-stone-100 shadow-lg sticky top-0 z-50 border-b-2 border-amber-700/60">
+    <header className="bg-[#173B2D] text-stone-100 shadow-lg sticky top-0 z-50 border-b-2 border-[#C8A24A]/40">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-serif italic text-xl text-amber-200 tracking-wide">Pradip&apos;s Homoe</span>
-            <span className="text-xs text-stone-400 hidden sm:inline">Personal Digital Library</span>
+        <div className="flex items-center justify-between h-16 gap-4">
+          <Link href="/" className="flex-shrink-0">
+            <div className="font-serif italic text-2xl text-[#C8A24A] leading-none">Pradip&apos;s Homoe</div>
+            <div className="text-[0.6rem] uppercase tracking-[0.15em] text-stone-400 mt-0.5">Personal Digital Library</div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {publicItems.map(it => navLink(it.href, it.label))}
-            {session?.authenticated && protectedItems.map(it => navLink(it.href, it.label))}
-            {session?.authenticated && session?.role === 'admin' && adminItems.map(it => navLink(it.href, it.label))}
+          <nav className="hidden lg:flex items-center gap-0.5 flex-1 overflow-x-auto">
+            {menuItems.map(it => (
+              <Link
+                key={it.label}
+                href={it.href}
+                className={`px-2.5 py-2 text-[0.7rem] font-semibold uppercase tracking-wider rounded transition-colors whitespace-nowrap ${
+                  isActive(it.href)
+                    ? 'bg-[#C8A24A] text-[#173B2D]'
+                    : 'text-stone-200 hover:bg-[#2a5443] hover:text-[#C8A24A]'
+                }`}
+              >{it.label}</Link>
+            ))}
           </nav>
 
-          {/* Auth button */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Quick search..."
+                className="w-40 px-3 py-1.5 pr-8 text-xs bg-[#0f2a20] border border-[#C8A24A]/30 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-[#C8A24A]"
+              />
+              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-[#C8A24A]">🔍</button>
+            </form>
             {session?.authenticated ? (
               <>
-                <span className="text-xs text-stone-400 hidden lg:inline">
-                  {session?.name}
-                  <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${
-                    session.role === 'admin' ? 'bg-amber-700' :
-                    session.role === 'staff' ? 'bg-blue-700' : 'bg-stone-600'
-                  }`}>{session.role}</span>
-                </span>
-                <button onClick={logout} className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded">Logout</button>
+                <Link href="/account" className="text-xs text-stone-300 hover:text-[#C8A24A] px-2">
+                  {session?.name?.split(' ')[0] || 'Account'}
+                </Link>
+                {session?.role === 'admin' && (
+                  <Link href="/admin" className="text-xs bg-[#C8A24A]/20 text-[#C8A24A] px-2 py-1 rounded font-semibold hover:bg-[#C8A24A]/30">Admin</Link>
+                )}
+                <button onClick={logout} className="text-xs bg-[#6E2A3A] hover:bg-[#8a3548] px-3 py-1.5 rounded font-semibold">Logout</button>
               </>
             ) : (
-              <Link href="/login" className="text-xs bg-amber-700 hover:bg-amber-600 px-4 py-1.5 rounded font-semibold">Login →</Link>
+              <Link href="/login" className="text-xs bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] px-4 py-1.5 rounded font-bold uppercase tracking-wider">Login</Link>
             )}
           </div>
 
-          {/* Mobile menu button */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 rounded hover:bg-emerald-800"
+            className="lg:hidden p-2 rounded hover:bg-[#2a5443] border border-[#C8A24A]/40"
             aria-label="Toggle menu"
-          >{menuOpen ? '✕' : '☰'}</button>
+          >
+            <span className="text-[#C8A24A] font-semibold text-sm">≡ Menu</span>
+          </button>
         </div>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="md:hidden pb-3 space-y-1">
-            {publicItems.map(it => (
-              <Link key={it.href} href={it.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded hover:bg-emerald-800">{it.label}</Link>
-            ))}
-            {session?.authenticated && (
-              <>
-                <div className="border-t border-emerald-800 my-2" />
-                {protectedItems.map(it => (
-                  <Link key={it.href} href={it.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded hover:bg-emerald-800">{it.label}</Link>
-                ))}
-                {session?.role === 'admin' && adminItems.map(it => (
-                  <Link key={it.href} href={it.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded hover:bg-emerald-800 text-amber-200">{it.label}</Link>
-                ))}
-              </>
-            )}
-            <div className="border-t border-emerald-800 my-2" />
-            {session?.authenticated ? (
-              <>
-                <div className="px-3 py-1 text-xs text-stone-400">
-                  {session?.name}
-                  <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${
-                    session.role === 'admin' ? 'bg-amber-700' :
-                    session.role === 'staff' ? 'bg-blue-700' : 'bg-stone-600'
-                  }`}>{session.role}</span>
-                </div>
-                <button onClick={() => { logout(); setMenuOpen(false); }} className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-red-900 text-red-200">Logout</button>
-              </>
-            ) : (
-              <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm rounded bg-amber-700 text-white text-center font-semibold">Login →</Link>
-            )}
-          </div>
-        )}
       </div>
+
+      {menuOpen && (
+        <div className="lg:hidden bg-[#173B2D] border-t border-[#C8A24A]/30">
+          <div className="max-w-7xl mx-auto px-4 py-3 space-y-2">
+            <form onSubmit={handleSearch} className="relative mb-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Quick search remedies, rubrics..."
+                className="w-full px-3 py-2 pr-8 text-sm bg-[#0f2a20] border border-[#C8A24A]/30 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-[#C8A24A]"
+              />
+              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-[#C8A24A]">🔍</button>
+            </form>
+            <div className="grid grid-cols-2 gap-1">
+              {menuItems.map(it => (
+                <Link
+                  key={it.label}
+                  href={it.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`px-3 py-2 text-xs font-semibold uppercase tracking-wider rounded ${
+                    isActive(it.href) ? 'bg-[#C8A24A] text-[#173B2D]' : 'text-stone-200 hover:bg-[#2a5443]'
+                  }`}
+                >{it.label}</Link>
+              ))}
+            </div>
+            <div className="border-t border-[#C8A24A]/20 pt-2 mt-2">
+              {session?.authenticated ? (
+                <div className="flex items-center justify-between">
+                  <Link href="/account" onClick={() => setMenuOpen(false)} className="text-sm text-[#C8A24A]">{session?.name}</Link>
+                  <button onClick={() => { logout(); setMenuOpen(false); }} className="text-xs bg-[#6E2A3A] text-white px-3 py-1.5 rounded">Logout</button>
+                </div>
+              ) : (
+                <Link href="/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-sm font-bold text-center bg-[#C8A24A] text-[#173B2D] rounded uppercase">Login →</Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
