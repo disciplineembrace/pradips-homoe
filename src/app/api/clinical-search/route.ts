@@ -69,9 +69,27 @@ export async function GET(req: NextRequest) {
     let matchType: 'exact' | 'close' | 'related' = 'related';
     let matchText = '';
     let snippet = '';
-    
+
+    // Highest priority: exact name match or name starts with query
+    if (name === queryPhrase) {
+      matchType = 'exact';
+      matchText = 'Exact remedy name match';
+      snippet = (r.keynote || r.full || '').substring(0, 200);
+    }
+    // Name starts with query
+    else if (name.startsWith(queryPhrase)) {
+      matchType = 'exact';
+      matchText = 'Remedy name starts with query';
+      snippet = (r.keynote || r.full || '').substring(0, 200);
+    }
+    // Name contains query
+    else if (name.includes(queryPhrase)) {
+      matchType = 'exact';
+      matchText = 'Remedy name contains query';
+      snippet = (r.keynote || r.full || '').substring(0, 200);
+    }
     // Exact phrase match in full text
-    if (fullText.includes(queryPhrase)) {
+    else if (fullText.includes(queryPhrase)) {
       matchType = 'exact';
       matchText = 'Exact phrase match';
       // Extract snippet around the match
@@ -191,8 +209,20 @@ export async function GET(req: NextRequest) {
   }
   
   // Sort by match type priority: exact > close > related
+  // Within same match type, name matches come before content matches
   const priority = { exact: 0, close: 1, related: 2 };
-  results.sort((a, b) => priority[a.matchType] - priority[b.matchType]);
+  results.sort((a, b) => {
+    // First sort by match type
+    const typeDiff = priority[a.matchType] - priority[b.matchType];
+    if (typeDiff !== 0) return typeDiff;
+    // Within same type, name matches ("Remedy name...") come before content matches
+    const aIsName = a.matchText.includes('name');
+    const bIsName = b.matchText.includes('name');
+    if (aIsName && !bIsName) return -1;
+    if (!aIsName && bIsName) return 1;
+    // Then by name alphabetically
+    return (a.name || '').localeCompare(b.name || '');
+  });
   
   // Deduplicate by id (keep strongest match)
   const seen = new Set<string>();
