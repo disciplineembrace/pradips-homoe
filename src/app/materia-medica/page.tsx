@@ -1,12 +1,10 @@
 'use client';
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
-import { useBrowseState } from '@/hooks/use-browse-state';
-import { getAuthorDisplayName } from '@/lib/author-names';
 
 type Remedy = {
   id: string;
@@ -18,36 +16,21 @@ type Remedy = {
   letter?: string;
 };
 
-const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur', 'Dubey'];
+const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur'];
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const PAGE_SIZE = 30;
 
-function MateriaMedicaPageImpl()
-
 export default function MateriaMedicaPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <MateriaMedicaPageImpl />
-    </Suspense>
-  );
-}
-
-function MateriaMedicaPageImpl() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [remedies, setRemedies] = useState<Remedy[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [q, setQ] = useState('');
+  const [author, setAuthor] = useState('All');
+  const [letter, setLetter] = useState('');
   const [loading, setLoading] = useState(false);
   const reader = useReaderFeatures();
-
-  // Use browse state persistence hook — preserves author/letter/search/page across navigation
-  const { state: browseState, setState: setBrowseState, restoreScroll } = useBrowseState('materia-medica', {
-    author: 'All',
-    letter: '',
-    q: '',
-    page: 1,
-  });
-  const { author, letter, q, page } = browseState;
 
   // Auth check — set session immediately, do NOT block on data
   useEffect(() => {
@@ -82,12 +65,8 @@ function MateriaMedicaPageImpl() {
     if (session) loadRemedies();
   }, [session, loadRemedies]);
 
-  // Restore scroll position when returning from detail page
-  useEffect(() => {
-    if (session && remedies.length > 0) {
-      restoreScroll();
-    }
-  }, [session, remedies, restoreScroll]);
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [q, author, letter]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -133,14 +112,14 @@ function MateriaMedicaPageImpl() {
           {AUTHORS.map(a => (
             <button
               key={a}
-              onClick={() => setBrowseState({ author: a })}
+              onClick={() => setAuthor(a)}
               className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors whitespace-nowrap ${
                 author === a
                   ? 'bg-[#173B2D] text-[#F5EFE0]'
                   : 'text-[#7C8F6E] hover:bg-[#F5EFE0] hover:text-[#173B2D]'
               }`}
             >
-              {a === 'All' ? 'All' : getAuthorDisplayName(a)}
+              {a}
             </button>
           ))}
         </div>
@@ -152,20 +131,20 @@ function MateriaMedicaPageImpl() {
               type="text"
               placeholder="Search remedies by name, common name, or keynote..."
               value={q}
-              onChange={e => setBrowseState({ q: e.target.value })}
+              onChange={e => setQ(e.target.value)}
               className="w-full px-4 py-2.5 pl-10 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C8F6E]">🔍</span>
           </div>
           <div className="flex flex-wrap gap-1">
             <button
-              onClick={() => setBrowseState({ letter: "" })}
+              onClick={() => setLetter('')}
               className={`px-3 h-7 text-xs font-mono rounded ${letter === '' ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-[#F5EFE0] border border-[#E8DCC3] hover:bg-[#E8DCC3] text-[#173B2D]'}`}
             >All</button>
             {LETTERS.map(L => (
               <button
                 key={L}
-                onClick={() => setBrowseState({ letter: letter === L ? "" : L })}
+                onClick={() => setLetter(letter === L ? '' : L)}
                 className={`w-7 h-7 text-xs font-mono rounded ${letter === L ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-[#F5EFE0] border border-[#E8DCC3] hover:bg-[#E8DCC3] text-[#173B2D]'}`}
               >{L}</button>
             ))}
@@ -175,7 +154,7 @@ function MateriaMedicaPageImpl() {
         {/* Count */}
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm text-[#7C8F6E]">
-            {loading ? 'Searching...' : `${total} remedy${total !== 1 ? 'ies' : ''}${q ? ` matching "${q}"` : ''}${author !== 'All' ? ` from ${getAuthorDisplayName(author)}` : ''}${letter ? ` starting with "${letter}"` : ''}`}
+            {loading ? 'Searching...' : `${total} remedy${total !== 1 ? 'ies' : ''}${q ? ` matching "${q}"` : ''}${author !== 'All' ? ` from ${author}` : ''}${letter ? ` starting with "${letter}"` : ''}`}
           </div>
         </div>
 
@@ -212,7 +191,7 @@ function MateriaMedicaPageImpl() {
                   </div>
                   {r.common && <p className="text-xs italic text-[#7C8F6E] mb-2">{r.common}</p>}
                   <div className="flex flex-wrap gap-2 mb-2">
-                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#C8A24A]">{getAuthorDisplayName(r.author)}</span>
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-[#C8A24A]">{r.author}</span>
                     {r.chapter && <span className="text-[0.65rem] text-[#7C8F6E]">· {r.chapter}</span>}
                   </div>
                   {r.keynote && (
@@ -228,13 +207,13 @@ function MateriaMedicaPageImpl() {
         {totalPages > 1 && (
           <div className="flex flex-wrap justify-center items-center gap-2 mt-8">
             <button
-              onClick={() => setBrowseState({ page: Math.max(1, page - 1) })}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >← Prev</button>
             <span className="text-sm text-[#7C8F6E]">Page {page} of {totalPages}</span>
             <button
-              onClick={() => setBrowseState({ page: Math.min(totalPages, page + 1) })}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
             >Next →</button>
