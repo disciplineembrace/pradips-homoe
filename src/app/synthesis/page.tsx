@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 import {
   DoctorProfile, PatientDetails, SelectedRubric, RepertorizationResult,
   Chapter, TreeNode, SearchResult, CrossRef,
@@ -345,7 +344,6 @@ export default function SynthesisPage() {
             <p className="text-sm text-[#7C8F6E]">Loading Synthesis...</p>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -1011,8 +1009,6 @@ export default function SynthesisPage() {
           ← Dashboard
         </button>
       )}
-
-      <Footer />
 
       {/* ===== PRINT STYLES ===== */}
       <style jsx global>{`
