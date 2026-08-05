@@ -107,6 +107,8 @@ export default function SynthesisPage() {
       .then(r => r.json())
       .then(d => { setChapters(d.chapters || []); setLoading(false); })
       .catch(() => setLoading(false));
+    // Load saved cases count for dashboard
+    setCases(loadCases());
     // Restore active case
     const saved = loadActiveCase();
     if (saved) {
@@ -304,6 +306,7 @@ export default function SynthesisPage() {
       repertorizedAt: results.length > 0 ? now : null,
     };
     saveCase(saved);
+    setCases(loadCases()); // Refresh cases state
     setPatient(prev => ({ ...prev, caseNo: caseId }));
     setError('Case saved successfully.');
     setTimeout(() => setError(''), 3000);
@@ -427,7 +430,7 @@ export default function SynthesisPage() {
                 { label: 'Chapters', icon: '📖', view: 'browse' as const, desc: 'Browse rubric hierarchy' },
                 { label: 'Search', icon: '🔍', view: 'search' as const, desc: 'Search 180K+ rubrics' },
                 { label: `Case Paper${selectedRubrics.length > 0 ? ` (${enabledCount})` : ''}`, icon: '📋', view: 'case' as const, desc: 'Patient details & rubrics' },
-                { label: `History (${loadCases().length})`, icon: '📂', view: 'history' as const, desc: 'Saved cases' },
+                { label: `History (${cases.length})`, icon: '📂', view: 'history' as const, desc: 'Saved cases' },
                 { label: 'Profile', icon: '👤', view: 'profile' as const, desc: 'Doctor/Clinic branding' },
                 { label: 'Report', icon: '📄', onClick: () => results.length > 0 && setShowReport(true), desc: 'View repertorization report' },
                 { label: 'New Case', icon: '➕', onClick: () => handleNewCase(), desc: 'Start fresh repertorization' },
@@ -867,7 +870,7 @@ export default function SynthesisPage() {
               </div>
               <div className="p-3">
                 {(() => {
-                  const allCases = loadCases();
+                  const allCases = cases;
                   if (allCases.length === 0) {
                     return <p className="text-sm text-stone-500 text-center py-8">No saved cases yet.</p>;
                   }
