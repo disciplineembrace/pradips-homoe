@@ -60,7 +60,7 @@ export function Sidebar() {
     { href: '/repertory', label: 'Repertory', icon: Library },
     { href: '/therapeutics', label: 'Therapeutics', icon: Pill },
     { href: '/clinical', label: 'Clinical', icon: Stethoscope },
-    { href: '/search', label: 'Quick Search', icon: Search },
+    { href: '/quick-clinical-search', label: 'Quick Clinical Search', icon: Search },
     { href: '/organon', label: 'Organon', icon: ScrollText },
     { href: '/segal', label: 'Segal Homeopathy', icon: Brain },
     { href: '/predictive', label: 'Predictive Homeopathy', icon: Microscope },

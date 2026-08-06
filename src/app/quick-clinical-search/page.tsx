@@ -130,9 +130,10 @@ function QuickClinicalSearchImpl() {
   const [q, setQ] = useState('');
   const [subject, setSubject] = useState('all');
   const [source, setSource] = useState('all');
-  const [viewMode, setViewMode] = useState('indications');
-  const [sortMode, setSortMode] = useState('relevant');
-  const [typeFilter, setTypeFilter] = useState('all');
+  // View By / Sort By / Type Filter removed per spec — replaced with
+  // "Search Within Results" client-side filter below Source selection.
+  const [viewMode] = useState('indications'); // kept for view-mode conditional rendering (default indications only)
+  const [withinResults, setWithinResults] = useState(''); // NEW: search-within-results query
   const [results, setResults] = useState<Result[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -161,7 +162,9 @@ function QuickClinicalSearchImpl() {
       setQ(urlQ);
       if (urlSubject) setSubject(urlSubject);
       if (urlSource) setSource(urlSource);
-      if (urlView) setViewMode(urlView);
+      // viewMode is now fixed to 'indications' (View By selector removed per spec)
+      // urlView is read but no longer applied — kept for URL backward-compat.
+      void urlView;
       // Auto-search
       setTimeout(() => doSearch(urlQ, urlSubject || 'all', urlSource || 'all', 1), 100);
     }
@@ -210,32 +213,31 @@ function QuickClinicalSearchImpl() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Apply client-side sorting and type filtering
+  // Apply client-side "Search Within Results" filtering.
+  // This searches ONLY inside the already-loaded results — it does NOT
+  // trigger a new database/API search. It matches against:
+  //   - Remedy/rubric name
+  //   - Snippet (clinical indications, characteristic symptoms, peculiar
+  //     symptoms, modalities, concomitants, original source text)
+  //   - Author/source
+  //   - Subsection (chapter/heading)
+  //   - Match text
   const sortedFilteredResults = (() => {
-    let filtered = [...results];
-
-    // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(r => r.categories && r.categories[typeFilter as keyof typeof r.categories]);
-    }
-
-    // Sort
-    if (sortMode === 'characteristic') {
-      // Sort by number of categories (more categories = more characteristic)
-      filtered.sort((a, b) => {
-        const aCats = a.categories ? Object.keys(a.categories).length : 0;
-        const bCats = b.categories ? Object.keys(b.categories).length : 0;
-        if (bCats !== aCats) return bCats - aCats;
-        return 0;
-      });
-    } else if (sortMode === 'source') {
-      filtered.sort((a, b) => (a.author || '').localeCompare(b.author || ''));
-    } else if (sortMode === 'remedy-az') {
-      filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    }
-    // 'relevant' keeps server-side sort order
-
-    return filtered;
+    if (!withinResults.trim()) return results;
+    const words = withinResults.toLowerCase().split(/\s+/).filter(w => w.length >= 1);
+    if (words.length === 0) return results;
+    return results.filter(r => {
+      const haystack = [
+        r.name,
+        r.snippet,
+        r.author,
+        r.source,
+        r.subsection || '',
+        r.matchText,
+        r.categories ? Object.values(r.categories).join(' ') : '',
+      ].join(' ').toLowerCase();
+      return words.every(w => haystack.includes(w));
+    });
   })();
 
   // Group results for different views
@@ -307,8 +309,8 @@ function QuickClinicalSearchImpl() {
             </button>
           </div>
 
-          {/* Filters */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+          {/* Filters — Search In + Source only (View By / Sort By / Type Filter removed per spec) */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
             <div>
               <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Search In</label>
               <select value={subject} onChange={e => { setSubject(e.target.value); setSource('all'); }}
@@ -323,37 +325,39 @@ function QuickClinicalSearchImpl() {
                 {(SOURCES_BY_SUBJECT[subject] || SOURCES_BY_SUBJECT['all']).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">View By</label>
-              <select value={viewMode} onChange={e => setViewMode(e.target.value)}
-                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
-                {VIEW_MODES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
-              </select>
-            </div>
           </div>
-          {/* Second row: Sort + Type filter */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <div>
-              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Sort By</label>
-              <select value={sortMode} onChange={e => setSortMode(e.target.value)}
-                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
-                {SORT_MODES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+
+          {/* Search Within Results — client-side filter on loaded results only.
+              Does NOT trigger a new API/database search. */}
+          {searched && results.length > 0 && (
+            <div className="mt-1">
+              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Search Within Results</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search within selected source..."
+                  value={withinResults}
+                  onChange={e => setWithinResults(e.target.value)}
+                  className="w-full px-3 py-1.5 pl-8 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]"
+                />
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[#7C8F6E] text-xs">🔍</span>
+                {withinResults && (
+                  <button
+                    onClick={() => setWithinResults('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[#7C8F6E] hover:text-[#173B2D] text-xs"
+                    aria-label="Clear within-results search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {withinResults && (
+                <p className="text-[0.65rem] text-[#7C8F6E] mt-1">
+                  Showing {sortedFilteredResults.length} of {results.length} loaded results
+                </p>
+              )}
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Type Filter</label>
-              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
-                <option value="all">All Types</option>
-                {TYPE_FILTERS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button onClick={handleSearch} className="w-full px-4 py-1.5 bg-stone-200 text-stone-700 rounded text-xs font-semibold hover:bg-stone-300">
-                ↻ Apply Filters
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Error */}
