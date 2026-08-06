@@ -21,7 +21,11 @@ workflows:
         # Safe version checks only — flutter doctor -v can crash in
         # Codemagic headless environments due to Android SDK licensing
         # or emulator diagnostics. Version checks are sufficient to
+<<<<<<< Updated upstream
         # confirm Flutter + Dart are installed and are NOT suppressed.
+=======
+        # confirm Flutter + Dart are installed.
+>>>>>>> Stashed changes
         script: |
           cd flutter_app
           flutter --version
