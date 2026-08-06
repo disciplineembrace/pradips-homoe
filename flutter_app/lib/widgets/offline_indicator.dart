@@ -7,7 +7,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/network/connectivity.dart';
 import '../providers.dart';
 
 class OfflineIndicator extends ConsumerWidget {

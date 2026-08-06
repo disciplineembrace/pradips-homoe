@@ -7,7 +7,6 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'core/config/app_config.dart';
 import 'core/network/connectivity.dart';
 import 'core/network/dio_client.dart';
 import 'data/local/database.dart';

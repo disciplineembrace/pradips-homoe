@@ -7,7 +7,6 @@ library;
 
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../core/network/dio_client.dart';
@@ -150,56 +149,6 @@ class AuthRepository {
   }
 
   String? _extractTokenFromHeaders(Map<String, dynamic> response) {
-    // The website API sets an httpOnly cookie, which the Dio client
-    // captures in its cookie jar. For the Flutter app, we also check
-    // if a token is returned in the response body.
     return response['token'] as String?;
-  }
-}
-
-// Note: authRepositoryProvider is defined in lib/main.dart
-// (it wires together DioClient + FlutterSecureStorage).
-
-abstract class AuthState {}
-
-class AuthInitialState extends AuthState {}
-class AuthLoadingState extends AuthState {}
-class AuthenticatedState extends AuthState {
-  final AuthUser user;
-  AuthenticatedState(this.user);
-}
-class UnauthenticatedState extends AuthState {}
-class AuthErrorState extends AuthState {
-  final String message;
-  AuthErrorState(this.message);
-}
-
-class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthRepository _repo;
-  AuthNotifier(this._repo) : super(AuthInitialState());
-
-  Future<void> checkSession() async {
-    state = AuthLoadingState();
-    final restored = await _repo.restoreSession();
-    if (restored && _repo.currentUser != null) {
-      state = AuthenticatedState(_repo.currentUser!);
-    } else {
-      state = UnauthenticatedState();
-    }
-  }
-
-  Future<void> login(String email, String pin) async {
-    state = AuthLoadingState();
-    try {
-      final user = await _repo.login(email: email, pin: pin);
-      state = AuthenticatedState(user);
-    } on ApiException catch (e) {
-      state = AuthErrorState(e.message);
-    }
-  }
-
-  Future<void> logout() async {
-    await _repo.logout();
-    state = UnauthenticatedState();
   }
 }
