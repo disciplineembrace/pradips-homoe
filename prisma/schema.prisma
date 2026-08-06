@@ -6,6 +6,9 @@ generator client {
 }
 
 datasource db {
+  // Production uses Neon PostgreSQL (DATABASE_URL set in Vercel dashboard).
+  // For local dev without a postgres instance, temporarily switch provider
+  // to "sqlite" and run `npx prisma db push && npx prisma generate`.
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }

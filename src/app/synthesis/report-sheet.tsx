@@ -158,7 +158,7 @@ export function ReportSheet({ patient, rubrics, results, profile, onClose }: Pro
                     <tr key={sr.symptomId} style={{ breakInside: 'avoid' }}>
                       <td className="border border-stone-200 px-2 py-1.5 text-stone-500">{idx + 1}</td>
                       <td className="border border-stone-200 px-2 py-1.5 text-stone-800">{sr.path}</td>
-                      <td className="border border-stone-200 px-2 py-1.5 text-center font-mono font-bold text-blue-700">{sr.weight}</td>
+                      <td className="border border-stone-200 px-2 py-1.5 text-center font-mono font-bold" style={{ color: '#0F4A38' }}>{sr.weight}</td>
                       <td className="border border-stone-200 px-2 py-1.5 text-center text-stone-600">{sr.remedyCount}</td>
                     </tr>
                   ))}
@@ -291,7 +291,7 @@ export function ReportSheet({ patient, rubrics, results, profile, onClose }: Pro
                                       {rb.grade}
                                     </span>
                                   </td>
-                                  <td className="border border-stone-200 px-2 py-1 text-center font-mono font-bold text-blue-700">{rb.weight}</td>
+                                  <td className="border border-stone-200 px-2 py-1 text-center font-mono font-bold" style={{ color: '#0F4A38' }}>{rb.weight}</td>
                                   <td className="border border-stone-200 px-2 py-1 text-center font-bold text-[#173B2D]">{rb.grade * rb.weight}</td>
                                 </tr>
                               );
@@ -420,7 +420,8 @@ export function ReportSheet({ patient, rubrics, results, profile, onClose }: Pro
         <div className="px-4 py-2 border-t border-stone-200 bg-stone-50 no-print-bar">
           <button
             onClick={() => setShowMatrix(!showMatrix)}
-            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: '#0F4A38' }}
           >
             {showMatrix ? 'Hide' : 'Show'} Detailed Rubric/Remedy Matrix
           </button>

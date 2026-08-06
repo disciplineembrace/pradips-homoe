@@ -206,9 +206,9 @@ export function StepGuide({ onClose, onStartWorkflow }: StepGuideProps) {
             ))}
           </div>
 
-          {/* Visual demo box */}
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1.5">💡 Tip</div>
+          {/* Visual demo box — uses Synthesis palette (no bright blue) */}
+          <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: '#E6F4EC', border: '1px solid rgba(15, 74, 56, 0.2)' }}>
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#0F4A38' }}>💡 Tip</div>
             <p className="text-xs text-stone-600">
               {currentStep === 0 && 'Bookmark this page — the dashboard is your home base for all repertorization work.'}
               {currentStep === 1 && 'Search works across all 180,386 rubrics. Try clinical terms like "headache morning", "anxiety fear", or "pain burning".'}
