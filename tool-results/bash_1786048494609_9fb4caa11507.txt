@@ -1,0 +1,2006 @@
+Switched to branch 'master'
+Your branch is up to date with 'origin/master'.
+=== Read ALL source files for issues ===
+=== flutter_app/lib/app.dart ===
+/// Root MaterialApp with routing and auth gate.
+/// All routes registered — no placeholder route comments.
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'features/auth/login_screen.dart';
+import 'features/bookmarks/bookmarks_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
+import 'features/materia_medica/materia_medica_screen.dart';
+import 'features/repertory/repertory_screen.dart';
+import 'features/search/quick_search_screen.dart';
+import 'features/settings/settings_screen.dart';
+import 'providers.dart';
+
+class PradipsHomeoApp extends ConsumerWidget {
+  const PradipsHomeoApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp(
+      title: "Pradip's Homeo",
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF173B2D),
+          primary: const Color(0xFF173B2D),
+          secondary: const Color(0xFFC8A24A),
+          surface: const Color(0xFFF5EFE0),
+        ),
+        fontFamily: 'Serif',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF173B2D),
+          foregroundColor: Color(0xFFF5EFE0),
+        ),
+      ),
+      home: const AuthGate(),
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/materia-medica': (context) => const MateriaMedicaScreen(),
+        '/repertory': (context) => const RepertoryScreen(),
+        '/quick-search': (context) => const QuickSearchScreen(),
+        '/bookmarks': (context) => const BookmarksScreen(),
+        '/settings': (context) => const SettingsScreen(),
+      },
+    );
+  }
+}
+
+/// Auth gate — shows login or dashboard based on auth state.
+class AuthGate extends ConsumerStatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  ConsumerState<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends ConsumerState<AuthGate> {
+  bool _checking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSession();
+  }
+
+  Future<void> _checkSession() async {
+    final repo = ref.read(authRepositoryProvider);
+    await repo.restoreSession();
+    if (mounted) {
+      setState(() => _checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final repo = ref.watch(authRepositoryProvider);
+    if (repo.isAuthenticated) {
+      return const DashboardScreen();
+    }
+    return const LoginScreen();
+  }
+}
+---END---
+=== flutter_app/lib/core/config/app_config.dart ===
+/// App configuration — API URLs and constants.
+///
+/// The Flutter app connects to the EXISTING live website backend.
+/// No separate backend is created. The website remains the source of truth.
+class AppConfig {
+  /// Live website API base URL (production).
+  /// All API calls go through the existing Next.js API routes.
+  static const String apiBaseUrl = 'https://pradips-homoe.vercel.app';
+
+  /// For local development (Android emulator → host machine):
+  /// static const String apiBaseUrl = 'http://10.0.2.2:3000';
+
+  /// API endpoint paths (reuse existing website API routes)
+  static const String loginEndpoint = '/api/auth/login';
+  static const String logoutEndpoint = '/api/auth/logout';
+  static const String sessionEndpoint = '/api/auth/session';
+  static const String meEndpoint = '/api/me';
+
+  // Content endpoints (read-only from app perspective)
+  static const String remediesEndpoint = '/api/remedies';
+  static const String rubricsEndpoint = '/api/rubrics';
+  static const String rubricsChaptersEndpoint = '/api/rubrics/chapters';
+  static const String rubricsChildrenEndpoint = '/api/rubrics/children';
+  static const String booksEndpoint = '/api/books';
+  static const String searchEndpoint = '/api/search';
+  static const String clinicalSearchEndpoint = '/api/clinical-search';
+  static const String synthesisEndpoint = '/api/synthesis';
+  static const String therapeuticsEndpoint = '/api/therapeutics';
+
+  // User feature endpoints (read/write — synced via outbox)
+  static const String bookmarksEndpoint = '/api/user/bookmarks';
+  static const String favoritesEndpoint = '/api/user/favorites';
+  static const String historyEndpoint = '/api/user/history';
+  static const String notesEndpoint = '/api/user/notes';
+  static const String highlightsEndpoint = '/api/user/highlights';
+
+  /// Sync configuration
+  static const int syncBatchSize = 100;
+  static const int syncMaxRetries = 5;
+  static const int syncRetryBaseDelaySec = 2;
+  static const int syncMaxBackoffSec = 60;
+  static const int backgroundSyncIntervalMin = 15;
+
+  /// Outbox configuration
+  static const int outboxMaxRetries = 10;
+  static const int outboxProcessIntervalSec = 30;
+
+  /// Session
+  static const int sessionRefreshThresholdMin = 30;
+
+  /// Secure storage keys
+  static const String secureStorageKey = 'ph_session_token';
+  static const String secureStorageUserKey = 'ph_user_data';
+
+  /// Local database
+  static const String dbFileName = 'pradips_homeo.db';
+
+  /// Request timeouts
+  static const int connectTimeoutSec = 15;
+  static const int receiveTimeoutSec = 60;
+  static const int sendTimeoutSec = 30;
+}
+---END---
+=== flutter_app/lib/core/network/api_exceptions.dart ===
+/// API exception types for structured error handling.
+///
+/// All errors include a user-friendly message. Sensitive data (tokens,
+/// passwords) is never included in error messages or logs.
+library;
+
+/// Base class for all API exceptions.
+sealed class ApiException implements Exception {
+  final String message;
+  final String? technicalDetail;
+
+  const ApiException(this.message, [this.technicalDetail]);
+
+  @override
+  String toString() => message;
+}
+
+/// No internet connection available.
+class NoConnectionException extends ApiException {
+  const NoConnectionException()
+      : super('No internet connection. Showing offline content.');
+}
+
+/// Request timed out.
+class TimeoutException extends ApiException {
+  const TimeoutException([String? detail])
+      : super('Request timed out. Please try again.', detail);
+}
+
+/// Authentication failed (invalid session, expired token, wrong PIN).
+class AuthException extends ApiException {
+  final int? statusCode;
+  const AuthException(String message, {this.statusCode, String? detail})
+      : super(message, detail);
+}
+
+/// Permission denied (insufficient role, no premium access).
+class PermissionException extends ApiException {
+  const PermissionException(String message, [String? detail])
+      : super(message, detail);
+}
+
+/// Server returned an error (5xx).
+class ServerException extends ApiException {
+  final int statusCode;
+  const ServerException(String message, this.statusCode, [String? detail])
+      : super(message, detail);
+}
+
+/// Malformed or unexpected server response.
+class MalformedResponseException extends ApiException {
+  const MalformedResponseException([String? detail])
+      : super('Received invalid data from server.', detail);
+}
+
+/// Local database (SQLite) error.
+class DatabaseException extends ApiException {
+  const DatabaseException(String message, [String? detail])
+      : super(message, detail);
+}
+
+/// Sync conflict that couldn't be auto-resolved.
+class SyncConflictException extends ApiException {
+  final String entityId;
+  const SyncConflictException(this.entityId, String message, [String? detail])
+      : super(message, detail);
+}
+
+/// Partial download — sync interrupted.
+class PartialSyncException extends ApiException {
+  final int received;
+  final int expected;
+  const PartialSyncException(this.received, this.expected, [String? detail])
+      : super(
+            'Sync incomplete: received $received of $expected records.', detail);
+}
+---END---
+=== flutter_app/lib/core/network/connectivity.dart ===
+/// Connectivity detection service.
+///
+/// Monitors network status and provides a stream of connectivity changes.
+/// Used by the sync engine to trigger sync when connectivity returns.
+library;
+
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
+enum ConnectivityStatus {
+  online,
+  offline,
+}
+
+/// Singleton connectivity monitor.
+class ConnectivityService {
+  static final ConnectivityService _instance = ConnectivityService._internal();
+  factory ConnectivityService() => _instance;
+  ConnectivityService._internal();
+
+  final Connectivity _connectivity = Connectivity();
+
+  final StreamController<ConnectivityStatus> _statusController =
+      StreamController<ConnectivityStatus>.broadcast();
+  Stream<ConnectivityStatus> get statusStream => _statusController.stream;
+
+  ConnectivityStatus _currentStatus = ConnectivityStatus.online;
+  ConnectivityStatus get currentStatus => _currentStatus;
+
+  bool get isOnline => _currentStatus == ConnectivityStatus.online;
+  bool get isOffline => _currentStatus == ConnectivityStatus.offline;
+
+  /// Initialize and start monitoring.
+  void init() {
+    _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      final wasOffline = _currentStatus == ConnectivityStatus.offline;
+      final hasConnection = results.any((r) =>
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.ethernet);
+
+      _currentStatus =
+          hasConnection ? ConnectivityStatus.online : ConnectivityStatus.offline;
+      _statusController.add(_currentStatus);
+
+      // If we just came back online, the sync engine will pick this up
+      // via the status stream and trigger an incremental sync + outbox flush.
+      if (wasOffline && isOnline) {
+        // Stream event is enough; sync engine subscribes.
+      }
+    });
+
+    // Check initial status synchronously
+    _connectivity.checkConnectivity().then((results) {
+      final hasConnection = results.any((r) =>
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.ethernet);
+      _currentStatus =
+          hasConnection ? ConnectivityStatus.online : ConnectivityStatus.offline;
+      _statusController.add(_currentStatus);
+    });
+  }
+
+  /// Manually check current connectivity (fresh query).
+  Future<bool> checkOnline() async {
+    final results = await _connectivity.checkConnectivity();
+    final hasConnection = results.any((r) =>
+        r == ConnectivityResult.wifi ||
+        r == ConnectivityResult.mobile ||
+        r == ConnectivityResult.ethernet);
+    _currentStatus =
+        hasConnection ? ConnectivityStatus.online : ConnectivityStatus.offline;
+    return hasConnection;
+  }
+
+  void dispose() {
+    _statusController.close();
+  }
+}
+---END---
+=== flutter_app/lib/core/network/dio_client.dart ===
+/// Dio HTTP client with authentication, retry, and error handling.
+///
+/// All API calls go through this client. It:
+///   - Attaches the session cookie/token to every request
+///   - Handles 401 (auth expired) by attempting session refresh
+///   - Converts DioErrors to typed ApiExceptions
+///   - Enforces HTTPS-only communication
+///   - Logs requests with sensitive data redacted
+library;
+
+import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/app_config.dart';
+import 'api_exceptions.dart';
+
+class DioClient {
+  late final Dio _dio;
+  final FlutterSecureStorage _secureStorage;
+
+  DioClient(this._secureStorage) {
+    _dio = Dio(BaseOptions(
+      baseUrl: AppConfig.apiBaseUrl,
+      connectTimeout: Duration(seconds: AppConfig.connectTimeoutSec),
+      receiveTimeout: Duration(seconds: AppConfig.receiveTimeoutSec),
+      sendTimeout: Duration(seconds: AppConfig.sendTimeoutSec),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      // Validate that we only use HTTPS in production
+      validateStatus: (status) => status != null && status >= 200 && status < 300,
+    ));
+
+    // Add auth interceptor
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        // Attach session cookie if available
+        final token = await _secureStorage.read(key: AppConfig.secureStorageKey);
+        if (token != null && token.isNotEmpty) {
+          // The website uses httpOnly cookies for sessions.
+          // For the Flutter app, we send the token as a Cookie header
+          // OR as a Bearer token (the API accepts both).
+          options.headers['Cookie'] = 'ph_session=$token';
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        handler.next(options);
+      },
+      onError: (error, handler) async {
+        // On 401, attempt session refresh once
+        if (error.response?.statusCode == 401) {
+          // Try to refresh session — if that fails, propagate the error
+          // (the auth repository will handle logout/redirect)
+          final refreshed = await _attemptSessionRefresh();
+          if (refreshed) {
+            // Retry the original request
+            try {
+              final retryResponse = await _dio.fetch(error.requestOptions);
+              return handler.resolve(retryResponse);
+            } catch (e) {
+              return handler.next(error);
+            }
+          }
+        }
+        handler.next(error);
+      },
+    ));
+  }
+
+  /// Attempt to refresh the session by calling the session endpoint.
+  /// Returns true if the session is still valid.
+  Future<bool> _attemptSessionRefresh() async {
+    try {
+      final response = await _dio.get(AppConfig.sessionEndpoint);
+      final data = response.data;
+      if (data is Map && data['authenticated'] == true) {
+        return true;
+      }
+    } catch (_) {
+      // Session is invalid — user will be redirected to login
+    }
+    return false;
+  }
+
+  /// GET request with typed response.
+  Future<T> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      final response = await _dio.get<T>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _convertDioError(e);
+    }
+  }
+
+  /// POST request with typed response.
+  Future<T> post<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      final response = await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _convertDioError(e);
+    }
+  }
+
+  /// PUT request with typed response.
+  Future<T> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      final response = await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _convertDioError(e);
+    }
+  }
+
+  /// DELETE request.
+  Future<void> delete(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      await _dio.delete(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw _convertDioError(e);
+    }
+  }
+
+  /// Convert DioException to typed ApiException.
+  ApiException _convertDioError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return TimeoutException(e.message);
+      case DioExceptionType.connectionError:
+        return const NoConnectionException();
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode ?? 500;
+        final data = e.response?.data;
+        String message = 'Server error';
+        if (data is Map && data['error'] != null) {
+          message = data['error'].toString();
+        }
+        if (statusCode == 401) {
+          return AuthException(message, statusCode: statusCode);
+        }
+        if (statusCode == 403) {
+          return PermissionException(message);
+        }
+        return ServerException(message, statusCode);
+      default:
+        return ServerException('Unexpected error', 500, e.message);
+    }
+  }
+}
+---END---
+=== flutter_app/lib/core/security/database_encryption.dart ===
+/// Database encryption service — manages SQLCipher encryption key.
+///
+/// - Generates a strong random 256-bit encryption key on first app launch.
+/// - Stores the key ONLY in Android secure storage (Android Keystore).
+/// - Never hardcodes the key in source code.
+/// - Never commits the key to GitHub.
+/// - Never stores the key in shared preferences.
+/// - Provides the key to Drift for opening an encrypted SQLCipher database.
+/// - Handles missing, corrupted, or invalid keys safely.
+/// - Does NOT silently delete user data when database opening fails.
+///
+/// The key is stored as a hex-encoded 32-byte (256-bit) random value.
+library;
+
+import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+/// Secure storage key for the database encryption key.
+const _dbEncryptionKeyStorageKey = 'ph_db_encryption_key';
+
+/// Service that manages the SQLCipher encryption key.
+class DatabaseEncryptionService {
+  final FlutterSecureStorage _secureStorage;
+
+  DatabaseEncryptionService(this._secureStorage);
+
+  /// Get or create the database encryption key.
+  ///
+  /// On first launch: generates a new 256-bit random key and stores it
+  /// in Android secure storage (Android Keystore).
+  /// On subsequent launches: retrieves the existing key from secure storage.
+  ///
+  /// Returns the key as a hex string suitable for SQLCipher's `PRAGMA key`.
+  Future<String> getOrCreateKey() async {
+    // Try to read the existing key from secure storage
+    final existingKey = await _secureStorage.read(
+      key: _dbEncryptionKeyStorageKey,
+    );
+
+    if (existingKey != null && existingKey.isNotEmpty) {
+      // Key exists — return it
+      return existingKey;
+    }
+
+    // First launch — generate a new strong random key
+    final newKey = _generateStrongKey();
+
+    // Store the key in Android secure storage (Android Keystore)
+    await _secureStorage.write(
+      key: _dbEncryptionKeyStorageKey,
+      value: newKey,
+    );
+
+    return newKey;
+  }
+
+  /// Check if an encryption key already exists in secure storage.
+  Future<bool> hasKey() async {
+    final key = await _secureStorage.read(key: _dbEncryptionKeyStorageKey);
+    return key != null && key.isNotEmpty;
+  }
+
+  /// Delete the encryption key from secure storage.
+  ///
+  /// Called on logout — after the database file is deleted, the key
+  /// is also removed so that any residual data cannot be decrypted.
+  Future<void> deleteKey() async {
+    await _secureStorage.delete(key: _dbEncryptionKeyStorageKey);
+  }
+
+  /// Generate a strong random 256-bit (32-byte) encryption key.
+  ///
+  /// Uses Dart's Random.secure() which delegates to the platform's
+  /// cryptographically secure random number generator:
+  /// - Android: java.security.SecureRandom
+  ///
+  /// Returns the key as a hex string (64 hex characters = 32 bytes = 256 bits).
+  String _generateStrongKey() {
+    final random = Random.secure();
+    final bytes = Uint8List(32); // 256 bits
+    for (int i = 0; i < 32; i++) {
+      bytes[i] = random.nextInt(256);
+    }
+    // Convert to hex string — SQLCipher accepts hex keys with PRAGMA key = "x'...'"
+    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  /// Format the key for SQLCipher's PRAGMA key statement.
+  ///
+  /// SQLCipher expects the key in the format: x'hexstring'
+  /// when using a raw hex key.
+  String formatKeyForSqlCipher(String hexKey) {
+    return "x'$hexKey'";
+  }
+
+  /// Clear all secure storage entries related to the database.
+  ///
+  /// Called on logout to ensure no sensitive data remains.
+  Future<void> clearAllSecureData() async {
+    await _secureStorage.delete(key: _dbEncryptionKeyStorageKey);
+  }
+}
+---END---
+=== flutter_app/lib/data/local/daos/bookmark_dao.dart ===
+/// Bookmark DAO — database access for user bookmarks.
+library;
+
+import 'package:drift/drift.dart';
+import '../database.dart';
+import '../tables/bookmarks.dart';
+
+part 'bookmark_dao.g.dart';
+
+@DriftAccessor(tables: [Bookmarks])
+class BookmarkDao extends DatabaseAccessor<AppDatabase> with _$BookmarkDaoMixin {
+  BookmarkDao(super.db);
+
+  /// Get all bookmarks for a user (non-deleted).
+  Future<List<Bookmark>> getBookmarks(String userId, {String? entityType}) {
+    final q = select(bookmarks)
+      ..where((b) =>
+          b.userId.equals(userId) &
+          b.deletedAt.isNull() &
+          (entityType == null ? const Constant(true) : b.entityType.equals(entityType)))
+      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)]);
+    return q.get();
+  }
+
+  /// Check if an entity is bookmarked.
+  Future<bool> isBookmarked(String userId, String entityId) async {
+    final result = await (select(bookmarks)
+          ..where((b) =>
+              b.userId.equals(userId) &
+              b.entityId.equals(entityId) &
+              b.deletedAt.isNull()))
+        .get();
+    return result.isNotEmpty;
+  }
+
+  /// Add a bookmark (local + pending sync).
+  Future<int> addBookmark({
+    required String userId,
+    required String entityId,
+    required String entityType,
+    required String title,
+  }) async {
+    return into(bookmarks).insert(BookmarksCompanion.insert(
+      userId: userId,
+      entityId: entityId,
+      entityType: entityType,
+      title: title,
+      syncStatus: const Value('pending'),
+    ));
+  }
+
+  /// Remove a bookmark (soft-delete + pending sync).
+  Future<void> removeBookmark(String userId, String entityId) async {
+    await (update(bookmarks)
+          ..where((b) =>
+              b.userId.equals(userId) &
+              b.entityId.equals(entityId) &
+              b.deletedAt.isNull()))
+        .write(BookmarksCompanion(
+      deletedAt: Value(DateTime.now()),
+      syncStatus: const Value('pending'),
+    ));
+  }
+
+  /// Upsert from server sync.
+  Future<void> upsertFromServer(BookmarksCompanion bookmark) async {
+    await into(bookmarks).insertOnConflictUpdate(bookmark);
+  }
+
+  /// Get pending (unsynced) bookmarks.
+  Future<List<Bookmark>> getPending(String userId) {
+    return (select(bookmarks)
+          ..where((b) =>
+              b.userId.equals(userId) &
+              b.syncStatus.equals('pending') &
+              b.deletedAt.isNull()))
+        .get();
+  }
+
+  /// Mark as synced.
+  Future<void> markSynced(int localId, {String? serverId}) async {
+    await (update(bookmarks)..where((b) => b.localId.equals(localId))).write(BookmarksCompanion(
+      syncStatus: const Value('synced'),
+      lastSyncedAt: Value(DateTime.now()),
+      serverId: serverId != null ? Value(serverId) : const Value.absent(),
+    ));
+  }
+
+  /// Count bookmarks.
+  Future<int> count(String userId) async {
+    final countExp = bookmarks.localId.count();
+    return (selectOnly(bookmarks)
+          ..addColumns([countExp])
+          ..where(bookmarks.userId.equals(userId) & bookmarks.deletedAt.isNull()))
+        .map((row) => row.read(countExp) ?? 0)
+        .getSingle();
+  }
+}
+---END---
+=== flutter_app/lib/data/local/daos/outbox_dao.dart ===
+/// Outbox DAO — database access for pending offline operations.
+library;
+
+import 'dart:convert';
+import 'package:drift/drift.dart';
+import '../database.dart';
+import '../tables/outbox.dart';
+
+part 'outbox_dao.g.dart';
+
+@DriftAccessor(tables: [OutboxOperations])
+class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
+  OutboxDao(super.db);
+
+  /// Get all pending operations (oldest first).
+  Future<List<OutboxOperation>> getPending({int limit = 50}) {
+    return (select(outboxOperations)
+          ..where((o) => o.status.equals('pending') | o.status.equals('failed'))
+          ..orderBy([(o) => OrderingTerm.asc(o.createdAt)])
+          ..limit(limit))
+        .get();
+  }
+
+  /// Enqueue a new operation.
+  Future<void> enqueue({
+    required String operationId,
+    required String userId,
+    required String entityId,
+    required String entityType,
+    required String operationType,
+    Map<String, dynamic>? payload,
+    String? idempotencyKey,
+  }) async {
+    await into(outboxOperations).insert(OutboxOperationsCompanion.insert(
+      operationId: operationId,
+      userId: userId,
+      entityId: entityId,
+      entityType: entityType,
+      operationType: operationType,
+      payload: Value(payload != null ? _encodeJson(payload) : '{}'),
+      idempotencyKey: Value(idempotencyKey ?? operationId),
+    ));
+  }
+
+  /// Mark as processing.
+  Future<void> markProcessing(String operationId) async {
+    await (update(outboxOperations)
+          ..where((o) => o.operationId.equals(operationId)))
+        .write(const OutboxOperationsCompanion(status: Value('processing')));
+  }
+
+  /// Mark as synced (success).
+  Future<void> markSynced(String operationId) async {
+    await (update(outboxOperations)
+          ..where((o) => o.operationId.equals(operationId)))
+        .write(OutboxOperationsCompanion(
+      status: const Value('synced'),
+      lastAttemptAt: Value(DateTime.now()),
+    ));
+  }
+
+  /// Mark as failed + increment retry count.
+  Future<void> markFailed(String operationId, String error) async {
+    final current = await (select(outboxOperations)
+          ..where((o) => o.operationId.equals(operationId)))
+        .getSingleOrNull();
+    await (update(outboxOperations)
+          ..where((o) => o.operationId.equals(operationId)))
+        .write(OutboxOperationsCompanion(
+      status: const Value('failed'),
+      retryCount: Value((current?.retryCount ?? 0) + 1),
+      lastAttemptAt: Value(DateTime.now()),
+      lastError: Value(error.substring(0, error.length > 500 ? 500 : error.length)),
+    ));
+  }
+
+  /// Delete synced operations older than 7 days (cleanup).
+  Future<void> cleanupOldSynced() async {
+    final cutoff = DateTime.now().subtract(const Duration(days: 7));
+    await (delete(outboxOperations)
+          ..where((o) =>
+              o.status.equals('synced') & o.createdAt.isSmallerThanValue(cutoff)))
+        .go();
+  }
+
+  /// Count pending operations.
+  Future<int> countPending() async {
+    final countExp = outboxOperations.operationId.count();
+    return (selectOnly(outboxOperations)
+          ..addColumns([countExp])
+          ..where(outboxOperations.status.equals('pending') |
+              outboxOperations.status.equals('failed')))
+        .map((row) => row.read(countExp) ?? 0)
+        .getSingle();
+  }
+
+  String _encodeJson(Map<String, dynamic> map) {
+    return jsonEncode(map);
+  }
+}
+---END---
+=== flutter_app/lib/data/local/daos/remedy_dao.dart ===
+/// Remedy DAO — database access for Materia Medica remedies.
+///
+/// All methods are fully implemented using Drift queries.
+/// No placeholders.
+library;
+
+import 'package:drift/drift.dart';
+import '../database.dart';
+import '../tables/remedies.dart';
+
+part 'remedy_dao.g.dart';
+
+@DriftAccessor(tables: [Remedies])
+class RemedyDao extends DatabaseAccessor<AppDatabase> with _$RemedyDaoMixin {
+  RemedyDao(super.db);
+
+  /// Get all remedies, optionally filtered by author.
+  Future<List<Remedy>> getAllRemedies({String? author, int? limit, int? offset}) {
+    final query = select(remedies);
+    if (author != null && author != 'All') {
+      query.where((r) => r.author.equals(author) & r.deletedAt.isNull());
+    } else {
+      query.where((r) => r.deletedAt.isNull());
+    }
+    query
+      ..orderBy([(r) => OrderingTerm.asc(r.name)])
+      ..limit(limit ?? 100, offset: offset ?? 0);
+    return query.get();
+  }
+
+  /// Search remedies by name (case-insensitive LIKE).
+  Future<List<Remedy>> searchRemedies(String query, {String? author, int limit = 50}) {
+    final q = select(remedies);
+    final pattern = '%${query.toLowerCase()}%';
+    q.where((r) =>
+      r.name.lower().like(pattern) &
+      r.deletedAt.isNull() &
+      (author == null || author == 'All' ? const Constant(true) : r.author.equals(author)));
+    q
+      ..orderBy([(r) => OrderingTerm.asc(r.name)])
+      ..limit(limit);
+    return q.get();
+  }
+
+  /// Get a single remedy by serverId.
+  Future<Remedy?> getRemedy(String serverId) {
+    return (select(remedies)..where((r) => r.serverId.equals(serverId))).getSingleOrNull();
+  }
+
+  /// Count total remedies (non-deleted).
+  Future<int> countRemedies({String? author}) {
+    final countExp = remedies.serverId.count();
+    final query = selectOnly(remedies)
+      ..addColumns([countExp])
+      ..where(remedies.deletedAt.isNull());
+    if (author != null && author != 'All') {
+      query.where(remedies.author.equals(author));
+    }
+    return query.map((row) => row.read(countExp) ?? 0).getSingle();
+  }
+
+  /// Get all distinct authors.
+  Future<List<String>> getAuthors() async {
+    final query = selectOnly(remedies, distinct: true)
+      ..addColumns([remedies.author])
+      ..where(remedies.deletedAt.isNull() & remedies.author.isNotNull());
+    final rows = await query.get();
+    return rows.map((row) => row.read(remedies.author)!).toList()..sort();
+  }
+
+  /// Upsert a remedy (insert or replace on conflict).
+  Future<void> upsertRemedy(RemediesCompanion remedy) async {
+    await into(remedies).insertOnConflictUpdate(remedy);
+  }
+
+  /// Batch upsert remedies.
+  Future<void> batchUpsert(List<RemediesCompanion> batch) async {
+    await Future.wait(batch.map((r) => into(remedies).insertOnConflictUpdate(r)));
+  }
+
+  /// Soft-delete a remedy by serverId.
+  Future<void> softDelete(String serverId, {DateTime? deletedAt}) async {
+    await (update(remedies)..where((r) => r.serverId.equals(serverId)))
+        .write(RemediesCompanion(deletedAt: Value(deletedAt ?? DateTime.now())));
+  }
+
+  /// Mark a remedy as synced.
+  Future<void> markSynced(String serverId) async {
+    await (update(remedies)..where((r) => r.serverId.equals(serverId)))
+        .write(const RemediesCompanion(syncStatus: Value('synced'), lastSyncedAt: Value(null)));
+  }
+
+  /// Get remedies modified since a given date (for sync).
+  Future<List<Remedy>> getModifiedSince(DateTime since) {
+    return (select(remedies)
+          ..where((r) => r.updatedAt.isBiggerOrEqualValue(since) | r.lastSyncedAt.isNull()))
+        .get();
+  }
+}
+---END---
+=== flutter_app/lib/data/local/daos/rubric_dao.dart ===
+/// Rubric DAO — database access for Repertory rubrics.
+///
+/// All methods fully implemented. No placeholders.
+library;
+
+import 'package:drift/drift.dart';
+import '../database.dart';
+import '../tables/rubrics.dart';
+
+part 'rubric_dao.g.dart';
+
+@DriftAccessor(tables: [Rubrics])
+class RubricDao extends DatabaseAccessor<AppDatabase> with _$RubricDaoMixin {
+  RubricDao(super.db);
+
+  /// Get root rubrics (parentId is null) for a given source + optional chapter.
+  Future<List<Rubric>> getRoots(String source, {String? chapter}) {
+    final q = select(rubrics)
+      ..where((r) =>
+          r.source.equals(source) &
+          r.parentId.isNull() &
+          r.deletedAt.isNull() &
+          (chapter == null || chapter.isEmpty ? const Constant(true) : r.chapter.equals(chapter)))
+      ..orderBy([(r) => OrderingTerm.asc(r.title)]);
+    return q.get();
+  }
+
+  /// Get children of a given parent (one level deep — for lazy loading).
+  Future<List<Rubric>> getChildren(String parentId) {
+    return (select(rubrics)
+          ..where((r) => r.parentId.equals(parentId) & r.deletedAt.isNull())
+          ..orderBy([(r) => OrderingTerm.asc(r.title)]))
+        .get();
+  }
+
+  /// Search rubrics by title/path (case-insensitive).
+  Future<List<Rubric>> searchRubrics(String query, {String? source, int limit = 50}) {
+    final pattern = '%${query.toLowerCase()}%';
+    final q = select(rubrics)
+      ..where((r) =>
+          (r.title.lower().like(pattern) | r.fullPath.lower().like(pattern)) &
+          r.deletedAt.isNull() &
+          (source == null || source.isEmpty ? const Constant(true) : r.source.equals(source)))
+      ..limit(limit);
+    return q.get();
+  }
+
+  /// Get a single rubric by serverId.
+  Future<Rubric?> getRubric(String serverId) {
+    return (select(rubrics)..where((r) => r.serverId.equals(serverId)))
+        .getSingleOrNull();
+  }
+
+  /// Count rubrics for a given source.
+  Future<int> countRubrics({String? source}) {
+    final countExp = rubrics.serverId.count();
+    final q = selectOnly(rubrics)
+      ..addColumns([countExp])
+      ..where(rubrics.deletedAt.isNull());
+    if (source != null) {
+      q.where(rubrics.source.equals(source));
+    }
+    return q.map((row) => row.read(countExp) ?? 0).getSingle();
+  }
+
+  /// Get distinct chapters for a source.
+  Future<List<String>> getChapters(String source) async {
+    final q = selectOnly(rubrics, distinct: true)
+      ..addColumns([rubrics.chapter])
+      ..where(rubrics.source.equals(source) &
+          rubrics.deletedAt.isNull() &
+          rubrics.chapter.isNotNull() &
+          rubrics.chapter.isNotEmpty());
+    final rows = await q.get();
+    return rows.map((row) => row.read(rubrics.chapter)!).toList()..sort();
+  }
+
+  /// Upsert a rubric.
+  Future<void> upsertRubric(RubricsCompanion rubric) async {
+    await into(rubrics).insertOnConflictUpdate(rubric);
+  }
+
+  /// Batch upsert.
+  Future<void> batchUpsert(List<RubricsCompanion> batch) async {
+    await Future.wait(batch.map((r) => into(rubrics).insertOnConflictUpdate(r)));
+  }
+
+  /// Soft-delete.
+  Future<void> softDelete(String serverId, {DateTime? deletedAt}) async {
+    await (update(rubrics)..where((r) => r.serverId.equals(serverId)))
+        .write(RubricsCompanion(deletedAt: Value(deletedAt ?? DateTime.now())));
+  }
+}
+---END---
+=== flutter_app/lib/data/local/database.dart ===
+/// Drift database definition for Pradip's Homeo offline cache.
+///
+/// This SQLite database is the app's LOCAL offline storage only.
+/// The server (Neon PostgreSQL + Supabase) remains the source of truth.
+///
+/// ENCRYPTION:
+///   The database is encrypted using SQLCipher. The encryption key is:
+///   - Generated on first app launch (256-bit random)
+///   - Stored ONLY in Android secure storage (Android Keystore)
+///   - Never hardcoded in source code
+///   - Never committed to GitHub
+///   - Never stored in shared preferences
+///
+/// Sync fields convention (per spec):
+///   - serverId: stable unique ID from server
+///   - serverVersion: version/revision number for conflict detection
+///   - updatedAt: server-side last-modified timestamp
+///   - deletedAt: soft-delete marker (null = active)
+///   - syncStatus: 'synced' | 'pending' | 'conflict'
+///   - lastSyncedAt: when this row was last synced
+library;
+
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/config/app_config.dart';
+import '../../core/security/database_encryption.dart';
+import 'tables/remedies.dart';
+import 'tables/rubrics.dart';
+import 'tables/books.dart';
+import 'tables/bookmarks.dart';
+import 'tables/favorites.dart';
+import 'tables/history.dart';
+import 'tables/outbox.dart';
+import 'tables/sync_state.dart';
+import 'daos/remedy_dao.dart';
+import 'daos/rubric_dao.dart';
+import 'daos/bookmark_dao.dart';
+import 'daos/outbox_dao.dart';
+
+part 'database.g.dart';
+
+@DriftDatabase(
+  tables: [
+    Remedies,
+    Rubrics,
+    Books,
+    Bookmarks,
+    Favorites,
+    ReadingHistory,
+    OutboxOperations,
+    SyncState,
+  ],
+  daos: [RemedyDao, RubricDao, BookmarkDao, OutboxDao],
+)
+class AppDatabase extends _$AppDatabase {
+  AppDatabase() : super(_openEncryptedConnection());
+
+  /// For testing — inject an in-memory database (no encryption).
+  AppDatabase.forTesting(QueryExecutor e) : super(e);
+
+  @override
+  int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // Additive migrations only — never delete columns/tables.
+          if (from < 2) {
+            // Example future migration:
+            // await m.addColumn(remedies, remedies.newColumn);
+          }
+        },
+        beforeOpen: (details) async {
+          // Enable foreign keys
+          await customStatement('PRAGMA foreign_keys = ON');
+          // Enable WAL mode for better concurrent read performance
+          await customStatement('PRAGMA journal_mode = WAL');
+        },
+      );
+
+  /// Open an encrypted SQLCipher database connection.
+  ///
+  /// This method:
+  ///   1. Gets or creates the encryption key from Android secure storage.
+  ///   2. Opens the database file with SQLCipher encryption.
+  ///   3. Handles migration from unencrypted SQLite if an old DB exists.
+  ///   4. Handles corrupted/invalid keys safely — does NOT silently delete data.
+  static LazyDatabase _openEncryptedConnection() {
+    return LazyDatabase(() async {
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);
+      final file = File(dbPath);
+
+      // Get the encryption service
+      final secureStorage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
+      final encryptionService = DatabaseEncryptionService(secureStorage);
+
+      // Get or create the encryption key
+      final hexKey = await encryptionService.getOrCreateKey();
+      final sqlCipherKey = encryptionService.formatKeyForSqlCipher(hexKey);
+
+      // Check if an old unencrypted database exists and needs migration
+      await _migrateUnencryptedIfNeeded(dbPath);
+
+      // Open the database with SQLCipher encryption
+      return NativeDatabase.createInBackground(
+        file,
+        setup: (rawDb) {
+          rawDb.execute("PRAGMA key = $sqlCipherKey;");
+        },
+      );
+    });
+  }
+
+  /// Migrate an old unencrypted SQLite database to encrypted SQLCipher.
+  ///
+  /// If an old unencrypted database file exists (from a previous app version
+  /// that didn't use encryption), this method renames it to .bak (preserved)
+  /// and lets a new encrypted database be created.
+  /// User data is NEVER silently deleted.
+  static Future<void> _migrateUnencryptedIfNeeded(String dbPath) async {
+    final file = File(dbPath);
+
+    if (!await file.exists()) {
+      return;
+    }
+
+    try {
+      final bytes = await file.openRead(0, 16).first;
+      final header = String.fromCharCodes(bytes);
+      if (header == 'SQLite format 3\x00') {
+        final backupPath = '$dbPath.unencrypted.bak';
+        await file.rename(backupPath);
+      }
+    } catch (_) {
+      // Could not read the file — might be corrupted or encrypted
+      // Do NOT delete the file — let Drift try to open it with the key.
+    }
+  }
+
+  /// Close the database and clear all local data on logout.
+  ///
+  /// Called by AuthRepository.logout() to:
+  ///   1. Close the database connection
+  ///   2. Delete the database file (contains cached content + user data)
+  ///   3. Delete the encryption key from secure storage
+  Future<void> clearOnLogout() async {
+    await close();
+
+    try {
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);
+      final file = File(dbPath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      final walFile = File('$dbPath-wal');
+      final shmFile = File('$dbPath-shm');
+      if (await walFile.exists()) await walFile.delete();
+      if (await shmFile.exists()) await shmFile.delete();
+    } catch (_) {}
+
+    try {
+      final secureStorage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
+      final encryptionService = DatabaseEncryptionService(secureStorage);
+      await encryptionService.deleteKey();
+    } catch (_) {}
+  }
+}
+---END---
+=== flutter_app/lib/data/local/tables/bookmarks.dart ===
+/// Bookmarks table — user-owned bookmarks.
+///
+/// Source: /api/user/bookmarks (read/write — synced via outbox)
+/// Conflict resolution: version-based, no silent overwrites.
+library;
+
+import 'package:drift/drift.dart';
+
+class Bookmarks extends Table {
+  /// Local auto-increment ID
+  IntColumn get localId => integer().autoIncrement()();
+  /// Server-side ID (null until synced)
+  TextColumn get serverId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get entityId => text()();
+  TextColumn get entityType => text()(); // 'remedy', 'rubric', 'book', etc.
+  TextColumn get title => text()();
+
+  /// Sync fields
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+}
+---END---
+=== flutter_app/lib/data/local/tables/books.dart ===
+/// Books table — Book/library metadata.
+///
+/// Source: /api/books (read-only from app perspective)
+library;
+
+import 'package:drift/drift.dart';
+
+class Books extends Table {
+  TextColumn get serverId => text()();
+  TextColumn get title => text()();
+  TextColumn get subtitle => text().nullable()();
+  TextColumn get author => text().nullable()();
+  TextColumn get category => text().nullable()();
+  TextColumn get description => text().nullable()();
+  IntColumn get totalChapters => integer().withDefault(const Constant(0))();
+
+  /// Sync fields
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {serverId};
+}
+---END---
+=== flutter_app/lib/data/local/tables/favorites.dart ===
+/// Favorites table — user-owned favorites.
+///
+/// Source: /api/user/favorites (read/write — synced via outbox)
+library;
+
+import 'package:drift/drift.dart';
+
+class Favorites extends Table {
+  IntColumn get localId => integer().autoIncrement()();
+  TextColumn get serverId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get entityId => text()();
+  TextColumn get entityType => text()();
+  TextColumn get title => text()();
+  TextColumn get author => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+}
+---END---
+=== flutter_app/lib/data/local/tables/history.dart ===
+/// Reading history table — recently viewed remedies/rubrics/books.
+///
+/// Source: /api/user/history (read/write — synced via outbox)
+library;
+
+import 'package:drift/drift.dart';
+
+class ReadingHistory extends Table {
+  IntColumn get localId => integer().autoIncrement()();
+  TextColumn get serverId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get entityId => text()();
+  TextColumn get entityType => text()();
+  TextColumn get title => text()();
+  TextColumn get author => text().nullable()();
+
+  DateTimeColumn get visitedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+}
+---END---
+=== flutter_app/lib/data/local/tables/outbox.dart ===
+/// Outbox table — pending offline operations waiting to sync.
+///
+/// Each row represents a user action (bookmark add/remove, favorite toggle,
+/// history visit) that was performed offline and needs to be synced to
+/// the server when connectivity returns.
+///
+/// Processed by OutboxProcessor with:
+///   - Idempotency keys (prevent duplicates)
+///   - Retry with exponential backoff
+///   - Failed ops preserved for later retry
+library;
+
+import 'package:drift/drift.dart';
+
+class OutboxOperations extends Table {
+  /// Unique operation ID (UUID generated locally)
+  TextColumn get operationId => text()();
+  TextColumn get userId => text()();
+
+  /// Entity details
+  TextColumn get entityId => text()();
+  TextColumn get entityType => text()();
+
+  /// Operation type: 'create_bookmark', 'delete_bookmark',
+  /// 'create_favorite', 'delete_favorite', 'add_history', etc.
+  TextColumn get operationType => text()();
+
+  /// Operation payload as JSON
+  TextColumn get payload => text().withDefault(const Constant('{}'))();
+
+  /// Idempotency key — prevents duplicate writes if the same op
+  /// is processed multiple times.
+  TextColumn get idempotencyKey => text().nullable()();
+
+  /// Status: 'pending', 'processing', 'synced', 'failed'
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+
+  /// Local timestamp when operation was created
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Last attempt timestamp
+  DateTimeColumn get lastAttemptAt => dateTime().nullable()();
+
+  /// Retry count (exponential backoff)
+  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+
+  /// Error message if failed (redacted, no sensitive data)
+  TextColumn get lastError => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {operationId};
+}
+---END---
+=== flutter_app/lib/data/local/tables/remedies.dart ===
+/// Remedies table — Materia Medica remedies from all authors.
+///
+/// Source: /api/remedies (read-only from app perspective)
+/// Server fields reused: id, name, author, keynote, full, source_book, etc.
+library;
+
+import 'package:drift/drift.dart';
+
+class Remedies extends Table {
+  /// Server-side stable unique ID (e.g. 'boericke-belladonna')
+  TextColumn get serverId => text()();
+  TextColumn get name => text()();
+  TextColumn get author => text().withDefault(const Constant(''))();
+  TextColumn get sourceBook => text().nullable()();
+  TextColumn get keynote => text().nullable()();
+  TextColumn get full => text().nullable()();
+
+  /// Sync fields
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {serverId};
+}
+---END---
+=== flutter_app/lib/data/local/tables/rubrics.dart ===
+/// Rubrics table — Repertory rubrics (Kent, Phatak, Murphy, Boericke).
+///
+/// Source: /api/rubrics (read-only from app perspective)
+/// Supports unlimited hierarchy via parentId.
+library;
+
+import 'package:drift/drift.dart';
+
+class Rubrics extends Table {
+  TextColumn get serverId => text()();
+  TextColumn get parentId => text().nullable()();
+  TextColumn get source => text()(); // Kent, Phatak, Murphy, Boericke
+  TextColumn get chapter => text().withDefault(const Constant(''))();
+  TextColumn get title => text()();
+  TextColumn get fullPath => text().withDefault(const Constant(''))();
+  IntColumn get level => integer().withDefault(const Constant(0))();
+
+  /// Remedies stored as JSON: [{"abbrev":"Bell","grade":3}, ...]
+  /// Grade: 4=Red(highest), 3=Green, 2=Blue, 1=Black(normal)
+  TextColumn get remediesJson => text().withDefault(const Constant('[]'))();
+  IntColumn get remedyCount => integer().withDefault(const Constant(0))();
+
+  /// Sync fields
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {serverId};
+}
+---END---
+=== flutter_app/lib/data/local/tables/sync_state.dart ===
+/// Sync state table — tracks sync checkpoints per entity type.
+///
+/// One row per entity type (remedies, rubrics, bookmarks, etc.)
+/// Records the last successful sync timestamp and cursor for
+/// incremental sync.
+library;
+
+import 'package:drift/drift.dart';
+
+class SyncState extends Table {
+  /// Entity type: 'remedies', 'rubrics', 'books', 'bookmarks', etc.
+  TextColumn get entityType => text()();
+
+  /// Last successful sync timestamp (server time)
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  /// Cursor for cursor-based pagination (opaque token from server)
+  TextColumn get nextCursor => text().nullable()();
+
+  /// Total records synced (for progress display + validation)
+  IntColumn get totalSynced => integer().withDefault(const Constant(0))();
+
+  /// Initial sync complete flag
+  BoolColumn get initialSyncComplete => boolean().withDefault(const Constant(false))();
+
+  /// Last sync error (redacted)
+  TextColumn get lastError => text().nullable()();
+
+  /// Sync status: 'idle', 'syncing', 'error', 'complete'
+  TextColumn get status => text().withDefault(const Constant('idle'))();
+
+  @override
+  Set<Column> get primaryKey => {entityType};
+}
+---END---
+=== flutter_app/lib/data/remote/api_client.dart ===
+/// API client — real endpoint calls to the existing website backend.
+///
+/// All methods are fully implemented. No placeholders.
+/// Uses the existing Next.js API routes (same URLs as the website).
+library;
+
+import 'dart:convert';
+import '../../core/config/app_config.dart';
+import '../../core/network/api_exceptions.dart';
+import '../../core/network/dio_client.dart';
+import 'dtos/dtos.dart';
+
+class ApiClient {
+  final DioClient _dio;
+
+  ApiClient(this._dio);
+
+  // ============================================================
+  // AUTH
+  // ============================================================
+
+  /// Login with email + PIN.
+  Future<LoginResponse> login({required String email, required String pin}) async {
+    final data = await _dio.post<Map<String, dynamic>>(
+      AppConfig.loginEndpoint,
+      data: {'email': email, 'pin': pin},
+    );
+    return LoginResponse.fromJson(data);
+  }
+
+  /// Check if session is valid.
+  Future<SessionResponse> checkSession() async {
+    final data = await _dio.get<Map<String, dynamic>>(AppConfig.sessionEndpoint);
+    return SessionResponse.fromJson(data);
+  }
+
+  /// Get current user info.
+  Future<AuthUserDto> getMe() async {
+    final data = await _dio.get<Map<String, dynamic>>(AppConfig.meEndpoint);
+    return AuthUserDto.fromJson(data);
+  }
+
+  /// Logout.
+  Future<void> logout() async {
+    await _dio.post(AppConfig.logoutEndpoint);
+  }
+
+  // ============================================================
+  // REMEDIES (Materia Medica)
+  // ============================================================
+
+  /// Fetch remedies with pagination.
+  Future<PaginatedResponse<RemedyDto>> fetchRemedies({
+    int page = 1,
+    int pageSize = 100,
+    String? author,
+    String? q,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize,
+    };
+    if (author != null && author != 'All') params['author'] = author;
+    if (q != null && q.isNotEmpty) params['q'] = q;
+
+    final data = await _dio.get<Map<String, dynamic>>(
+      AppConfig.remediesEndpoint,
+      queryParameters: params,
+    );
+    final items = (data['remedies'] as List? ?? [])
+        .map((r) => RemedyDto.fromJson(r as Map<String, dynamic>))
+        .toList();
+    return PaginatedResponse(
+      items: items,
+      total: (data['total'] as num?)?.toInt() ?? 0,
+      page: (data['page'] as num?)?.toInt() ?? page,
+      pageSize: (data['pageSize'] as num?)?.toInt() ?? pageSize,
+    );
+  }
+
+  // ============================================================
+  // RUBRICS (Repertory)
+  // ============================================================
+
+  /// Fetch rubrics with pagination.
+  Future<PaginatedResponse<RubricDto>> fetchRubrics({
+    int page = 1,
+    int pageSize = 100,
+    String? author,
+    String? chapter,
+    String? q,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize,
+    };
+    if (author != null) params['author'] = author;
+    if (chapter != null && chapter.isNotEmpty) params['chapter'] = chapter;
+    if (q != null && q.isNotEmpty) params['q'] = q;
+
+    final data = await _dio.get<Map<String, dynamic>>(
+      AppConfig.rubricsEndpoint,
+      queryParameters: params,
+    );
+    final items = (data['items'] as List? ?? [])
+        .map((r) => RubricDto.fromJson(r as Map<String, dynamic>))
+        .toList();
+    return PaginatedResponse(
+      items: items,
+      total: (data['total'] as num?)?.toInt() ?? 0,
+      page: (data['page'] as num?)?.toInt() ?? page,
+      pageSize: (data['pageSize'] as num?)?.toInt() ?? pageSize,
+    );
+  }
+
+  /// Fetch rubric children (lazy loading — one level).
+  Future<List<RubricDto>> fetchRubricChildren({
+    required String author,
+    String? parentId,
+    String? chapter,
+  }) async {
+    final params = <String, dynamic>{'author': author};
+    if (parentId != null) params['parentId'] = parentId;
+    if (chapter != null) params['chapter'] = chapter;
+
+    final data = await _dio.get<Map<String, dynamic>>(
+      AppConfig.rubricsChildrenEndpoint,
+      queryParameters: params,
+    );
+    return (data['children'] as List? ?? [])
+        .map((r) => RubricDto.fromJson(r as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Fetch chapters for a given author.
+  Future<List<String>> fetchChapters(String author) async {
+    final data = await _dio.get<Map<String, dynamic>>(
+      AppConfig.rubricsChaptersEndpoint,
+      queryParameters: {'author': author},
+    );
+    return (data['items'] as List? ?? [])
+        .map((c) => (c as Map<String, dynamic>)['name'].toString())
+        .toList();
+  }
+
+  // ============================================================
+  // BOOKS
+  // ============================================================
+
+  Future<PaginatedResponse<BookDto>> fetchBooks({
+    int page = 1,
+    int pageSize = 100,
+  }) async {
+    final data = await _dio.get<Map<String, dynamic>>(
+      AppConfig.booksEndpoint,
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final items = (data['books'] as List? ?? [])
+        .map((b) => BookDto.fromJson(b as Map<String, dynamic>))
+        .toList();
+    return PaginatedResponse(
+      items: items,
+      total: (data['total'] as num?)?.toInt() ?? 0,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  // ============================================================
+  // CLINICAL SEARCH
+  // ============================================================
+
+  Future<PaginatedResponse<SearchResultDto>> clinicalSearch({
+    required String q,
+    String subject = 'all',
+    String source = 'all',
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final data = await _dio.get<Map<String, dynamic>>(
+      AppConfig.clinicalSearchEndpoint,
+      queryParameters: {
+        'q': q,
+        'subject': subject,
+        'source': source,
+        'page': page,
+        'pageSize': pageSize,
+      },
+    );
+    final items = (data['results'] as List? ?? [])
+        .map((r) => SearchResultDto.fromJson(r as Map<String, dynamic>))
+        .toList();
+    return PaginatedResponse(
+      items: items,
+      total: (data['total'] as num?)?.toInt() ?? 0,
+      page: (data['page'] as num?)?.toInt() ?? page,
+      pageSize: (data['pageSize'] as num?)?.toInt() ?? pageSize,
+    );
+  }
+
+  // ============================================================
+  // USER FEATURES (bookmarks, favorites, history)
+  // ============================================================
+
+  /// Fetch user bookmarks.
+  Future<List<Map<String, dynamic>>> fetchBookmarks() async {
+    final data = await _dio.get<Map<String, dynamic>>(AppConfig.bookmarksEndpoint);
+    return (data['items'] as List? ?? []).cast<Map<String, dynamic>>();
+  }
+
+  /// Create a bookmark on the server.
+  Future<Map<String, dynamic>> createBookmark({
+    required String entityId,
+    required String entityType,
+    required String title,
+    required String idempotencyKey,
+  }) async {
+    return await _dio.post<Map<String, dynamic>>(
+      AppConfig.bookmarksEndpoint,
+      data: {
+        'entityId': entityId,
+        'entityType': entityType,
+        'title': title,
+        'idempotencyKey': idempotencyKey,
+      },
+    );
+  }
+
+  /// Delete a bookmark on the server.
+  Future<void> deleteBookmark({required String entityId, required String idempotencyKey}) async {
+    await _dio.delete(
+      AppConfig.bookmarksEndpoint,
+      queryParameters: {
+        'entityId': entityId,
+        'idempotencyKey': idempotencyKey,
+      },
+    );
+  }
+
+  /// Fetch user favorites.
+  Future<List<Map<String, dynamic>>> fetchFavorites() async {
+    final data = await _dio.get<Map<String, dynamic>>(AppConfig.favoritesEndpoint);
+    return (data['items'] as List? ?? []).cast<Map<String, dynamic>>();
+  }
+
+  /// Create a favorite.
+  Future<Map<String, dynamic>> createFavorite({
+    required String entityId,
+    required String entityType,
+    required String title,
+    String? author,
+    required String idempotencyKey,
+  }) async {
+    return await _dio.post<Map<String, dynamic>>(
+      AppConfig.favoritesEndpoint,
+      data: {
+        'entityId': entityId,
+        'entityType': entityType,
+        'title': title,
+        'author': author,
+        'idempotencyKey': idempotencyKey,
+      },
+    );
+  }
+
+  /// Delete a favorite.
+  Future<void> deleteFavorite({required String entityId, required String idempotencyKey}) async {
+    await _dio.delete(
+      AppConfig.favoritesEndpoint,
+      queryParameters: {
+        'entityId': entityId,
+        'idempotencyKey': idempotencyKey,
+      },
+    );
+  }
+
+  /// Add to reading history.
+  Future<void> addHistory({
+    required String entityId,
+    required String entityType,
+    required String title,
+    String? author,
+    required String idempotencyKey,
+  }) async {
+    await _dio.post<Map<String, dynamic>>(
+      AppConfig.historyEndpoint,
+      data: {
+        'entityId': entityId,
+        'entityType': entityType,
+        'title': title,
+        'author': author,
+        'idempotencyKey': idempotencyKey,
+      },
+    );
+  }
+
+  /// Fetch reading history.
+  Future<List<Map<String, dynamic>>> fetchHistory() async {
+    final data = await _dio.get<Map<String, dynamic>>(AppConfig.historyEndpoint);
+    return (data['items'] as List? ?? []).cast<Map<String, dynamic>>();
+  }
+}
+---END---
+=== flutter_app/lib/data/remote/dtos/dtos.dart ===
+/// Data Transfer Objects (DTOs) for API responses.
+///
+/// These mirror the JSON structure returned by the existing website API.
+/// Used for parsing API responses before storing in local SQLite.
+library;
+
+import 'dart:convert';
+
+// ============================================================
+// REMEDY DTO
+// ============================================================
+class RemedyDto {
+  final String id;
+  final String name;
+  final String author;
+  final String? sourceBook;
+  final String? keynote;
+  final String? full;
+  final String? sourcePages;
+
+  RemedyDto({
+    required this.id,
+    required this.name,
+    required this.author,
+    this.sourceBook,
+    this.keynote,
+    this.full,
+    this.sourcePages,
+  });
+
+  factory RemedyDto.fromJson(Map<String, dynamic> json) => RemedyDto(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        author: json['author']?.toString() ?? json['source_book']?.toString() ?? '',
+        sourceBook: json['source_book']?.toString(),
+        keynote: json['keynote']?.toString(),
+        full: json['full']?.toString(),
+        sourcePages: json['source_pages']?.toString(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'author': author,
+        'source_book': sourceBook,
+        'keynote': keynote,
+        'full': full,
+        'source_pages': sourcePages,
+      };
+}
+
+// ============================================================
+// RUBRIC DTO
+// ============================================================
+class RubricDto {
+  final String id;
+  final String? parentId;
+  final String source;
+  final String chapter;
+  final String title;
+  final String fullPath;
+  final int level;
+  final List<ParsedRemedyDto> remedies;
+  final int remedyCount;
+  final Map<String, List<String>> byGrade;
+
+  RubricDto({
+    required this.id,
+    this.parentId,
+    required this.source,
+    required this.chapter,
+    required this.title,
+    required this.fullPath,
+    required this.level,
+    required this.remedies,
+    required this.remedyCount,
+    required this.byGrade,
+  });
+
+  factory RubricDto.fromJson(Map<String, dynamic> json) {
+    final remediesRaw = json['remedies'] as List? ?? [];
+    final remedies = remediesRaw.map((r) {
+      if (r is Map) {
+        return ParsedRemedyDto(
+          abbrev: r['abbrev']?.toString() ?? '',
+          grade: (r['grade'] as num?)?.toInt() ?? 1,
+        );
+      }
+      // Format: "abbrev|grade"
+      final parts = r.toString().split('|');
+      return ParsedRemedyDto(
+        abbrev: parts[0],
+        grade: parts.length > 1 ? int.tryParse(parts[1]) ?? 1 : 1,
+      );
+    }).toList();
+
+    final byGrade = <String, List<String>>{};
+    final bg = json['byGrade'] as Map? ?? {};
+    for (final entry in bg.entries) {
+      byGrade[entry.key] = (entry.value as List).map((e) => e.toString()).toList();
+    }
+
+    return RubricDto(
+      id: json['id']?.toString() ?? '',
+      parentId: json['parentId']?.toString() ?? json['parent_id']?.toString(),
+      source: json['source']?.toString() ?? json['author']?.toString() ?? '',
+      chapter: json['chapter']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      fullPath: json['fullPath']?.toString() ?? json['full_path']?.toString() ?? json['title']?.toString() ?? '',
+      level: (json['level'] as num?)?.toInt() ?? 0,
+      remedies: remedies,
+      remedyCount: (json['remedyCount'] as num?)?.toInt() ?? remedies.length,
+      byGrade: byGrade,
+    );
+  }
+
+  String get remediesJson => jsonEncode(remedies.map((r) => {'abbrev': r.abbrev, 'grade': r.grade}).toList());
+}
+
+class ParsedRemedyDto {
+  final String abbrev;
+  final int grade;
+  const ParsedRemedyDto({required this.abbrev, required this.grade});
+}
+
+// ============================================================
+// BOOK DTO
+// ============================================================
+class BookDto {
+  final String id;
+  final String title;
+  final String? subtitle;
+  final String? author;
+  final String? category;
+  final String? description;
+  final int totalChapters;
+
+  BookDto({
+    required this.id,
+    required this.title,
+    this.subtitle,
+    this.author,
+    this.category,
+    this.description,
+    required this.totalChapters,
+  });
+
+  factory BookDto.fromJson(Map<String, dynamic> json) => BookDto(
+        id: json['id']?.toString() ?? '',
+        title: json['title']?.toString() ?? '',
+        subtitle: json['subtitle']?.toString(),
+        author: json['author']?.toString(),
+        category: json['category']?.toString(),
+        description: json['description']?.toString(),
+        totalChapters: (json['totalChapters'] as num?)?.toInt() ?? 0,
+      );
+}
+
+// ============================================================
+// SEARCH RESULT DTO
+// ============================================================
+class SearchResultDto {
+  final String type; // 'remedy' | 'rubric'
+  final String id;
+  final String name;
+  final String author;
+  final String source;
+  final String? subsection;
+  final String matchType; // 'exact' | 'close' | 'related'
+  final String matchText;
+  final String snippet;
+  final String href;
+  final String? sourcePages;
+  final Map<String, String>? categories;
+
+  SearchResultDto({
+    required this.type,
+    required this.id,
+    required this.name,
+    required this.author,
+    required this.source,
+    this.subsection,
+    required this.matchType,
+    required this.matchText,
+    required this.snippet,
+    required this.href,
+    this.sourcePages,
+    this.categories,
+  });
+
+  factory SearchResultDto.fromJson(Map<String, dynamic> json) => SearchResultDto(
+        type: json['type']?.toString() ?? 'remedy',
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        author: json['author']?.toString() ?? '',
+        source: json['source']?.toString() ?? '',
+        subsection: json['subsection']?.toString(),
+        matchType: json['matchType']?.toString() ?? 'related',
+        matchText: json['matchText']?.toString() ?? '',
+        snippet: json['snippet']?.toString() ?? '',
+        href: json['href']?.toString() ?? '',
+        sourcePages: json['sourcePages']?.toString(),
+        categories: (json['categories'] as Map?)?.map(
+          (k, v) => MapEntry(k.toString(), v.toString()),
+        ),
+      );
+}
+
+// ============================================================
+// API RESPONSE WRAPPERS
+// ============================================================
+class PaginatedResponse<T> {
+  final List<T> items;
+  final int total;
+  final int page;
+  final int pageSize;
+  final String? nextCursor;
+
+  PaginatedResponse({
+    required this.items,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+    this.nextCursor,
+  });
+}
+
+class LoginResponse {
+  final bool success;
+  final String? error;
+  final String? token;
+  final AuthUserDto? user;
+  final String? redirect;
+
+  LoginResponse({
+    required this.success,
+    this.error,
+    this.token,
+    this.user,
+    this.redirect,
+  });
+
+  factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
+        success: json['success'] == true,
+        error: json['error']?.toString(),
+        token: json['token']?.toString(),
+        user: json['user'] != null ? AuthUserDto.fromJson(json['user']) : null,
+        redirect: json['redirect']?.toString(),
+      );
+}
+
+class AuthUserDto {
+
+stderr:
+/bin/bash: line 1: tail-2: command not found

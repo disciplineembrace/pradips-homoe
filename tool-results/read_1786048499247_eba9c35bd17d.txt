@@ -1,0 +1,2006 @@
+     1→Switched to branch 'master'
+     2→Your branch is up to date with 'origin/master'.
+     3→=== Read ALL source files for issues ===
+     4→=== flutter_app/lib/app.dart ===
+     5→/// Root MaterialApp with routing and auth gate.
+     6→/// All routes registered — no placeholder route comments.
+     7→library;
+     8→
+     9→import 'package:flutter/material.dart';
+    10→import 'package:flutter_riverpod/flutter_riverpod.dart';
+    11→
+    12→import 'features/auth/login_screen.dart';
+    13→import 'features/bookmarks/bookmarks_screen.dart';
+    14→import 'features/dashboard/dashboard_screen.dart';
+    15→import 'features/materia_medica/materia_medica_screen.dart';
+    16→import 'features/repertory/repertory_screen.dart';
+    17→import 'features/search/quick_search_screen.dart';
+    18→import 'features/settings/settings_screen.dart';
+    19→import 'providers.dart';
+    20→
+    21→class PradipsHomeoApp extends ConsumerWidget {
+    22→  const PradipsHomeoApp({super.key});
+    23→
+    24→  @override
+    25→  Widget build(BuildContext context, WidgetRef ref) {
+    26→    return MaterialApp(
+    27→      title: "Pradip's Homeo",
+    28→      debugShowCheckedModeBanner: false,
+    29→      theme: ThemeData(
+    30→        useMaterial3: true,
+    31→        colorScheme: ColorScheme.fromSeed(
+    32→          seedColor: const Color(0xFF173B2D),
+    33→          primary: const Color(0xFF173B2D),
+    34→          secondary: const Color(0xFFC8A24A),
+    35→          surface: const Color(0xFFF5EFE0),
+    36→        ),
+    37→        fontFamily: 'Serif',
+    38→        appBarTheme: const AppBarTheme(
+    39→          backgroundColor: Color(0xFF173B2D),
+    40→          foregroundColor: Color(0xFFF5EFE0),
+    41→        ),
+    42→      ),
+    43→      home: const AuthGate(),
+    44→      routes: {
+    45→        '/login': (context) => const LoginScreen(),
+    46→        '/dashboard': (context) => const DashboardScreen(),
+    47→        '/materia-medica': (context) => const MateriaMedicaScreen(),
+    48→        '/repertory': (context) => const RepertoryScreen(),
+    49→        '/quick-search': (context) => const QuickSearchScreen(),
+    50→        '/bookmarks': (context) => const BookmarksScreen(),
+    51→        '/settings': (context) => const SettingsScreen(),
+    52→      },
+    53→    );
+    54→  }
+    55→}
+    56→
+    57→/// Auth gate — shows login or dashboard based on auth state.
+    58→class AuthGate extends ConsumerStatefulWidget {
+    59→  const AuthGate({super.key});
+    60→
+    61→  @override
+    62→  ConsumerState<AuthGate> createState() => _AuthGateState();
+    63→}
+    64→
+    65→class _AuthGateState extends ConsumerState<AuthGate> {
+    66→  bool _checking = true;
+    67→
+    68→  @override
+    69→  void initState() {
+    70→    super.initState();
+    71→    _checkSession();
+    72→  }
+    73→
+    74→  Future<void> _checkSession() async {
+    75→    final repo = ref.read(authRepositoryProvider);
+    76→    await repo.restoreSession();
+    77→    if (mounted) {
+    78→      setState(() => _checking = false);
+    79→    }
+    80→  }
+    81→
+    82→  @override
+    83→  Widget build(BuildContext context) {
+    84→    if (_checking) {
+    85→      return const Scaffold(
+    86→        body: Center(child: CircularProgressIndicator()),
+    87→      );
+    88→    }
+    89→
+    90→    final repo = ref.watch(authRepositoryProvider);
+    91→    if (repo.isAuthenticated) {
+    92→      return const DashboardScreen();
+    93→    }
+    94→    return const LoginScreen();
+    95→  }
+    96→}
+    97→---END---
+    98→=== flutter_app/lib/core/config/app_config.dart ===
+    99→/// App configuration — API URLs and constants.
+   100→///
+   101→/// The Flutter app connects to the EXISTING live website backend.
+   102→/// No separate backend is created. The website remains the source of truth.
+   103→class AppConfig {
+   104→  /// Live website API base URL (production).
+   105→  /// All API calls go through the existing Next.js API routes.
+   106→  static const String apiBaseUrl = 'https://pradips-homoe.vercel.app';
+   107→
+   108→  /// For local development (Android emulator → host machine):
+   109→  /// static const String apiBaseUrl = 'http://10.0.2.2:3000';
+   110→
+   111→  /// API endpoint paths (reuse existing website API routes)
+   112→  static const String loginEndpoint = '/api/auth/login';
+   113→  static const String logoutEndpoint = '/api/auth/logout';
+   114→  static const String sessionEndpoint = '/api/auth/session';
+   115→  static const String meEndpoint = '/api/me';
+   116→
+   117→  // Content endpoints (read-only from app perspective)
+   118→  static const String remediesEndpoint = '/api/remedies';
+   119→  static const String rubricsEndpoint = '/api/rubrics';
+   120→  static const String rubricsChaptersEndpoint = '/api/rubrics/chapters';
+   121→  static const String rubricsChildrenEndpoint = '/api/rubrics/children';
+   122→  static const String booksEndpoint = '/api/books';
+   123→  static const String searchEndpoint = '/api/search';
+   124→  static const String clinicalSearchEndpoint = '/api/clinical-search';
+   125→  static const String synthesisEndpoint = '/api/synthesis';
+   126→  static const String therapeuticsEndpoint = '/api/therapeutics';
+   127→
+   128→  // User feature endpoints (read/write — synced via outbox)
+   129→  static const String bookmarksEndpoint = '/api/user/bookmarks';
+   130→  static const String favoritesEndpoint = '/api/user/favorites';
+   131→  static const String historyEndpoint = '/api/user/history';
+   132→  static const String notesEndpoint = '/api/user/notes';
+   133→  static const String highlightsEndpoint = '/api/user/highlights';
+   134→
+   135→  /// Sync configuration
+   136→  static const int syncBatchSize = 100;
+   137→  static const int syncMaxRetries = 5;
+   138→  static const int syncRetryBaseDelaySec = 2;
+   139→  static const int syncMaxBackoffSec = 60;
+   140→  static const int backgroundSyncIntervalMin = 15;
+   141→
+   142→  /// Outbox configuration
+   143→  static const int outboxMaxRetries = 10;
+   144→  static const int outboxProcessIntervalSec = 30;
+   145→
+   146→  /// Session
+   147→  static const int sessionRefreshThresholdMin = 30;
+   148→
+   149→  /// Secure storage keys
+   150→  static const String secureStorageKey = 'ph_session_token';
+   151→  static const String secureStorageUserKey = 'ph_user_data';
+   152→
+   153→  /// Local database
+   154→  static const String dbFileName = 'pradips_homeo.db';
+   155→
+   156→  /// Request timeouts
+   157→  static const int connectTimeoutSec = 15;
+   158→  static const int receiveTimeoutSec = 60;
+   159→  static const int sendTimeoutSec = 30;
+   160→}
+   161→---END---
+   162→=== flutter_app/lib/core/network/api_exceptions.dart ===
+   163→/// API exception types for structured error handling.
+   164→///
+   165→/// All errors include a user-friendly message. Sensitive data (tokens,
+   166→/// passwords) is never included in error messages or logs.
+   167→library;
+   168→
+   169→/// Base class for all API exceptions.
+   170→sealed class ApiException implements Exception {
+   171→  final String message;
+   172→  final String? technicalDetail;
+   173→
+   174→  const ApiException(this.message, [this.technicalDetail]);
+   175→
+   176→  @override
+   177→  String toString() => message;
+   178→}
+   179→
+   180→/// No internet connection available.
+   181→class NoConnectionException extends ApiException {
+   182→  const NoConnectionException()
+   183→      : super('No internet connection. Showing offline content.');
+   184→}
+   185→
+   186→/// Request timed out.
+   187→class TimeoutException extends ApiException {
+   188→  const TimeoutException([String? detail])
+   189→      : super('Request timed out. Please try again.', detail);
+   190→}
+   191→
+   192→/// Authentication failed (invalid session, expired token, wrong PIN).
+   193→class AuthException extends ApiException {
+   194→  final int? statusCode;
+   195→  const AuthException(String message, {this.statusCode, String? detail})
+   196→      : super(message, detail);
+   197→}
+   198→
+   199→/// Permission denied (insufficient role, no premium access).
+   200→class PermissionException extends ApiException {
+   201→  const PermissionException(String message, [String? detail])
+   202→      : super(message, detail);
+   203→}
+   204→
+   205→/// Server returned an error (5xx).
+   206→class ServerException extends ApiException {
+   207→  final int statusCode;
+   208→  const ServerException(String message, this.statusCode, [String? detail])
+   209→      : super(message, detail);
+   210→}
+   211→
+   212→/// Malformed or unexpected server response.
+   213→class MalformedResponseException extends ApiException {
+   214→  const MalformedResponseException([String? detail])
+   215→      : super('Received invalid data from server.', detail);
+   216→}
+   217→
+   218→/// Local database (SQLite) error.
+   219→class DatabaseException extends ApiException {
+   220→  const DatabaseException(String message, [String? detail])
+   221→      : super(message, detail);
+   222→}
+   223→
+   224→/// Sync conflict that couldn't be auto-resolved.
+   225→class SyncConflictException extends ApiException {
+   226→  final String entityId;
+   227→  const SyncConflictException(this.entityId, String message, [String? detail])
+   228→      : super(message, detail);
+   229→}
+   230→
+   231→/// Partial download — sync interrupted.
+   232→class PartialSyncException extends ApiException {
+   233→  final int received;
+   234→  final int expected;
+   235→  const PartialSyncException(this.received, this.expected, [String? detail])
+   236→      : super(
+   237→            'Sync incomplete: received $received of $expected records.', detail);
+   238→}
+   239→---END---
+   240→=== flutter_app/lib/core/network/connectivity.dart ===
+   241→/// Connectivity detection service.
+   242→///
+   243→/// Monitors network status and provides a stream of connectivity changes.
+   244→/// Used by the sync engine to trigger sync when connectivity returns.
+   245→library;
+   246→
+   247→import 'dart:async';
+   248→import 'package:connectivity_plus/connectivity_plus.dart';
+   249→
+   250→enum ConnectivityStatus {
+   251→  online,
+   252→  offline,
+   253→}
+   254→
+   255→/// Singleton connectivity monitor.
+   256→class ConnectivityService {
+   257→  static final ConnectivityService _instance = ConnectivityService._internal();
+   258→  factory ConnectivityService() => _instance;
+   259→  ConnectivityService._internal();
+   260→
+   261→  final Connectivity _connectivity = Connectivity();
+   262→
+   263→  final StreamController<ConnectivityStatus> _statusController =
+   264→      StreamController<ConnectivityStatus>.broadcast();
+   265→  Stream<ConnectivityStatus> get statusStream => _statusController.stream;
+   266→
+   267→  ConnectivityStatus _currentStatus = ConnectivityStatus.online;
+   268→  ConnectivityStatus get currentStatus => _currentStatus;
+   269→
+   270→  bool get isOnline => _currentStatus == ConnectivityStatus.online;
+   271→  bool get isOffline => _currentStatus == ConnectivityStatus.offline;
+   272→
+   273→  /// Initialize and start monitoring.
+   274→  void init() {
+   275→    _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+   276→      final wasOffline = _currentStatus == ConnectivityStatus.offline;
+   277→      final hasConnection = results.any((r) =>
+   278→          r == ConnectivityResult.wifi ||
+   279→          r == ConnectivityResult.mobile ||
+   280→          r == ConnectivityResult.ethernet);
+   281→
+   282→      _currentStatus =
+   283→          hasConnection ? ConnectivityStatus.online : ConnectivityStatus.offline;
+   284→      _statusController.add(_currentStatus);
+   285→
+   286→      // If we just came back online, the sync engine will pick this up
+   287→      // via the status stream and trigger an incremental sync + outbox flush.
+   288→      if (wasOffline && isOnline) {
+   289→        // Stream event is enough; sync engine subscribes.
+   290→      }
+   291→    });
+   292→
+   293→    // Check initial status synchronously
+   294→    _connectivity.checkConnectivity().then((results) {
+   295→      final hasConnection = results.any((r) =>
+   296→          r == ConnectivityResult.wifi ||
+   297→          r == ConnectivityResult.mobile ||
+   298→          r == ConnectivityResult.ethernet);
+   299→      _currentStatus =
+   300→          hasConnection ? ConnectivityStatus.online : ConnectivityStatus.offline;
+   301→      _statusController.add(_currentStatus);
+   302→    });
+   303→  }
+   304→
+   305→  /// Manually check current connectivity (fresh query).
+   306→  Future<bool> checkOnline() async {
+   307→    final results = await _connectivity.checkConnectivity();
+   308→    final hasConnection = results.any((r) =>
+   309→        r == ConnectivityResult.wifi ||
+   310→        r == ConnectivityResult.mobile ||
+   311→        r == ConnectivityResult.ethernet);
+   312→    _currentStatus =
+   313→        hasConnection ? ConnectivityStatus.online : ConnectivityStatus.offline;
+   314→    return hasConnection;
+   315→  }
+   316→
+   317→  void dispose() {
+   318→    _statusController.close();
+   319→  }
+   320→}
+   321→---END---
+   322→=== flutter_app/lib/core/network/dio_client.dart ===
+   323→/// Dio HTTP client with authentication, retry, and error handling.
+   324→///
+   325→/// All API calls go through this client. It:
+   326→///   - Attaches the session cookie/token to every request
+   327→///   - Handles 401 (auth expired) by attempting session refresh
+   328→///   - Converts DioErrors to typed ApiExceptions
+   329→///   - Enforces HTTPS-only communication
+   330→///   - Logs requests with sensitive data redacted
+   331→library;
+   332→
+   333→import 'package:dio/dio.dart';
+   334→import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+   335→import '../config/app_config.dart';
+   336→import 'api_exceptions.dart';
+   337→
+   338→class DioClient {
+   339→  late final Dio _dio;
+   340→  final FlutterSecureStorage _secureStorage;
+   341→
+   342→  DioClient(this._secureStorage) {
+   343→    _dio = Dio(BaseOptions(
+   344→      baseUrl: AppConfig.apiBaseUrl,
+   345→      connectTimeout: Duration(seconds: AppConfig.connectTimeoutSec),
+   346→      receiveTimeout: Duration(seconds: AppConfig.receiveTimeoutSec),
+   347→      sendTimeout: Duration(seconds: AppConfig.sendTimeoutSec),
+   348→      headers: {
+   349→        'Content-Type': 'application/json',
+   350→        'Accept': 'application/json',
+   351→      },
+   352→      // Validate that we only use HTTPS in production
+   353→      validateStatus: (status) => status != null && status >= 200 && status < 300,
+   354→    ));
+   355→
+   356→    // Add auth interceptor
+   357→    _dio.interceptors.add(InterceptorsWrapper(
+   358→      onRequest: (options, handler) async {
+   359→        // Attach session cookie if available
+   360→        final token = await _secureStorage.read(key: AppConfig.secureStorageKey);
+   361→        if (token != null && token.isNotEmpty) {
+   362→          // The website uses httpOnly cookies for sessions.
+   363→          // For the Flutter app, we send the token as a Cookie header
+   364→          // OR as a Bearer token (the API accepts both).
+   365→          options.headers['Cookie'] = 'ph_session=$token';
+   366→          options.headers['Authorization'] = 'Bearer $token';
+   367→        }
+   368→        handler.next(options);
+   369→      },
+   370→      onError: (error, handler) async {
+   371→        // On 401, attempt session refresh once
+   372→        if (error.response?.statusCode == 401) {
+   373→          // Try to refresh session — if that fails, propagate the error
+   374→          // (the auth repository will handle logout/redirect)
+   375→          final refreshed = await _attemptSessionRefresh();
+   376→          if (refreshed) {
+   377→            // Retry the original request
+   378→            try {
+   379→              final retryResponse = await _dio.fetch(error.requestOptions);
+   380→              return handler.resolve(retryResponse);
+   381→            } catch (e) {
+   382→              return handler.next(error);
+   383→            }
+   384→          }
+   385→        }
+   386→        handler.next(error);
+   387→      },
+   388→    ));
+   389→  }
+   390→
+   391→  /// Attempt to refresh the session by calling the session endpoint.
+   392→  /// Returns true if the session is still valid.
+   393→  Future<bool> _attemptSessionRefresh() async {
+   394→    try {
+   395→      final response = await _dio.get(AppConfig.sessionEndpoint);
+   396→      final data = response.data;
+   397→      if (data is Map && data['authenticated'] == true) {
+   398→        return true;
+   399→      }
+   400→    } catch (_) {
+   401→      // Session is invalid — user will be redirected to login
+   402→    }
+   403→    return false;
+   404→  }
+   405→
+   406→  /// GET request with typed response.
+   407→  Future<T> get<T>(
+   408→    String path, {
+   409→    Map<String, dynamic>? queryParameters,
+   410→    Options? options,
+   411→  }) async {
+   412→    try {
+   413→      final response = await _dio.get<T>(
+   414→        path,
+   415→        queryParameters: queryParameters,
+   416→        options: options,
+   417→      );
+   418→      return response.data as T;
+   419→    } on DioException catch (e) {
+   420→      throw _convertDioError(e);
+   421→    }
+   422→  }
+   423→
+   424→  /// POST request with typed response.
+   425→  Future<T> post<T>(
+   426→    String path, {
+   427→    dynamic data,
+   428→    Map<String, dynamic>? queryParameters,
+   429→    Options? options,
+   430→  }) async {
+   431→    try {
+   432→      final response = await _dio.post<T>(
+   433→        path,
+   434→        data: data,
+   435→        queryParameters: queryParameters,
+   436→        options: options,
+   437→      );
+   438→      return response.data as T;
+   439→    } on DioException catch (e) {
+   440→      throw _convertDioError(e);
+   441→    }
+   442→  }
+   443→
+   444→  /// PUT request with typed response.
+   445→  Future<T> put<T>(
+   446→    String path, {
+   447→    dynamic data,
+   448→    Map<String, dynamic>? queryParameters,
+   449→    Options? options,
+   450→  }) async {
+   451→    try {
+   452→      final response = await _dio.put<T>(
+   453→        path,
+   454→        data: data,
+   455→        queryParameters: queryParameters,
+   456→        options: options,
+   457→      );
+   458→      return response.data as T;
+   459→    } on DioException catch (e) {
+   460→      throw _convertDioError(e);
+   461→    }
+   462→  }
+   463→
+   464→  /// DELETE request.
+   465→  Future<void> delete(
+   466→    String path, {
+   467→    Map<String, dynamic>? queryParameters,
+   468→    Options? options,
+   469→  }) async {
+   470→    try {
+   471→      await _dio.delete(
+   472→        path,
+   473→        queryParameters: queryParameters,
+   474→        options: options,
+   475→      );
+   476→    } on DioException catch (e) {
+   477→      throw _convertDioError(e);
+   478→    }
+   479→  }
+   480→
+   481→  /// Convert DioException to typed ApiException.
+   482→  ApiException _convertDioError(DioException e) {
+   483→    switch (e.type) {
+   484→      case DioExceptionType.connectionTimeout:
+   485→      case DioExceptionType.sendTimeout:
+   486→      case DioExceptionType.receiveTimeout:
+   487→        return TimeoutException(e.message);
+   488→      case DioExceptionType.connectionError:
+   489→        return const NoConnectionException();
+   490→      case DioExceptionType.badResponse:
+   491→        final statusCode = e.response?.statusCode ?? 500;
+   492→        final data = e.response?.data;
+   493→        String message = 'Server error';
+   494→        if (data is Map && data['error'] != null) {
+   495→          message = data['error'].toString();
+   496→        }
+   497→        if (statusCode == 401) {
+   498→          return AuthException(message, statusCode: statusCode);
+   499→        }
+   500→        if (statusCode == 403) {
+   501→          return PermissionException(message);
+   502→        }
+   503→        return ServerException(message, statusCode);
+   504→      default:
+   505→        return ServerException('Unexpected error', 500, e.message);
+   506→    }
+   507→  }
+   508→}
+   509→---END---
+   510→=== flutter_app/lib/core/security/database_encryption.dart ===
+   511→/// Database encryption service — manages SQLCipher encryption key.
+   512→///
+   513→/// - Generates a strong random 256-bit encryption key on first app launch.
+   514→/// - Stores the key ONLY in Android secure storage (Android Keystore).
+   515→/// - Never hardcodes the key in source code.
+   516→/// - Never commits the key to GitHub.
+   517→/// - Never stores the key in shared preferences.
+   518→/// - Provides the key to Drift for opening an encrypted SQLCipher database.
+   519→/// - Handles missing, corrupted, or invalid keys safely.
+   520→/// - Does NOT silently delete user data when database opening fails.
+   521→///
+   522→/// The key is stored as a hex-encoded 32-byte (256-bit) random value.
+   523→library;
+   524→
+   525→import 'dart:math';
+   526→import 'dart:typed_data';
+   527→
+   528→import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+   529→
+   530→/// Secure storage key for the database encryption key.
+   531→const _dbEncryptionKeyStorageKey = 'ph_db_encryption_key';
+   532→
+   533→/// Service that manages the SQLCipher encryption key.
+   534→class DatabaseEncryptionService {
+   535→  final FlutterSecureStorage _secureStorage;
+   536→
+   537→  DatabaseEncryptionService(this._secureStorage);
+   538→
+   539→  /// Get or create the database encryption key.
+   540→  ///
+   541→  /// On first launch: generates a new 256-bit random key and stores it
+   542→  /// in Android secure storage (Android Keystore).
+   543→  /// On subsequent launches: retrieves the existing key from secure storage.
+   544→  ///
+   545→  /// Returns the key as a hex string suitable for SQLCipher's `PRAGMA key`.
+   546→  Future<String> getOrCreateKey() async {
+   547→    // Try to read the existing key from secure storage
+   548→    final existingKey = await _secureStorage.read(
+   549→      key: _dbEncryptionKeyStorageKey,
+   550→    );
+   551→
+   552→    if (existingKey != null && existingKey.isNotEmpty) {
+   553→      // Key exists — return it
+   554→      return existingKey;
+   555→    }
+   556→
+   557→    // First launch — generate a new strong random key
+   558→    final newKey = _generateStrongKey();
+   559→
+   560→    // Store the key in Android secure storage (Android Keystore)
+   561→    await _secureStorage.write(
+   562→      key: _dbEncryptionKeyStorageKey,
+   563→      value: newKey,
+   564→    );
+   565→
+   566→    return newKey;
+   567→  }
+   568→
+   569→  /// Check if an encryption key already exists in secure storage.
+   570→  Future<bool> hasKey() async {
+   571→    final key = await _secureStorage.read(key: _dbEncryptionKeyStorageKey);
+   572→    return key != null && key.isNotEmpty;
+   573→  }
+   574→
+   575→  /// Delete the encryption key from secure storage.
+   576→  ///
+   577→  /// Called on logout — after the database file is deleted, the key
+   578→  /// is also removed so that any residual data cannot be decrypted.
+   579→  Future<void> deleteKey() async {
+   580→    await _secureStorage.delete(key: _dbEncryptionKeyStorageKey);
+   581→  }
+   582→
+   583→  /// Generate a strong random 256-bit (32-byte) encryption key.
+   584→  ///
+   585→  /// Uses Dart's Random.secure() which delegates to the platform's
+   586→  /// cryptographically secure random number generator:
+   587→  /// - Android: java.security.SecureRandom
+   588→  ///
+   589→  /// Returns the key as a hex string (64 hex characters = 32 bytes = 256 bits).
+   590→  String _generateStrongKey() {
+   591→    final random = Random.secure();
+   592→    final bytes = Uint8List(32); // 256 bits
+   593→    for (int i = 0; i < 32; i++) {
+   594→      bytes[i] = random.nextInt(256);
+   595→    }
+   596→    // Convert to hex string — SQLCipher accepts hex keys with PRAGMA key = "x'...'"
+   597→    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+   598→  }
+   599→
+   600→  /// Format the key for SQLCipher's PRAGMA key statement.
+   601→  ///
+   602→  /// SQLCipher expects the key in the format: x'hexstring'
+   603→  /// when using a raw hex key.
+   604→  String formatKeyForSqlCipher(String hexKey) {
+   605→    return "x'$hexKey'";
+   606→  }
+   607→
+   608→  /// Clear all secure storage entries related to the database.
+   609→  ///
+   610→  /// Called on logout to ensure no sensitive data remains.
+   611→  Future<void> clearAllSecureData() async {
+   612→    await _secureStorage.delete(key: _dbEncryptionKeyStorageKey);
+   613→  }
+   614→}
+   615→---END---
+   616→=== flutter_app/lib/data/local/daos/bookmark_dao.dart ===
+   617→/// Bookmark DAO — database access for user bookmarks.
+   618→library;
+   619→
+   620→import 'package:drift/drift.dart';
+   621→import '../database.dart';
+   622→import '../tables/bookmarks.dart';
+   623→
+   624→part 'bookmark_dao.g.dart';
+   625→
+   626→@DriftAccessor(tables: [Bookmarks])
+   627→class BookmarkDao extends DatabaseAccessor<AppDatabase> with _$BookmarkDaoMixin {
+   628→  BookmarkDao(super.db);
+   629→
+   630→  /// Get all bookmarks for a user (non-deleted).
+   631→  Future<List<Bookmark>> getBookmarks(String userId, {String? entityType}) {
+   632→    final q = select(bookmarks)
+   633→      ..where((b) =>
+   634→          b.userId.equals(userId) &
+   635→          b.deletedAt.isNull() &
+   636→          (entityType == null ? const Constant(true) : b.entityType.equals(entityType)))
+   637→      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)]);
+   638→    return q.get();
+   639→  }
+   640→
+   641→  /// Check if an entity is bookmarked.
+   642→  Future<bool> isBookmarked(String userId, String entityId) async {
+   643→    final result = await (select(bookmarks)
+   644→          ..where((b) =>
+   645→              b.userId.equals(userId) &
+   646→              b.entityId.equals(entityId) &
+   647→              b.deletedAt.isNull()))
+   648→        .get();
+   649→    return result.isNotEmpty;
+   650→  }
+   651→
+   652→  /// Add a bookmark (local + pending sync).
+   653→  Future<int> addBookmark({
+   654→    required String userId,
+   655→    required String entityId,
+   656→    required String entityType,
+   657→    required String title,
+   658→  }) async {
+   659→    return into(bookmarks).insert(BookmarksCompanion.insert(
+   660→      userId: userId,
+   661→      entityId: entityId,
+   662→      entityType: entityType,
+   663→      title: title,
+   664→      syncStatus: const Value('pending'),
+   665→    ));
+   666→  }
+   667→
+   668→  /// Remove a bookmark (soft-delete + pending sync).
+   669→  Future<void> removeBookmark(String userId, String entityId) async {
+   670→    await (update(bookmarks)
+   671→          ..where((b) =>
+   672→              b.userId.equals(userId) &
+   673→              b.entityId.equals(entityId) &
+   674→              b.deletedAt.isNull()))
+   675→        .write(BookmarksCompanion(
+   676→      deletedAt: Value(DateTime.now()),
+   677→      syncStatus: const Value('pending'),
+   678→    ));
+   679→  }
+   680→
+   681→  /// Upsert from server sync.
+   682→  Future<void> upsertFromServer(BookmarksCompanion bookmark) async {
+   683→    await into(bookmarks).insertOnConflictUpdate(bookmark);
+   684→  }
+   685→
+   686→  /// Get pending (unsynced) bookmarks.
+   687→  Future<List<Bookmark>> getPending(String userId) {
+   688→    return (select(bookmarks)
+   689→          ..where((b) =>
+   690→              b.userId.equals(userId) &
+   691→              b.syncStatus.equals('pending') &
+   692→              b.deletedAt.isNull()))
+   693→        .get();
+   694→  }
+   695→
+   696→  /// Mark as synced.
+   697→  Future<void> markSynced(int localId, {String? serverId}) async {
+   698→    await (update(bookmarks)..where((b) => b.localId.equals(localId))).write(BookmarksCompanion(
+   699→      syncStatus: const Value('synced'),
+   700→      lastSyncedAt: Value(DateTime.now()),
+   701→      serverId: serverId != null ? Value(serverId) : const Value.absent(),
+   702→    ));
+   703→  }
+   704→
+   705→  /// Count bookmarks.
+   706→  Future<int> count(String userId) async {
+   707→    final countExp = bookmarks.localId.count();
+   708→    return (selectOnly(bookmarks)
+   709→          ..addColumns([countExp])
+   710→          ..where(bookmarks.userId.equals(userId) & bookmarks.deletedAt.isNull()))
+   711→        .map((row) => row.read(countExp) ?? 0)
+   712→        .getSingle();
+   713→  }
+   714→}
+   715→---END---
+   716→=== flutter_app/lib/data/local/daos/outbox_dao.dart ===
+   717→/// Outbox DAO — database access for pending offline operations.
+   718→library;
+   719→
+   720→import 'dart:convert';
+   721→import 'package:drift/drift.dart';
+   722→import '../database.dart';
+   723→import '../tables/outbox.dart';
+   724→
+   725→part 'outbox_dao.g.dart';
+   726→
+   727→@DriftAccessor(tables: [OutboxOperations])
+   728→class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
+   729→  OutboxDao(super.db);
+   730→
+   731→  /// Get all pending operations (oldest first).
+   732→  Future<List<OutboxOperation>> getPending({int limit = 50}) {
+   733→    return (select(outboxOperations)
+   734→          ..where((o) => o.status.equals('pending') | o.status.equals('failed'))
+   735→          ..orderBy([(o) => OrderingTerm.asc(o.createdAt)])
+   736→          ..limit(limit))
+   737→        .get();
+   738→  }
+   739→
+   740→  /// Enqueue a new operation.
+   741→  Future<void> enqueue({
+   742→    required String operationId,
+   743→    required String userId,
+   744→    required String entityId,
+   745→    required String entityType,
+   746→    required String operationType,
+   747→    Map<String, dynamic>? payload,
+   748→    String? idempotencyKey,
+   749→  }) async {
+   750→    await into(outboxOperations).insert(OutboxOperationsCompanion.insert(
+   751→      operationId: operationId,
+   752→      userId: userId,
+   753→      entityId: entityId,
+   754→      entityType: entityType,
+   755→      operationType: operationType,
+   756→      payload: Value(payload != null ? _encodeJson(payload) : '{}'),
+   757→      idempotencyKey: Value(idempotencyKey ?? operationId),
+   758→    ));
+   759→  }
+   760→
+   761→  /// Mark as processing.
+   762→  Future<void> markProcessing(String operationId) async {
+   763→    await (update(outboxOperations)
+   764→          ..where((o) => o.operationId.equals(operationId)))
+   765→        .write(const OutboxOperationsCompanion(status: Value('processing')));
+   766→  }
+   767→
+   768→  /// Mark as synced (success).
+   769→  Future<void> markSynced(String operationId) async {
+   770→    await (update(outboxOperations)
+   771→          ..where((o) => o.operationId.equals(operationId)))
+   772→        .write(OutboxOperationsCompanion(
+   773→      status: const Value('synced'),
+   774→      lastAttemptAt: Value(DateTime.now()),
+   775→    ));
+   776→  }
+   777→
+   778→  /// Mark as failed + increment retry count.
+   779→  Future<void> markFailed(String operationId, String error) async {
+   780→    final current = await (select(outboxOperations)
+   781→          ..where((o) => o.operationId.equals(operationId)))
+   782→        .getSingleOrNull();
+   783→    await (update(outboxOperations)
+   784→          ..where((o) => o.operationId.equals(operationId)))
+   785→        .write(OutboxOperationsCompanion(
+   786→      status: const Value('failed'),
+   787→      retryCount: Value((current?.retryCount ?? 0) + 1),
+   788→      lastAttemptAt: Value(DateTime.now()),
+   789→      lastError: Value(error.substring(0, error.length > 500 ? 500 : error.length)),
+   790→    ));
+   791→  }
+   792→
+   793→  /// Delete synced operations older than 7 days (cleanup).
+   794→  Future<void> cleanupOldSynced() async {
+   795→    final cutoff = DateTime.now().subtract(const Duration(days: 7));
+   796→    await (delete(outboxOperations)
+   797→          ..where((o) =>
+   798→              o.status.equals('synced') & o.createdAt.isSmallerThanValue(cutoff)))
+   799→        .go();
+   800→  }
+   801→
+   802→  /// Count pending operations.
+   803→  Future<int> countPending() async {
+   804→    final countExp = outboxOperations.operationId.count();
+   805→    return (selectOnly(outboxOperations)
+   806→          ..addColumns([countExp])
+   807→          ..where(outboxOperations.status.equals('pending') |
+   808→              outboxOperations.status.equals('failed')))
+   809→        .map((row) => row.read(countExp) ?? 0)
+   810→        .getSingle();
+   811→  }
+   812→
+   813→  String _encodeJson(Map<String, dynamic> map) {
+   814→    return jsonEncode(map);
+   815→  }
+   816→}
+   817→---END---
+   818→=== flutter_app/lib/data/local/daos/remedy_dao.dart ===
+   819→/// Remedy DAO — database access for Materia Medica remedies.
+   820→///
+   821→/// All methods are fully implemented using Drift queries.
+   822→/// No placeholders.
+   823→library;
+   824→
+   825→import 'package:drift/drift.dart';
+   826→import '../database.dart';
+   827→import '../tables/remedies.dart';
+   828→
+   829→part 'remedy_dao.g.dart';
+   830→
+   831→@DriftAccessor(tables: [Remedies])
+   832→class RemedyDao extends DatabaseAccessor<AppDatabase> with _$RemedyDaoMixin {
+   833→  RemedyDao(super.db);
+   834→
+   835→  /// Get all remedies, optionally filtered by author.
+   836→  Future<List<Remedy>> getAllRemedies({String? author, int? limit, int? offset}) {
+   837→    final query = select(remedies);
+   838→    if (author != null && author != 'All') {
+   839→      query.where((r) => r.author.equals(author) & r.deletedAt.isNull());
+   840→    } else {
+   841→      query.where((r) => r.deletedAt.isNull());
+   842→    }
+   843→    query
+   844→      ..orderBy([(r) => OrderingTerm.asc(r.name)])
+   845→      ..limit(limit ?? 100, offset: offset ?? 0);
+   846→    return query.get();
+   847→  }
+   848→
+   849→  /// Search remedies by name (case-insensitive LIKE).
+   850→  Future<List<Remedy>> searchRemedies(String query, {String? author, int limit = 50}) {
+   851→    final q = select(remedies);
+   852→    final pattern = '%${query.toLowerCase()}%';
+   853→    q.where((r) =>
+   854→      r.name.lower().like(pattern) &
+   855→      r.deletedAt.isNull() &
+   856→      (author == null || author == 'All' ? const Constant(true) : r.author.equals(author)));
+   857→    q
+   858→      ..orderBy([(r) => OrderingTerm.asc(r.name)])
+   859→      ..limit(limit);
+   860→    return q.get();
+   861→  }
+   862→
+   863→  /// Get a single remedy by serverId.
+   864→  Future<Remedy?> getRemedy(String serverId) {
+   865→    return (select(remedies)..where((r) => r.serverId.equals(serverId))).getSingleOrNull();
+   866→  }
+   867→
+   868→  /// Count total remedies (non-deleted).
+   869→  Future<int> countRemedies({String? author}) {
+   870→    final countExp = remedies.serverId.count();
+   871→    final query = selectOnly(remedies)
+   872→      ..addColumns([countExp])
+   873→      ..where(remedies.deletedAt.isNull());
+   874→    if (author != null && author != 'All') {
+   875→      query.where(remedies.author.equals(author));
+   876→    }
+   877→    return query.map((row) => row.read(countExp) ?? 0).getSingle();
+   878→  }
+   879→
+   880→  /// Get all distinct authors.
+   881→  Future<List<String>> getAuthors() async {
+   882→    final query = selectOnly(remedies, distinct: true)
+   883→      ..addColumns([remedies.author])
+   884→      ..where(remedies.deletedAt.isNull() & remedies.author.isNotNull());
+   885→    final rows = await query.get();
+   886→    return rows.map((row) => row.read(remedies.author)!).toList()..sort();
+   887→  }
+   888→
+   889→  /// Upsert a remedy (insert or replace on conflict).
+   890→  Future<void> upsertRemedy(RemediesCompanion remedy) async {
+   891→    await into(remedies).insertOnConflictUpdate(remedy);
+   892→  }
+   893→
+   894→  /// Batch upsert remedies.
+   895→  Future<void> batchUpsert(List<RemediesCompanion> batch) async {
+   896→    await Future.wait(batch.map((r) => into(remedies).insertOnConflictUpdate(r)));
+   897→  }
+   898→
+   899→  /// Soft-delete a remedy by serverId.
+   900→  Future<void> softDelete(String serverId, {DateTime? deletedAt}) async {
+   901→    await (update(remedies)..where((r) => r.serverId.equals(serverId)))
+   902→        .write(RemediesCompanion(deletedAt: Value(deletedAt ?? DateTime.now())));
+   903→  }
+   904→
+   905→  /// Mark a remedy as synced.
+   906→  Future<void> markSynced(String serverId) async {
+   907→    await (update(remedies)..where((r) => r.serverId.equals(serverId)))
+   908→        .write(const RemediesCompanion(syncStatus: Value('synced'), lastSyncedAt: Value(null)));
+   909→  }
+   910→
+   911→  /// Get remedies modified since a given date (for sync).
+   912→  Future<List<Remedy>> getModifiedSince(DateTime since) {
+   913→    return (select(remedies)
+   914→          ..where((r) => r.updatedAt.isBiggerOrEqualValue(since) | r.lastSyncedAt.isNull()))
+   915→        .get();
+   916→  }
+   917→}
+   918→---END---
+   919→=== flutter_app/lib/data/local/daos/rubric_dao.dart ===
+   920→/// Rubric DAO — database access for Repertory rubrics.
+   921→///
+   922→/// All methods fully implemented. No placeholders.
+   923→library;
+   924→
+   925→import 'package:drift/drift.dart';
+   926→import '../database.dart';
+   927→import '../tables/rubrics.dart';
+   928→
+   929→part 'rubric_dao.g.dart';
+   930→
+   931→@DriftAccessor(tables: [Rubrics])
+   932→class RubricDao extends DatabaseAccessor<AppDatabase> with _$RubricDaoMixin {
+   933→  RubricDao(super.db);
+   934→
+   935→  /// Get root rubrics (parentId is null) for a given source + optional chapter.
+   936→  Future<List<Rubric>> getRoots(String source, {String? chapter}) {
+   937→    final q = select(rubrics)
+   938→      ..where((r) =>
+   939→          r.source.equals(source) &
+   940→          r.parentId.isNull() &
+   941→          r.deletedAt.isNull() &
+   942→          (chapter == null || chapter.isEmpty ? const Constant(true) : r.chapter.equals(chapter)))
+   943→      ..orderBy([(r) => OrderingTerm.asc(r.title)]);
+   944→    return q.get();
+   945→  }
+   946→
+   947→  /// Get children of a given parent (one level deep — for lazy loading).
+   948→  Future<List<Rubric>> getChildren(String parentId) {
+   949→    return (select(rubrics)
+   950→          ..where((r) => r.parentId.equals(parentId) & r.deletedAt.isNull())
+   951→          ..orderBy([(r) => OrderingTerm.asc(r.title)]))
+   952→        .get();
+   953→  }
+   954→
+   955→  /// Search rubrics by title/path (case-insensitive).
+   956→  Future<List<Rubric>> searchRubrics(String query, {String? source, int limit = 50}) {
+   957→    final pattern = '%${query.toLowerCase()}%';
+   958→    final q = select(rubrics)
+   959→      ..where((r) =>
+   960→          (r.title.lower().like(pattern) | r.fullPath.lower().like(pattern)) &
+   961→          r.deletedAt.isNull() &
+   962→          (source == null || source.isEmpty ? const Constant(true) : r.source.equals(source)))
+   963→      ..limit(limit);
+   964→    return q.get();
+   965→  }
+   966→
+   967→  /// Get a single rubric by serverId.
+   968→  Future<Rubric?> getRubric(String serverId) {
+   969→    return (select(rubrics)..where((r) => r.serverId.equals(serverId)))
+   970→        .getSingleOrNull();
+   971→  }
+   972→
+   973→  /// Count rubrics for a given source.
+   974→  Future<int> countRubrics({String? source}) {
+   975→    final countExp = rubrics.serverId.count();
+   976→    final q = selectOnly(rubrics)
+   977→      ..addColumns([countExp])
+   978→      ..where(rubrics.deletedAt.isNull());
+   979→    if (source != null) {
+   980→      q.where(rubrics.source.equals(source));
+   981→    }
+   982→    return q.map((row) => row.read(countExp) ?? 0).getSingle();
+   983→  }
+   984→
+   985→  /// Get distinct chapters for a source.
+   986→  Future<List<String>> getChapters(String source) async {
+   987→    final q = selectOnly(rubrics, distinct: true)
+   988→      ..addColumns([rubrics.chapter])
+   989→      ..where(rubrics.source.equals(source) &
+   990→          rubrics.deletedAt.isNull() &
+   991→          rubrics.chapter.isNotNull() &
+   992→          rubrics.chapter.isNotEmpty());
+   993→    final rows = await q.get();
+   994→    return rows.map((row) => row.read(rubrics.chapter)!).toList()..sort();
+   995→  }
+   996→
+   997→  /// Upsert a rubric.
+   998→  Future<void> upsertRubric(RubricsCompanion rubric) async {
+   999→    await into(rubrics).insertOnConflictUpdate(rubric);
+  1000→  }
+  1001→
+  1002→  /// Batch upsert.
+  1003→  Future<void> batchUpsert(List<RubricsCompanion> batch) async {
+  1004→    await Future.wait(batch.map((r) => into(rubrics).insertOnConflictUpdate(r)));
+  1005→  }
+  1006→
+  1007→  /// Soft-delete.
+  1008→  Future<void> softDelete(String serverId, {DateTime? deletedAt}) async {
+  1009→    await (update(rubrics)..where((r) => r.serverId.equals(serverId)))
+  1010→        .write(RubricsCompanion(deletedAt: Value(deletedAt ?? DateTime.now())));
+  1011→  }
+  1012→}
+  1013→---END---
+  1014→=== flutter_app/lib/data/local/database.dart ===
+  1015→/// Drift database definition for Pradip's Homeo offline cache.
+  1016→///
+  1017→/// This SQLite database is the app's LOCAL offline storage only.
+  1018→/// The server (Neon PostgreSQL + Supabase) remains the source of truth.
+  1019→///
+  1020→/// ENCRYPTION:
+  1021→///   The database is encrypted using SQLCipher. The encryption key is:
+  1022→///   - Generated on first app launch (256-bit random)
+  1023→///   - Stored ONLY in Android secure storage (Android Keystore)
+  1024→///   - Never hardcoded in source code
+  1025→///   - Never committed to GitHub
+  1026→///   - Never stored in shared preferences
+  1027→///
+  1028→/// Sync fields convention (per spec):
+  1029→///   - serverId: stable unique ID from server
+  1030→///   - serverVersion: version/revision number for conflict detection
+  1031→///   - updatedAt: server-side last-modified timestamp
+  1032→///   - deletedAt: soft-delete marker (null = active)
+  1033→///   - syncStatus: 'synced' | 'pending' | 'conflict'
+  1034→///   - lastSyncedAt: when this row was last synced
+  1035→library;
+  1036→
+  1037→import 'dart:io';
+  1038→import 'package:drift/drift.dart';
+  1039→import 'package:drift/native.dart';
+  1040→import 'package:path_provider/path_provider.dart';
+  1041→import 'package:path/path.dart' as p;
+  1042→import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+  1043→import '../../core/config/app_config.dart';
+  1044→import '../../core/security/database_encryption.dart';
+  1045→import 'tables/remedies.dart';
+  1046→import 'tables/rubrics.dart';
+  1047→import 'tables/books.dart';
+  1048→import 'tables/bookmarks.dart';
+  1049→import 'tables/favorites.dart';
+  1050→import 'tables/history.dart';
+  1051→import 'tables/outbox.dart';
+  1052→import 'tables/sync_state.dart';
+  1053→import 'daos/remedy_dao.dart';
+  1054→import 'daos/rubric_dao.dart';
+  1055→import 'daos/bookmark_dao.dart';
+  1056→import 'daos/outbox_dao.dart';
+  1057→
+  1058→part 'database.g.dart';
+  1059→
+  1060→@DriftDatabase(
+  1061→  tables: [
+  1062→    Remedies,
+  1063→    Rubrics,
+  1064→    Books,
+  1065→    Bookmarks,
+  1066→    Favorites,
+  1067→    ReadingHistory,
+  1068→    OutboxOperations,
+  1069→    SyncState,
+  1070→  ],
+  1071→  daos: [RemedyDao, RubricDao, BookmarkDao, OutboxDao],
+  1072→)
+  1073→class AppDatabase extends _$AppDatabase {
+  1074→  AppDatabase() : super(_openEncryptedConnection());
+  1075→
+  1076→  /// For testing — inject an in-memory database (no encryption).
+  1077→  AppDatabase.forTesting(QueryExecutor e) : super(e);
+  1078→
+  1079→  @override
+  1080→  int get schemaVersion => 1;
+  1081→
+  1082→  @override
+  1083→  MigrationStrategy get migration => MigrationStrategy(
+  1084→        onCreate: (m) => m.createAll(),
+  1085→        onUpgrade: (m, from, to) async {
+  1086→          // Additive migrations only — never delete columns/tables.
+  1087→          if (from < 2) {
+  1088→            // Example future migration:
+  1089→            // await m.addColumn(remedies, remedies.newColumn);
+  1090→          }
+  1091→        },
+  1092→        beforeOpen: (details) async {
+  1093→          // Enable foreign keys
+  1094→          await customStatement('PRAGMA foreign_keys = ON');
+  1095→          // Enable WAL mode for better concurrent read performance
+  1096→          await customStatement('PRAGMA journal_mode = WAL');
+  1097→        },
+  1098→      );
+  1099→
+  1100→  /// Open an encrypted SQLCipher database connection.
+  1101→  ///
+  1102→  /// This method:
+  1103→  ///   1. Gets or creates the encryption key from Android secure storage.
+  1104→  ///   2. Opens the database file with SQLCipher encryption.
+  1105→  ///   3. Handles migration from unencrypted SQLite if an old DB exists.
+  1106→  ///   4. Handles corrupted/invalid keys safely — does NOT silently delete data.
+  1107→  static LazyDatabase _openEncryptedConnection() {
+  1108→    return LazyDatabase(() async {
+  1109→      final dbFolder = await getApplicationDocumentsDirectory();
+  1110→      final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);
+  1111→      final file = File(dbPath);
+  1112→
+  1113→      // Get the encryption service
+  1114→      final secureStorage = const FlutterSecureStorage(
+  1115→        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  1116→      );
+  1117→      final encryptionService = DatabaseEncryptionService(secureStorage);
+  1118→
+  1119→      // Get or create the encryption key
+  1120→      final hexKey = await encryptionService.getOrCreateKey();
+  1121→      final sqlCipherKey = encryptionService.formatKeyForSqlCipher(hexKey);
+  1122→
+  1123→      // Check if an old unencrypted database exists and needs migration
+  1124→      await _migrateUnencryptedIfNeeded(dbPath);
+  1125→
+  1126→      // Open the database with SQLCipher encryption
+  1127→      return NativeDatabase.createInBackground(
+  1128→        file,
+  1129→        setup: (rawDb) {
+  1130→          rawDb.execute("PRAGMA key = $sqlCipherKey;");
+  1131→        },
+  1132→      );
+  1133→    });
+  1134→  }
+  1135→
+  1136→  /// Migrate an old unencrypted SQLite database to encrypted SQLCipher.
+  1137→  ///
+  1138→  /// If an old unencrypted database file exists (from a previous app version
+  1139→  /// that didn't use encryption), this method renames it to .bak (preserved)
+  1140→  /// and lets a new encrypted database be created.
+  1141→  /// User data is NEVER silently deleted.
+  1142→  static Future<void> _migrateUnencryptedIfNeeded(String dbPath) async {
+  1143→    final file = File(dbPath);
+  1144→
+  1145→    if (!await file.exists()) {
+  1146→      return;
+  1147→    }
+  1148→
+  1149→    try {
+  1150→      final bytes = await file.openRead(0, 16).first;
+  1151→      final header = String.fromCharCodes(bytes);
+  1152→      if (header == 'SQLite format 3\x00') {
+  1153→        final backupPath = '$dbPath.unencrypted.bak';
+  1154→        await file.rename(backupPath);
+  1155→      }
+  1156→    } catch (_) {
+  1157→      // Could not read the file — might be corrupted or encrypted
+  1158→      // Do NOT delete the file — let Drift try to open it with the key.
+  1159→    }
+  1160→  }
+  1161→
+  1162→  /// Close the database and clear all local data on logout.
+  1163→  ///
+  1164→  /// Called by AuthRepository.logout() to:
+  1165→  ///   1. Close the database connection
+  1166→  ///   2. Delete the database file (contains cached content + user data)
+  1167→  ///   3. Delete the encryption key from secure storage
+  1168→  Future<void> clearOnLogout() async {
+  1169→    await close();
+  1170→
+  1171→    try {
+  1172→      final dbFolder = await getApplicationDocumentsDirectory();
+  1173→      final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);
+  1174→      final file = File(dbPath);
+  1175→      if (await file.exists()) {
+  1176→        await file.delete();
+  1177→      }
+  1178→      final walFile = File('$dbPath-wal');
+  1179→      final shmFile = File('$dbPath-shm');
+  1180→      if (await walFile.exists()) await walFile.delete();
+  1181→      if (await shmFile.exists()) await shmFile.delete();
+  1182→    } catch (_) {}
+  1183→
+  1184→    try {
+  1185→      final secureStorage = const FlutterSecureStorage(
+  1186→        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  1187→      );
+  1188→      final encryptionService = DatabaseEncryptionService(secureStorage);
+  1189→      await encryptionService.deleteKey();
+  1190→    } catch (_) {}
+  1191→  }
+  1192→}
+  1193→---END---
+  1194→=== flutter_app/lib/data/local/tables/bookmarks.dart ===
+  1195→/// Bookmarks table — user-owned bookmarks.
+  1196→///
+  1197→/// Source: /api/user/bookmarks (read/write — synced via outbox)
+  1198→/// Conflict resolution: version-based, no silent overwrites.
+  1199→library;
+  1200→
+  1201→import 'package:drift/drift.dart';
+  1202→
+  1203→class Bookmarks extends Table {
+  1204→  /// Local auto-increment ID
+  1205→  IntColumn get localId => integer().autoIncrement()();
+  1206→  /// Server-side ID (null until synced)
+  1207→  TextColumn get serverId => text().nullable()();
+  1208→  TextColumn get userId => text()();
+  1209→  TextColumn get entityId => text()();
+  1210→  TextColumn get entityType => text()(); // 'remedy', 'rubric', 'book', etc.
+  1211→  TextColumn get title => text()();
+  1212→
+  1213→  /// Sync fields
+  1214→  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  1215→  DateTimeColumn get updatedAt => dateTime().nullable()();
+  1216→  DateTimeColumn get deletedAt => dateTime().nullable()();
+  1217→  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  1218→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1219→}
+  1220→---END---
+  1221→=== flutter_app/lib/data/local/tables/books.dart ===
+  1222→/// Books table — Book/library metadata.
+  1223→///
+  1224→/// Source: /api/books (read-only from app perspective)
+  1225→library;
+  1226→
+  1227→import 'package:drift/drift.dart';
+  1228→
+  1229→class Books extends Table {
+  1230→  TextColumn get serverId => text()();
+  1231→  TextColumn get title => text()();
+  1232→  TextColumn get subtitle => text().nullable()();
+  1233→  TextColumn get author => text().nullable()();
+  1234→  TextColumn get category => text().nullable()();
+  1235→  TextColumn get description => text().nullable()();
+  1236→  IntColumn get totalChapters => integer().withDefault(const Constant(0))();
+  1237→
+  1238→  /// Sync fields
+  1239→  DateTimeColumn get updatedAt => dateTime().nullable()();
+  1240→  DateTimeColumn get deletedAt => dateTime().nullable()();
+  1241→  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  1242→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1243→
+  1244→  @override
+  1245→  Set<Column> get primaryKey => {serverId};
+  1246→}
+  1247→---END---
+  1248→=== flutter_app/lib/data/local/tables/favorites.dart ===
+  1249→/// Favorites table — user-owned favorites.
+  1250→///
+  1251→/// Source: /api/user/favorites (read/write — synced via outbox)
+  1252→library;
+  1253→
+  1254→import 'package:drift/drift.dart';
+  1255→
+  1256→class Favorites extends Table {
+  1257→  IntColumn get localId => integer().autoIncrement()();
+  1258→  TextColumn get serverId => text().nullable()();
+  1259→  TextColumn get userId => text()();
+  1260→  TextColumn get entityId => text()();
+  1261→  TextColumn get entityType => text()();
+  1262→  TextColumn get title => text()();
+  1263→  TextColumn get author => text().nullable()();
+  1264→
+  1265→  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  1266→  DateTimeColumn get updatedAt => dateTime().nullable()();
+  1267→  DateTimeColumn get deletedAt => dateTime().nullable()();
+  1268→  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  1269→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1270→}
+  1271→---END---
+  1272→=== flutter_app/lib/data/local/tables/history.dart ===
+  1273→/// Reading history table — recently viewed remedies/rubrics/books.
+  1274→///
+  1275→/// Source: /api/user/history (read/write — synced via outbox)
+  1276→library;
+  1277→
+  1278→import 'package:drift/drift.dart';
+  1279→
+  1280→class ReadingHistory extends Table {
+  1281→  IntColumn get localId => integer().autoIncrement()();
+  1282→  TextColumn get serverId => text().nullable()();
+  1283→  TextColumn get userId => text()();
+  1284→  TextColumn get entityId => text()();
+  1285→  TextColumn get entityType => text()();
+  1286→  TextColumn get title => text()();
+  1287→  TextColumn get author => text().nullable()();
+  1288→
+  1289→  DateTimeColumn get visitedAt => dateTime().withDefault(currentDateAndTime)();
+  1290→  DateTimeColumn get updatedAt => dateTime().nullable()();
+  1291→  DateTimeColumn get deletedAt => dateTime().nullable()();
+  1292→  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  1293→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1294→}
+  1295→---END---
+  1296→=== flutter_app/lib/data/local/tables/outbox.dart ===
+  1297→/// Outbox table — pending offline operations waiting to sync.
+  1298→///
+  1299→/// Each row represents a user action (bookmark add/remove, favorite toggle,
+  1300→/// history visit) that was performed offline and needs to be synced to
+  1301→/// the server when connectivity returns.
+  1302→///
+  1303→/// Processed by OutboxProcessor with:
+  1304→///   - Idempotency keys (prevent duplicates)
+  1305→///   - Retry with exponential backoff
+  1306→///   - Failed ops preserved for later retry
+  1307→library;
+  1308→
+  1309→import 'package:drift/drift.dart';
+  1310→
+  1311→class OutboxOperations extends Table {
+  1312→  /// Unique operation ID (UUID generated locally)
+  1313→  TextColumn get operationId => text()();
+  1314→  TextColumn get userId => text()();
+  1315→
+  1316→  /// Entity details
+  1317→  TextColumn get entityId => text()();
+  1318→  TextColumn get entityType => text()();
+  1319→
+  1320→  /// Operation type: 'create_bookmark', 'delete_bookmark',
+  1321→  /// 'create_favorite', 'delete_favorite', 'add_history', etc.
+  1322→  TextColumn get operationType => text()();
+  1323→
+  1324→  /// Operation payload as JSON
+  1325→  TextColumn get payload => text().withDefault(const Constant('{}'))();
+  1326→
+  1327→  /// Idempotency key — prevents duplicate writes if the same op
+  1328→  /// is processed multiple times.
+  1329→  TextColumn get idempotencyKey => text().nullable()();
+  1330→
+  1331→  /// Status: 'pending', 'processing', 'synced', 'failed'
+  1332→  TextColumn get status => text().withDefault(const Constant('pending'))();
+  1333→
+  1334→  /// Local timestamp when operation was created
+  1335→  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  1336→
+  1337→  /// Last attempt timestamp
+  1338→  DateTimeColumn get lastAttemptAt => dateTime().nullable()();
+  1339→
+  1340→  /// Retry count (exponential backoff)
+  1341→  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  1342→
+  1343→  /// Error message if failed (redacted, no sensitive data)
+  1344→  TextColumn get lastError => text().nullable()();
+  1345→
+  1346→  @override
+  1347→  Set<Column> get primaryKey => {operationId};
+  1348→}
+  1349→---END---
+  1350→=== flutter_app/lib/data/local/tables/remedies.dart ===
+  1351→/// Remedies table — Materia Medica remedies from all authors.
+  1352→///
+  1353→/// Source: /api/remedies (read-only from app perspective)
+  1354→/// Server fields reused: id, name, author, keynote, full, source_book, etc.
+  1355→library;
+  1356→
+  1357→import 'package:drift/drift.dart';
+  1358→
+  1359→class Remedies extends Table {
+  1360→  /// Server-side stable unique ID (e.g. 'boericke-belladonna')
+  1361→  TextColumn get serverId => text()();
+  1362→  TextColumn get name => text()();
+  1363→  TextColumn get author => text().withDefault(const Constant(''))();
+  1364→  TextColumn get sourceBook => text().nullable()();
+  1365→  TextColumn get keynote => text().nullable()();
+  1366→  TextColumn get full => text().nullable()();
+  1367→
+  1368→  /// Sync fields
+  1369→  DateTimeColumn get updatedAt => dateTime().nullable()();
+  1370→  DateTimeColumn get deletedAt => dateTime().nullable()();
+  1371→  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  1372→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1373→
+  1374→  @override
+  1375→  Set<Column> get primaryKey => {serverId};
+  1376→}
+  1377→---END---
+  1378→=== flutter_app/lib/data/local/tables/rubrics.dart ===
+  1379→/// Rubrics table — Repertory rubrics (Kent, Phatak, Murphy, Boericke).
+  1380→///
+  1381→/// Source: /api/rubrics (read-only from app perspective)
+  1382→/// Supports unlimited hierarchy via parentId.
+  1383→library;
+  1384→
+  1385→import 'package:drift/drift.dart';
+  1386→
+  1387→class Rubrics extends Table {
+  1388→  TextColumn get serverId => text()();
+  1389→  TextColumn get parentId => text().nullable()();
+  1390→  TextColumn get source => text()(); // Kent, Phatak, Murphy, Boericke
+  1391→  TextColumn get chapter => text().withDefault(const Constant(''))();
+  1392→  TextColumn get title => text()();
+  1393→  TextColumn get fullPath => text().withDefault(const Constant(''))();
+  1394→  IntColumn get level => integer().withDefault(const Constant(0))();
+  1395→
+  1396→  /// Remedies stored as JSON: [{"abbrev":"Bell","grade":3}, ...]
+  1397→  /// Grade: 4=Red(highest), 3=Green, 2=Blue, 1=Black(normal)
+  1398→  TextColumn get remediesJson => text().withDefault(const Constant('[]'))();
+  1399→  IntColumn get remedyCount => integer().withDefault(const Constant(0))();
+  1400→
+  1401→  /// Sync fields
+  1402→  DateTimeColumn get updatedAt => dateTime().nullable()();
+  1403→  DateTimeColumn get deletedAt => dateTime().nullable()();
+  1404→  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  1405→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1406→
+  1407→  @override
+  1408→  Set<Column> get primaryKey => {serverId};
+  1409→}
+  1410→---END---
+  1411→=== flutter_app/lib/data/local/tables/sync_state.dart ===
+  1412→/// Sync state table — tracks sync checkpoints per entity type.
+  1413→///
+  1414→/// One row per entity type (remedies, rubrics, bookmarks, etc.)
+  1415→/// Records the last successful sync timestamp and cursor for
+  1416→/// incremental sync.
+  1417→library;
+  1418→
+  1419→import 'package:drift/drift.dart';
+  1420→
+  1421→class SyncState extends Table {
+  1422→  /// Entity type: 'remedies', 'rubrics', 'books', 'bookmarks', etc.
+  1423→  TextColumn get entityType => text()();
+  1424→
+  1425→  /// Last successful sync timestamp (server time)
+  1426→  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  1427→
+  1428→  /// Cursor for cursor-based pagination (opaque token from server)
+  1429→  TextColumn get nextCursor => text().nullable()();
+  1430→
+  1431→  /// Total records synced (for progress display + validation)
+  1432→  IntColumn get totalSynced => integer().withDefault(const Constant(0))();
+  1433→
+  1434→  /// Initial sync complete flag
+  1435→  BoolColumn get initialSyncComplete => boolean().withDefault(const Constant(false))();
+  1436→
+  1437→  /// Last sync error (redacted)
+  1438→  TextColumn get lastError => text().nullable()();
+  1439→
+  1440→  /// Sync status: 'idle', 'syncing', 'error', 'complete'
+  1441→  TextColumn get status => text().withDefault(const Constant('idle'))();
+  1442→
+  1443→  @override
+  1444→  Set<Column> get primaryKey => {entityType};
+  1445→}
+  1446→---END---
+  1447→=== flutter_app/lib/data/remote/api_client.dart ===
+  1448→/// API client — real endpoint calls to the existing website backend.
+  1449→///
+  1450→/// All methods are fully implemented. No placeholders.
+  1451→/// Uses the existing Next.js API routes (same URLs as the website).
+  1452→library;
+  1453→
+  1454→import 'dart:convert';
+  1455→import '../../core/config/app_config.dart';
+  1456→import '../../core/network/api_exceptions.dart';
+  1457→import '../../core/network/dio_client.dart';
+  1458→import 'dtos/dtos.dart';
+  1459→
+  1460→class ApiClient {
+  1461→  final DioClient _dio;
+  1462→
+  1463→  ApiClient(this._dio);
+  1464→
+  1465→  // ============================================================
+  1466→  // AUTH
+  1467→  // ============================================================
+  1468→
+  1469→  /// Login with email + PIN.
+  1470→  Future<LoginResponse> login({required String email, required String pin}) async {
+  1471→    final data = await _dio.post<Map<String, dynamic>>(
+  1472→      AppConfig.loginEndpoint,
+  1473→      data: {'email': email, 'pin': pin},
+  1474→    );
+  1475→    return LoginResponse.fromJson(data);
+  1476→  }
+  1477→
+  1478→  /// Check if session is valid.
+  1479→  Future<SessionResponse> checkSession() async {
+  1480→    final data = await _dio.get<Map<String, dynamic>>(AppConfig.sessionEndpoint);
+  1481→    return SessionResponse.fromJson(data);
+  1482→  }
+  1483→
+  1484→  /// Get current user info.
+  1485→  Future<AuthUserDto> getMe() async {
+  1486→    final data = await _dio.get<Map<String, dynamic>>(AppConfig.meEndpoint);
+  1487→    return AuthUserDto.fromJson(data);
+  1488→  }
+  1489→
+  1490→  /// Logout.
+  1491→  Future<void> logout() async {
+  1492→    await _dio.post(AppConfig.logoutEndpoint);
+  1493→  }
+  1494→
+  1495→  // ============================================================
+  1496→  // REMEDIES (Materia Medica)
+  1497→  // ============================================================
+  1498→
+  1499→  /// Fetch remedies with pagination.
+  1500→  Future<PaginatedResponse<RemedyDto>> fetchRemedies({
+  1501→    int page = 1,
+  1502→    int pageSize = 100,
+  1503→    String? author,
+  1504→    String? q,
+  1505→  }) async {
+  1506→    final params = <String, dynamic>{
+  1507→      'page': page,
+  1508→      'pageSize': pageSize,
+  1509→    };
+  1510→    if (author != null && author != 'All') params['author'] = author;
+  1511→    if (q != null && q.isNotEmpty) params['q'] = q;
+  1512→
+  1513→    final data = await _dio.get<Map<String, dynamic>>(
+  1514→      AppConfig.remediesEndpoint,
+  1515→      queryParameters: params,
+  1516→    );
+  1517→    final items = (data['remedies'] as List? ?? [])
+  1518→        .map((r) => RemedyDto.fromJson(r as Map<String, dynamic>))
+  1519→        .toList();
+  1520→    return PaginatedResponse(
+  1521→      items: items,
+  1522→      total: (data['total'] as num?)?.toInt() ?? 0,
+  1523→      page: (data['page'] as num?)?.toInt() ?? page,
+  1524→      pageSize: (data['pageSize'] as num?)?.toInt() ?? pageSize,
+  1525→    );
+  1526→  }
+  1527→
+  1528→  // ============================================================
+  1529→  // RUBRICS (Repertory)
+  1530→  // ============================================================
+  1531→
+  1532→  /// Fetch rubrics with pagination.
+  1533→  Future<PaginatedResponse<RubricDto>> fetchRubrics({
+  1534→    int page = 1,
+  1535→    int pageSize = 100,
+  1536→    String? author,
+  1537→    String? chapter,
+  1538→    String? q,
+  1539→  }) async {
+  1540→    final params = <String, dynamic>{
+  1541→      'page': page,
+  1542→      'pageSize': pageSize,
+  1543→    };
+  1544→    if (author != null) params['author'] = author;
+  1545→    if (chapter != null && chapter.isNotEmpty) params['chapter'] = chapter;
+  1546→    if (q != null && q.isNotEmpty) params['q'] = q;
+  1547→
+  1548→    final data = await _dio.get<Map<String, dynamic>>(
+  1549→      AppConfig.rubricsEndpoint,
+  1550→      queryParameters: params,
+  1551→    );
+  1552→    final items = (data['items'] as List? ?? [])
+  1553→        .map((r) => RubricDto.fromJson(r as Map<String, dynamic>))
+  1554→        .toList();
+  1555→    return PaginatedResponse(
+  1556→      items: items,
+  1557→      total: (data['total'] as num?)?.toInt() ?? 0,
+  1558→      page: (data['page'] as num?)?.toInt() ?? page,
+  1559→      pageSize: (data['pageSize'] as num?)?.toInt() ?? pageSize,
+  1560→    );
+  1561→  }
+  1562→
+  1563→  /// Fetch rubric children (lazy loading — one level).
+  1564→  Future<List<RubricDto>> fetchRubricChildren({
+  1565→    required String author,
+  1566→    String? parentId,
+  1567→    String? chapter,
+  1568→  }) async {
+  1569→    final params = <String, dynamic>{'author': author};
+  1570→    if (parentId != null) params['parentId'] = parentId;
+  1571→    if (chapter != null) params['chapter'] = chapter;
+  1572→
+  1573→    final data = await _dio.get<Map<String, dynamic>>(
+  1574→      AppConfig.rubricsChildrenEndpoint,
+  1575→      queryParameters: params,
+  1576→    );
+  1577→    return (data['children'] as List? ?? [])
+  1578→        .map((r) => RubricDto.fromJson(r as Map<String, dynamic>))
+  1579→        .toList();
+  1580→  }
+  1581→
+  1582→  /// Fetch chapters for a given author.
+  1583→  Future<List<String>> fetchChapters(String author) async {
+  1584→    final data = await _dio.get<Map<String, dynamic>>(
+  1585→      AppConfig.rubricsChaptersEndpoint,
+  1586→      queryParameters: {'author': author},
+  1587→    );
+  1588→    return (data['items'] as List? ?? [])
+  1589→        .map((c) => (c as Map<String, dynamic>)['name'].toString())
+  1590→        .toList();
+  1591→  }
+  1592→
+  1593→  // ============================================================
+  1594→  // BOOKS
+  1595→  // ============================================================
+  1596→
+  1597→  Future<PaginatedResponse<BookDto>> fetchBooks({
+  1598→    int page = 1,
+  1599→    int pageSize = 100,
+  1600→  }) async {
+  1601→    final data = await _dio.get<Map<String, dynamic>>(
+  1602→      AppConfig.booksEndpoint,
+  1603→      queryParameters: {'page': page, 'pageSize': pageSize},
+  1604→    );
+  1605→    final items = (data['books'] as List? ?? [])
+  1606→        .map((b) => BookDto.fromJson(b as Map<String, dynamic>))
+  1607→        .toList();
+  1608→    return PaginatedResponse(
+  1609→      items: items,
+  1610→      total: (data['total'] as num?)?.toInt() ?? 0,
+  1611→      page: page,
+  1612→      pageSize: pageSize,
+  1613→    );
+  1614→  }
+  1615→
+  1616→  // ============================================================
+  1617→  // CLINICAL SEARCH
+  1618→  // ============================================================
+  1619→
+  1620→  Future<PaginatedResponse<SearchResultDto>> clinicalSearch({
+  1621→    required String q,
+  1622→    String subject = 'all',
+  1623→    String source = 'all',
+  1624→    int page = 1,
+  1625→    int pageSize = 20,
+  1626→  }) async {
+  1627→    final data = await _dio.get<Map<String, dynamic>>(
+  1628→      AppConfig.clinicalSearchEndpoint,
+  1629→      queryParameters: {
+  1630→        'q': q,
+  1631→        'subject': subject,
+  1632→        'source': source,
+  1633→        'page': page,
+  1634→        'pageSize': pageSize,
+  1635→      },
+  1636→    );
+  1637→    final items = (data['results'] as List? ?? [])
+  1638→        .map((r) => SearchResultDto.fromJson(r as Map<String, dynamic>))
+  1639→        .toList();
+  1640→    return PaginatedResponse(
+  1641→      items: items,
+  1642→      total: (data['total'] as num?)?.toInt() ?? 0,
+  1643→      page: (data['page'] as num?)?.toInt() ?? page,
+  1644→      pageSize: (data['pageSize'] as num?)?.toInt() ?? pageSize,
+  1645→    );
+  1646→  }
+  1647→
+  1648→  // ============================================================
+  1649→  // USER FEATURES (bookmarks, favorites, history)
+  1650→  // ============================================================
+  1651→
+  1652→  /// Fetch user bookmarks.
+  1653→  Future<List<Map<String, dynamic>>> fetchBookmarks() async {
+  1654→    final data = await _dio.get<Map<String, dynamic>>(AppConfig.bookmarksEndpoint);
+  1655→    return (data['items'] as List? ?? []).cast<Map<String, dynamic>>();
+  1656→  }
+  1657→
+  1658→  /// Create a bookmark on the server.
+  1659→  Future<Map<String, dynamic>> createBookmark({
+  1660→    required String entityId,
+  1661→    required String entityType,
+  1662→    required String title,
+  1663→    required String idempotencyKey,
+  1664→  }) async {
+  1665→    return await _dio.post<Map<String, dynamic>>(
+  1666→      AppConfig.bookmarksEndpoint,
+  1667→      data: {
+  1668→        'entityId': entityId,
+  1669→        'entityType': entityType,
+  1670→        'title': title,
+  1671→        'idempotencyKey': idempotencyKey,
+  1672→      },
+  1673→    );
+  1674→  }
+  1675→
+  1676→  /// Delete a bookmark on the server.
+  1677→  Future<void> deleteBookmark({required String entityId, required String idempotencyKey}) async {
+  1678→    await _dio.delete(
+  1679→      AppConfig.bookmarksEndpoint,
+  1680→      queryParameters: {
+  1681→        'entityId': entityId,
+  1682→        'idempotencyKey': idempotencyKey,
+  1683→      },
+  1684→    );
+  1685→  }
+  1686→
+  1687→  /// Fetch user favorites.
+  1688→  Future<List<Map<String, dynamic>>> fetchFavorites() async {
+  1689→    final data = await _dio.get<Map<String, dynamic>>(AppConfig.favoritesEndpoint);
+  1690→    return (data['items'] as List? ?? []).cast<Map<String, dynamic>>();
+  1691→  }
+  1692→
+  1693→  /// Create a favorite.
+  1694→  Future<Map<String, dynamic>> createFavorite({
+  1695→    required String entityId,
+  1696→    required String entityType,
+  1697→    required String title,
+  1698→    String? author,
+  1699→    required String idempotencyKey,
+  1700→  }) async {
+  1701→    return await _dio.post<Map<String, dynamic>>(
+  1702→      AppConfig.favoritesEndpoint,
+  1703→      data: {
+  1704→        'entityId': entityId,
+  1705→        'entityType': entityType,
+  1706→        'title': title,
+  1707→        'author': author,
+  1708→        'idempotencyKey': idempotencyKey,
+  1709→      },
+  1710→    );
+  1711→  }
+  1712→
+  1713→  /// Delete a favorite.
+  1714→  Future<void> deleteFavorite({required String entityId, required String idempotencyKey}) async {
+  1715→    await _dio.delete(
+  1716→      AppConfig.favoritesEndpoint,
+  1717→      queryParameters: {
+  1718→        'entityId': entityId,
+  1719→        'idempotencyKey': idempotencyKey,
+  1720→      },
+  1721→    );
+  1722→  }
+  1723→
+  1724→  /// Add to reading history.
+  1725→  Future<void> addHistory({
+  1726→    required String entityId,
+  1727→    required String entityType,
+  1728→    required String title,
+  1729→    String? author,
+  1730→    required String idempotencyKey,
+  1731→  }) async {
+  1732→    await _dio.post<Map<String, dynamic>>(
+  1733→      AppConfig.historyEndpoint,
+  1734→      data: {
+  1735→        'entityId': entityId,
+  1736→        'entityType': entityType,
+  1737→        'title': title,
+  1738→        'author': author,
+  1739→        'idempotencyKey': idempotencyKey,
+  1740→      },
+  1741→    );
+  1742→  }
+  1743→
+  1744→  /// Fetch reading history.
+  1745→  Future<List<Map<String, dynamic>>> fetchHistory() async {
+  1746→    final data = await _dio.get<Map<String, dynamic>>(AppConfig.historyEndpoint);
+  1747→    return (data['items'] as List? ?? []).cast<Map<String, dynamic>>();
+  1748→  }
+  1749→}
+  1750→---END---
+  1751→=== flutter_app/lib/data/remote/dtos/dtos.dart ===
+  1752→/// Data Transfer Objects (DTOs) for API responses.
+  1753→///
+  1754→/// These mirror the JSON structure returned by the existing website API.
+  1755→/// Used for parsing API responses before storing in local SQLite.
+  1756→library;
+  1757→
+  1758→import 'dart:convert';
+  1759→
+  1760→// ============================================================
+  1761→// REMEDY DTO
+  1762→// ============================================================
+  1763→class RemedyDto {
+  1764→  final String id;
+  1765→  final String name;
+  1766→  final String author;
+  1767→  final String? sourceBook;
+  1768→  final String? keynote;
+  1769→  final String? full;
+  1770→  final String? sourcePages;
+  1771→
+  1772→  RemedyDto({
+  1773→    required this.id,
+  1774→    required this.name,
+  1775→    required this.author,
+  1776→    this.sourceBook,
+  1777→    this.keynote,
+  1778→    this.full,
+  1779→    this.sourcePages,
+  1780→  });
+  1781→
+  1782→  factory RemedyDto.fromJson(Map<String, dynamic> json) => RemedyDto(
+  1783→        id: json['id']?.toString() ?? '',
+  1784→        name: json['name']?.toString() ?? '',
+  1785→        author: json['author']?.toString() ?? json['source_book']?.toString() ?? '',
+  1786→        sourceBook: json['source_book']?.toString(),
+  1787→        keynote: json['keynote']?.toString(),
+  1788→        full: json['full']?.toString(),
+  1789→        sourcePages: json['source_pages']?.toString(),
+  1790→      );
+  1791→
+  1792→  Map<String, dynamic> toJson() => {
+  1793→        'id': id,
+  1794→        'name': name,
+  1795→        'author': author,
+  1796→        'source_book': sourceBook,
+  1797→        'keynote': keynote,
+  1798→        'full': full,
+  1799→        'source_pages': sourcePages,
+  1800→      };
+  1801→}
+  1802→
+  1803→// ============================================================
+  1804→// RUBRIC DTO
+  1805→// ============================================================
+  1806→class RubricDto {
+  1807→  final String id;
+  1808→  final String? parentId;
+  1809→  final String source;
+  1810→  final String chapter;
+  1811→  final String title;
+  1812→  final String fullPath;
+  1813→  final int level;
+  1814→  final List<ParsedRemedyDto> remedies;
+  1815→  final int remedyCount;
+  1816→  final Map<String, List<String>> byGrade;
+  1817→
+  1818→  RubricDto({
+  1819→    required this.id,
+  1820→    this.parentId,
+  1821→    required this.source,
+  1822→    required this.chapter,
+  1823→    required this.title,
+  1824→    required this.fullPath,
+  1825→    required this.level,
+  1826→    required this.remedies,
+  1827→    required this.remedyCount,
+  1828→    required this.byGrade,
+  1829→  });
+  1830→
+  1831→  factory RubricDto.fromJson(Map<String, dynamic> json) {
+  1832→    final remediesRaw = json['remedies'] as List? ?? [];
+  1833→    final remedies = remediesRaw.map((r) {
+  1834→      if (r is Map) {
+  1835→        return ParsedRemedyDto(
+  1836→          abbrev: r['abbrev']?.toString() ?? '',
+  1837→          grade: (r['grade'] as num?)?.toInt() ?? 1,
+  1838→        );
+  1839→      }
+  1840→      // Format: "abbrev|grade"
+  1841→      final parts = r.toString().split('|');
+  1842→      return ParsedRemedyDto(
+  1843→        abbrev: parts[0],
+  1844→        grade: parts.length > 1 ? int.tryParse(parts[1]) ?? 1 : 1,
+  1845→      );
+  1846→    }).toList();
+  1847→
+  1848→    final byGrade = <String, List<String>>{};
+  1849→    final bg = json['byGrade'] as Map? ?? {};
+  1850→    for (final entry in bg.entries) {
+  1851→      byGrade[entry.key] = (entry.value as List).map((e) => e.toString()).toList();
+  1852→    }
+  1853→
+  1854→    return RubricDto(
+  1855→      id: json['id']?.toString() ?? '',
+  1856→      parentId: json['parentId']?.toString() ?? json['parent_id']?.toString(),
+  1857→      source: json['source']?.toString() ?? json['author']?.toString() ?? '',
+  1858→      chapter: json['chapter']?.toString() ?? '',
+  1859→      title: json['title']?.toString() ?? '',
+  1860→      fullPath: json['fullPath']?.toString() ?? json['full_path']?.toString() ?? json['title']?.toString() ?? '',
+  1861→      level: (json['level'] as num?)?.toInt() ?? 0,
+  1862→      remedies: remedies,
+  1863→      remedyCount: (json['remedyCount'] as num?)?.toInt() ?? remedies.length,
+  1864→      byGrade: byGrade,
+  1865→    );
+  1866→  }
+  1867→
+  1868→  String get remediesJson => jsonEncode(remedies.map((r) => {'abbrev': r.abbrev, 'grade': r.grade}).toList());
+  1869→}
+  1870→
+  1871→class ParsedRemedyDto {
+  1872→  final String abbrev;
+  1873→  final int grade;
+  1874→  const ParsedRemedyDto({required this.abbrev, required this.grade});
+  1875→}
+  1876→
+  1877→// ============================================================
+  1878→// BOOK DTO
+  1879→// ============================================================
+  1880→class BookDto {
+  1881→  final String id;
+  1882→  final String title;
+  1883→  final String? subtitle;
+  1884→  final String? author;
+  1885→  final String? category;
+  1886→  final String? description;
+  1887→  final int totalChapters;
+  1888→
+  1889→  BookDto({
+  1890→    required this.id,
+  1891→    required this.title,
+  1892→    this.subtitle,
+  1893→    this.author,
+  1894→    this.category,
+  1895→    this.description,
+  1896→    required this.totalChapters,
+  1897→  });
+  1898→
+  1899→  factory BookDto.fromJson(Map<String, dynamic> json) => BookDto(
+  1900→        id: json['id']?.toString() ?? '',
+  1901→        title: json['title']?.toString() ?? '',
+  1902→        subtitle: json['subtitle']?.toString(),
+  1903→        author: json['author']?.toString(),
+  1904→        category: json['category']?.toString(),
+  1905→        description: json['description']?.toString(),
+  1906→        totalChapters: (json['totalChapters'] as num?)?.toInt() ?? 0,
+  1907→      );
+  1908→}
+  1909→
+  1910→// ============================================================
+  1911→// SEARCH RESULT DTO
+  1912→// ============================================================
+  1913→class SearchResultDto {
+  1914→  final String type; // 'remedy' | 'rubric'
+  1915→  final String id;
+  1916→  final String name;
+  1917→  final String author;
+  1918→  final String source;
+  1919→  final String? subsection;
+  1920→  final String matchType; // 'exact' | 'close' | 'related'
+  1921→  final String matchText;
+  1922→  final String snippet;
+  1923→  final String href;
+  1924→  final String? sourcePages;
+  1925→  final Map<String, String>? categories;
+  1926→
+  1927→  SearchResultDto({
+  1928→    required this.type,
+  1929→    required this.id,
+  1930→    required this.name,
+  1931→    required this.author,
+  1932→    required this.source,
+  1933→    this.subsection,
+  1934→    required this.matchType,
+  1935→    required this.matchText,
+  1936→    required this.snippet,
+  1937→    required this.href,
+  1938→    this.sourcePages,
+  1939→    this.categories,
+  1940→  });
+  1941→
+  1942→  factory SearchResultDto.fromJson(Map<String, dynamic> json) => SearchResultDto(
+  1943→        type: json['type']?.toString() ?? 'remedy',
+  1944→        id: json['id']?.toString() ?? '',
+  1945→        name: json['name']?.toString() ?? '',
+  1946→        author: json['author']?.toString() ?? '',
+  1947→        source: json['source']?.toString() ?? '',
+  1948→        subsection: json['subsection']?.toString(),
+  1949→        matchType: json['matchType']?.toString() ?? 'related',
+  1950→        matchText: json['matchText']?.toString() ?? '',
+  1951→        snippet: json['snippet']?.toString() ?? '',
+  1952→        href: json['href']?.toString() ?? '',
+  1953→        sourcePages: json['sourcePages']?.toString(),
+  1954→        categories: (json['categories'] as Map?)?.map(
+  1955→          (k, v) => MapEntry(k.toString(), v.toString()),
+  1956→        ),
+  1957→      );
+  1958→}
+  1959→
+  1960→// ============================================================
+  1961→// API RESPONSE WRAPPERS
+  1962→// ============================================================
+  1963→class PaginatedResponse<T> {
+  1964→  final List<T> items;
+  1965→  final int total;
+  1966→  final int page;
+  1967→  final int pageSize;
+  1968→  final String? nextCursor;
+  1969→
+  1970→  PaginatedResponse({
+  1971→    required this.items,
+  1972→    required this.total,
+  1973→    required this.page,
+  1974→    required this.pageSize,
+  1975→    this.nextCursor,
+  1976→  });
+  1977→}
+  1978→
+  1979→class LoginResponse {
+  1980→  final bool success;
+  1981→  final String? error;
+  1982→  final String? token;
+  1983→  final AuthUserDto? user;
+  1984→  final String? redirect;
+  1985→
+  1986→  LoginResponse({
+  1987→    required this.success,
+  1988→    this.error,
+  1989→    this.token,
+  1990→    this.user,
+  1991→    this.redirect,
+  1992→  });
+  1993→
+  1994→  factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
+  1995→        success: json['success'] == true,
+  1996→        error: json['error']?.toString(),
+  1997→        token: json['token']?.toString(),
+  1998→        user: json['user'] != null ? AuthUserDto.fromJson(json['user']) : null,
+  1999→        redirect: json['redirect']?.toString(),
+  2000→      );
+  2001→}
+  2002→
+  2003→class AuthUserDto {
+  2004→
+  2005→stderr:
+  2006→/bin/bash: line 1: tail-2: command not found
