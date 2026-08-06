@@ -11,7 +11,7 @@ import {
   DoctorProfile, PatientDetails, SelectedRubric, RepertorizationResult,
   Chapter, TreeNode, SearchResult, CrossRef,
   loadProfile, loadActiveCase, saveActiveCase, clearActiveCase,
-  loadCases, saveCase, deleteCase, SavedCase,
+  loadCases, saveCase, deleteCase, loadCaseById, SavedCase,
   generateCaseNo, getRubricId, getRubricName, getRubricPath,
   GRADE_COLORS, PRINT_GRADE_COLORS,
 } from './storage';
@@ -19,6 +19,7 @@ import { ProfileSettings } from './profile-settings';
 import { CasePaper } from './case-paper';
 import { ReportSheet } from './report-sheet';
 import { StepGuide } from './step-guide';
+import { EditCaseModal, DeleteConfirmDialog } from './case-actions';
 import { SynthesisCircle, LeafGrowth, SkeletonTable, EmptyState, WorkflowSteps, PulseDot, Icons } from './components';
 
 // ============================================================
@@ -82,6 +83,39 @@ export default function SynthesisPage() {
 
   // Error
   const [error, setError] = useState('');
+
+  // ============================================================
+  // SAVED-CASE ACTION STATE
+  // (Edit / Share / Delete — Synthesis-only, scoped to history view)
+  // ============================================================
+  const [menuOpenCaseId, setMenuOpenCaseId] = useState<string | null>(null);
+  const [editingCase, setEditingCase] = useState<SavedCase | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const [reportCase, setReportCase] = useState<SavedCase | null>(null);
+  // Per-case loading state — key = `${caseId}:${action}` where action ∈ open|edit|share|delete|save
+  const [caseActionLoading, setCaseActionLoading] = useState<Record<string, boolean>>({});
+  // Lightweight toast: { type: 'success'|'error'|'info', msg: string, id: number }
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; msg: string; id: number } | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = useCallback((type: 'success' | 'error' | 'info', msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ type, msg, id: Date.now() });
+    toastTimerRef.current = setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  const setCaseAction = useCallback((caseId: string, action: string, loading: boolean) => {
+    setCaseActionLoading(prev => {
+      const next = { ...prev };
+      const key = `${caseId}:${action}`;
+      if (loading) next[key] = true; else delete next[key];
+      return next;
+    });
+  }, []);
+
+  const isCaseActionLoading = useCallback((caseId: string, action: string) => {
+    return !!caseActionLoading[`${caseId}:${action}`];
+  }, [caseActionLoading]);
 
   // ============================================================
   // AUTH + INIT
@@ -314,15 +348,144 @@ export default function SynthesisPage() {
   };
 
   const handleOpenCase = (c: SavedCase) => {
-    setPatient(c.patient);
-    setSelectedRubrics(c.rubrics);
-    setResults(c.results);
-    setView('case');
+    if (isCaseActionLoading(c.id, 'open')) return;
+    setCaseAction(c.id, 'open', true);
+    setMenuOpenCaseId(null);
+    try {
+      // Defensive validation — case ID must match and case must still exist.
+      const fresh = loadCaseById(c.id);
+      if (!fresh) {
+        showToast('error', 'Unable to open this case. It may have been deleted.');
+        setCaseAction(c.id, 'open', false);
+        return;
+      }
+      setPatient(fresh.patient);
+      setSelectedRubrics(fresh.rubrics);
+      setResults(fresh.results);
+      // Persist as active session case (does NOT create a duplicate saved case)
+      saveActiveCase({ patient: fresh.patient, rubrics: fresh.rubrics, results: fresh.results });
+      showToast('success', `Case "${fresh.patient.patientName || 'Unknown Patient'}" loaded.`);
+      setView('case');
+    } catch {
+      showToast('error', 'Unable to open this case. Please retry.');
+    } finally {
+      setCaseAction(c.id, 'open', false);
+    }
+  };
+
+  // ============================================================
+  // EDIT CASE — open editable modal for a saved case
+  // ============================================================
+  const handleEditCase = (c: SavedCase) => {
+    setMenuOpenCaseId(null);
+    const fresh = loadCaseById(c.id);
+    if (!fresh) {
+      showToast('error', 'Unable to edit this case. It may have been deleted.');
+      return;
+    }
+    setEditingCase(fresh);
+  };
+
+  const handleSaveEditedCase = (updated: SavedCase) => {
+    if (!editingCase) return;
+    if (isCaseActionLoading(editingCase.id, 'save')) return;
+    setCaseAction(editingCase.id, 'save', true);
+    try {
+      // Defensive validation — preserve id, createdAt, repertorizedAt from the original.
+      const original = loadCaseById(editingCase.id);
+      if (!original) {
+        showToast('error', 'Unable to save. This case no longer exists.');
+        setCaseAction(editingCase.id, 'save', false);
+        return;
+      }
+      const sanitized: SavedCase = {
+        ...updated,
+        id: original.id, // ID cannot change — prevents duplicate creation
+        createdAt: original.createdAt,
+        updatedAt: new Date().toISOString(),
+        repertorizedAt: original.repertorizedAt,
+        // Patient caseNo stays locked to case id to avoid ID/link drift
+        patient: { ...updated.patient, caseNo: original.patient.caseNo || original.id },
+      };
+      saveCase(sanitized);
+      setCases(loadCases());
+      setEditingCase(null);
+      showToast('success', 'Case updated successfully.');
+    } catch {
+      showToast('error', 'Unable to save changes. Please retry.');
+    } finally {
+      setCaseAction(editingCase.id, 'save', false);
+    }
+  };
+
+  // ============================================================
+  // SHARE CASE — open the report sheet for this specific saved case
+  // (PDF print + download + native mobile share handled by ReportSheet)
+  // ============================================================
+  const handleShareCase = (c: SavedCase) => {
+    if (isCaseActionLoading(c.id, 'share')) return;
+    setCaseAction(c.id, 'share', true);
+    setMenuOpenCaseId(null);
+    try {
+      const fresh = loadCaseById(c.id);
+      if (!fresh) {
+        showToast('error', 'Unable to share this case. It may have been deleted.');
+        setCaseAction(c.id, 'share', false);
+        return;
+      }
+      if (!fresh.results || fresh.results.length === 0) {
+        showToast('info', 'This case has no repertorization results to share yet. Open it and repertorize first.');
+        setCaseAction(c.id, 'share', false);
+        return;
+      }
+      // Brief "Preparing Case Report..." state — let user see the spinner briefly
+      // before the modal opens, so the loading state is visible.
+      setTimeout(() => {
+        setReportCase(fresh);
+        setCaseAction(c.id, 'share', false);
+        showToast('success', 'Case report is ready to share.');
+      }, 350);
+    } catch {
+      showToast('error', 'Unable to prepare the case report. Please retry.');
+      setCaseAction(c.id, 'share', false);
+    }
+  };
+
+  // ============================================================
+  // DELETE CASE — two-step confirmation, single-submit guarded
+  // ============================================================
+  const handleRequestDelete = (c: SavedCase) => {
+    setMenuOpenCaseId(null);
+    setConfirmingDeleteId(c.id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!confirmingDeleteId) return;
+    if (isCaseActionLoading(confirmingDeleteId, 'delete')) return;
+    setCaseAction(confirmingDeleteId, 'delete', true);
+    try {
+      // Defensive re-verification — case must still exist locally before delete.
+      const fresh = loadCaseById(confirmingDeleteId);
+      if (!fresh) {
+        showToast('error', 'Unable to delete this case. It may have already been removed.');
+        setCaseAction(confirmingDeleteId, 'delete', false);
+        setConfirmingDeleteId(null);
+        return;
+      }
+      deleteCase(confirmingDeleteId);
+      setCases(loadCases());
+      showToast('success', 'Saved case deleted successfully.');
+    } catch {
+      showToast('error', 'Unable to delete this case. Please retry.');
+    } finally {
+      setCaseAction(confirmingDeleteId, 'delete', false);
+      setConfirmingDeleteId(null);
+    }
   };
 
   const handleDeleteCase = (id: string) => {
-    deleteCase(id);
-    setCases(loadCases());
+    // Legacy direct-delete kept for backward compatibility — now routes through confirmation.
+    setConfirmingDeleteId(id);
   };
 
   const handleNewCase = () => {
@@ -876,25 +1039,101 @@ export default function SynthesisPage() {
                   }
                   return (
                     <div className="space-y-2">
-                      {allCases.map(c => (
-                        <div key={c.id} className="p-3 border border-stone-200 rounded-lg hover:bg-stone-50">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-semibold text-[#173B2D]">{c.patient.patientName || 'Unknown Patient'}</div>
-                              <div className="text-xs text-stone-500">
-                                Case: {c.patient.caseNo} · {c.patient.age || '?'} yrs · {c.patient.sex || '?'} · {c.patient.date}
+                      {allCases.map(c => {
+                        const openLoading = isCaseActionLoading(c.id, 'open');
+                        const shareLoading = isCaseActionLoading(c.id, 'share');
+                        const deleteLoading = isCaseActionLoading(c.id, 'delete');
+                        const saveLoading = isCaseActionLoading(c.id, 'save');
+                        const anyLoading = openLoading || shareLoading || deleteLoading || saveLoading;
+                        return (
+                          <div key={c.id} className="p-3 border border-stone-200 rounded-lg hover:bg-stone-50 relative">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold text-[#173B2D]">{c.patient.patientName || 'Unknown Patient'}</div>
+                                <div className="text-xs text-stone-500">
+                                  Case: {c.patient.caseNo} · {c.patient.age || '?'} yrs · {c.patient.sex || '?'} · {c.patient.date}
+                                </div>
+                                <div className="text-xs text-stone-400 mt-0.5">
+                                  {c.rubrics.length} rubrics · {c.results.length > 0 ? `${c.results.length} results` : 'Not repertorized'}
+                                </div>
                               </div>
-                              <div className="text-xs text-stone-400 mt-0.5">
-                                {c.rubrics.length} rubrics · {c.results.length > 0 ? `${c.results.length} results` : 'Not repertorized'}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {/* OPEN — primary action, always visible */}
+                                <button
+                                  onClick={() => handleOpenCase(c)}
+                                  disabled={anyLoading}
+                                  className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[#173B2D] text-white rounded-md hover:bg-[#0f2a20] disabled:opacity-50 disabled:cursor-not-allowed min-h-[32px]"
+                                  title="Open case"
+                                >
+                                  {openLoading ? (
+                                    <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  ) : (
+                                    <Icons.Eye size={14} className="text-white" />
+                                  )}
+                                  <span>Open</span>
+                                </button>
+                                {/* ⋮ MORE — opens Edit / Share / Delete dropdown */}
+                                <div className="relative">
+                                  <button
+                                    onClick={() => setMenuOpenCaseId(menuOpenCaseId === c.id ? null : c.id)}
+                                    disabled={anyLoading}
+                                    className="flex items-center justify-center w-8 h-8 text-stone-600 hover:bg-stone-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="More actions"
+                                    aria-label="More actions"
+                                  >
+                                    <Icons.MoreVertical size={16} className="text-stone-600" />
+                                  </button>
+                                  {menuOpenCaseId === c.id && (
+                                    <>
+                                      {/* Click-away overlay */}
+                                      <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setMenuOpenCaseId(null)}
+                                      />
+                                      {/* Dropdown menu */}
+                                      <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-stone-200 rounded-md shadow-lg z-50 overflow-hidden">
+                                        <button
+                                          onClick={() => handleEditCase(c)}
+                                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-stone-700 hover:bg-stone-50 text-left"
+                                        >
+                                          <Icons.Pencil size={14} className="text-stone-600" />
+                                          <span>Edit</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleShareCase(c)}
+                                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-stone-700 hover:bg-stone-50 text-left"
+                                        >
+                                          <Icons.Share size={14} className="text-stone-600" />
+                                          <span>Share</span>
+                                        </button>
+                                        <div className="border-t border-stone-100" />
+                                        <button
+                                          onClick={() => handleRequestDelete(c)}
+                                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-red-600 hover:bg-red-50 text-left"
+                                        >
+                                          <Icons.Trash size={14} className="text-red-600" />
+                                          <span>Delete</span>
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <button onClick={() => handleOpenCase(c)} className="px-3 py-1 text-xs bg-[#173B2D] text-white rounded hover:bg-[#0f2a20]">Open</button>
-                              <button onClick={() => handleDeleteCase(c.id)} className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded">✕</button>
-                            </div>
+                            {/* Inline loading indicator for share/save (so user sees feedback even before modal opens) */}
+                            {(shareLoading || saveLoading) && (
+                              <div className="absolute inset-0 bg-white/60 rounded-lg flex items-center justify-center z-10 pointer-events-none">
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-stone-200 rounded-md shadow-sm">
+                                  <span className="inline-block w-3 h-3 border-2 border-[#173B2D]/30 border-t-[#173B2D] rounded-full animate-spin" />
+                                  <span className="text-xs text-stone-700 font-medium">
+                                    {shareLoading ? 'Preparing Case Report...' : 'Saving Changes...'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   );
                 })()}
@@ -1003,6 +1242,53 @@ export default function SynthesisPage() {
         />
       )}
 
+      {/* ===== EDIT CASE MODAL — Synthesis-only ===== */}
+      {editingCase && (
+        <EditCaseModal
+          caseData={editingCase}
+          saving={isCaseActionLoading(editingCase.id, 'save')}
+          onSave={handleSaveEditedCase}
+          onCancel={() => setEditingCase(null)}
+        />
+      )}
+
+      {/* ===== DELETE CONFIRMATION DIALOG — Synthesis-only ===== */}
+      {confirmingDeleteId && (
+        <DeleteConfirmDialog
+          caseId={confirmingDeleteId}
+          deleting={isCaseActionLoading(confirmingDeleteId, 'delete')}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmingDeleteId(null)}
+        />
+      )}
+
+      {/* ===== SHARE REPORT MODAL — opens ReportSheet for the selected saved case ===== */}
+      {reportCase && (
+        <ReportSheet
+          patient={reportCase.patient}
+          rubrics={reportCase.rubrics}
+          results={reportCase.results}
+          profile={profile}
+          onClose={() => setReportCase(null)}
+        />
+      )}
+
+      {/* ===== TOAST — Synthesis-only feedback messages ===== */}
+      {toast && (
+        <div
+          key={toast.id}
+          className={`fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium max-w-[90vw] text-center no-print-toast ${
+            toast.type === 'success'
+              ? 'bg-[#173B2D] text-white'
+              : toast.type === 'error'
+                ? 'bg-red-600 text-white'
+                : 'bg-stone-800 text-white'
+          }`}
+        >
+          {toast.msg}
+        </div>
+      )}
+
       {/* ===== PRINT STYLES ===== */}
       <style jsx global>{`
         @media print {
@@ -1015,6 +1301,8 @@ export default function SynthesisPage() {
             padding: 15mm;
           }
           .no-print { display: none !important; }
+          /* Synthesis-only: hide toast + saved-case action UI from printed/shared PDFs */
+          .no-print-toast { display: none !important; }
           @page {
             size: A4;
             margin: 10mm;
