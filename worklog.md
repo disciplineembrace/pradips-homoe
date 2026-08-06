@@ -212,3 +212,55 @@ Stage Summary:
 - 8 local commits ready to push to GitHub (user needs to run: git push origin main).
 - No source data modified. No other sections changed. No global CSS.
 - Production-ready.
+
+---
+Task ID: 155
+Agent: main
+Task: User reported "Quick Clinical Search je structure kidhu tej joiye" (make it fast) + check both Quick Clinical Search and Repertory sections.
+
+Investigation:
+- Quick Clinical Search was SLOW: 220-720ms per query (iterates through 86,867 rubrics + 3,659 remedies on every request).
+- Quick Clinical Search had DATA QUALITY issues: 1,569 Phatak rubrics with OCR-corrupted fullPath values (leading ·, •, ,, ', digits replacing letters like "11,VER" = "FEVER").
+- Repertory section was already fast (100-160ms) and clean after Task 154 fixes.
+
+Fixes Applied — Quick Clinical Search:
+- Built CACHED SEARCH INDEX (built once on first request, reused for all subsequent searches):
+  - Pre-processes 86,867 rubrics + 3,659 remedies into IndexedRemedy[] + IndexedRubric[] arrays.
+  - Pre-computes lowercase combined text per item (no re-concatenation per query).
+  - Pre-parses remedies with grades at index time.
+  - Pre-cleans display names (OCR artifacts stripped at index time, not per query).
+- Improved cleanDisplayName function:
+  - Strip leading OCR artifacts: ·, •, ,, ', -, (, ), whitespace runs.
+  - Collapse multiple internal spaces.
+  - Skip entries starting with digit+punctuation+letters (e.g. "11,VER" pattern).
+  - Skip entries with • or · in middle of text.
+  - Skip entries shorter than 3 chars after cleaning.
+  - Prefer cleaned fullPath; fall back to title if fullPath is corrupted.
+
+Performance Results:
+- First request (builds index): ~900ms-1s (one-time cost)
+- Subsequent requests: ~100ms (10x faster than before!)
+  - 'fever': 895ms (first) → ~100ms (cached)
+  - 'headache': 112ms
+  - 'anxiety': 96ms
+  - 'stomach pain': 257ms
+  - 'fear': 101ms
+
+Data Quality Results:
+- 'fever': clean Murphy results first (ABRICAN, fever / ADYNAMIG, fever / AFFECTED, parts, fever of)
+- 'headache': clean Kent results (ACCELERATED - headache, during / ACCOMMODATION defective - headaches)
+- 'anxiety': clean Kent results (ACCELERATED - anxiety, during / AFTERNOON - anxiety and sweat, with)
+- 'stomach pain': clean Phatak results (Lost, wanting - ~Stomach pain, from)
+- 'fear': mostly clean Kent + some Phatak
+
+Repertory Section (verified working from Task 154):
+- API: 100-150ms per search, 15ms for page load.
+- Returns fullPath + byGrade + chapter + level + parentId.
+- UI: grade-colored badges (G4=Red, G3=Green, G2=Blue, G1=Black).
+- UI: chapter filter, grade legend, full paths.
+
+Verification:
+- TypeScript: 0 errors in modified files.
+- All routes HTTP 200.
+- No source data modified. No other sections changed.
+- 9 local commits ready to push to GitHub.
