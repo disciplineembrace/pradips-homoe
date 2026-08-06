@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { RepertoryTree } from './repertory-tree';
 
 type ParsedRemedy = { abbrev: string; grade: number };
 
@@ -112,6 +113,9 @@ export default function RepertoryPage() {
   const [chapters, setChapters] = useState<{ name: string; rubricCount: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingChapters, setLoadingChapters] = useState(false);
+  // viewMode: 'tree' = recursive hierarchy with expand/collapse (default),
+  // 'list' = flat paginated list with grade badges.
+  const [viewMode, setViewMode] = useState<'tree' | 'list'>('tree');
   const reader = useReaderFeatures();
 
   // Auth check
@@ -222,7 +226,84 @@ export default function RepertoryPage() {
           >Synthesis Repertory →</Link>
         </div>
 
-        {/* Search + Chapter filter */}
+        {/* View mode toggle — Tree (recursive hierarchy) vs List (flat paginated) */}
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div
+            className="inline-flex rounded-md overflow-hidden border border-[#E8DCC3]"
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode('tree')}
+              className={`px-4 py-1.5 text-xs font-semibold transition-colors ${
+                viewMode === 'tree' ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-white text-[#7C8F6E] hover:bg-[#F5EFE0]'
+              }`}
+              title="Recursive tree view with expand/collapse (unlimited hierarchy depth)"
+            >
+              🌳 Tree View
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-4 py-1.5 text-xs font-semibold transition-colors ${
+                viewMode === 'list' ? 'bg-[#173B2D] text-[#F5EFE0]' : 'bg-white text-[#7C8F6E] hover:bg-[#F5EFE0]'
+              }`}
+              title="Flat paginated list with grade-colored remedy badges"
+            >
+              📋 List View
+            </button>
+          </div>
+          {viewMode === 'tree' && (
+            <div className="text-xs text-[#7C8F6E]">
+              Chapter filter: <strong className="text-[#173B2D]">{chapter || 'All Chapters'}</strong>
+            </div>
+          )}
+        </div>
+
+        {/* ===== TREE VIEW — recursive hierarchy ===== */}
+        {viewMode === 'tree' && (
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            {/* Chapter filter for tree */}
+            <div className="mb-3">
+              <select
+                value={chapter}
+                onChange={e => setChapter(e.target.value)}
+                disabled={loadingChapters}
+                className="px-3 py-2 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D] bg-white disabled:opacity-50"
+              >
+                <option value="">All Chapters ({chapters.reduce((s, c) => s + c.rubricCount, 0)} rubrics)</option>
+                {chapters.map(ch => (
+                  <option key={ch.name} value={ch.name}>
+                    {ch.name} ({ch.rubricCount})
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Grade legend */}
+            <div className="flex items-center gap-3 mb-3 flex-wrap text-[0.65rem]">
+              <span className="font-semibold text-[#7C8F6E] uppercase tracking-wider">Grade Legend:</span>
+              {[
+                { g: 4, label: 'Grade 4 — Highest' },
+                { g: 3, label: 'Grade 3' },
+                { g: 2, label: 'Grade 2' },
+                { g: 1, label: 'Grade 1 — Normal' },
+              ].map(({ g, label }) => {
+                const meta = GRADE_META[g];
+                return (
+                  <span key={g} className="flex items-center gap-1">
+                    <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: meta.bg }}></span>
+                    <span className="text-[#7C8F6E]">{label}</span>
+                  </span>
+                );
+              })}
+            </div>
+            {/* Recursive tree */}
+            <RepertoryTree author={author} chapter={chapter} />
+          </div>
+        )}
+
+        {/* Search + Chapter filter (only in List view) */}
+        {viewMode === 'list' && (
+        <>
         <div className="bg-white rounded-lg shadow p-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Search */}
@@ -359,6 +440,8 @@ export default function RepertoryPage() {
             >Next →</button>
           </div>
         )}
+        </>
+        )} {/* end List View mode */}
       </main>
       <Footer />
     </div>
