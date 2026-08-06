@@ -4,9 +4,7 @@
 /// Uses the existing Next.js API routes (same URLs as the website).
 library;
 
-import 'dart:convert';
 import '../../core/config/app_config.dart';
-import '../../core/network/api_exceptions.dart';
 import '../../core/network/dio_client.dart';
 import 'dtos/dtos.dart';
 

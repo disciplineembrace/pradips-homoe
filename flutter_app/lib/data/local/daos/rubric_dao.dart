@@ -70,7 +70,7 @@ class RubricDao extends DatabaseAccessor<AppDatabase> with _$RubricDaoMixin {
       ..where(rubrics.source.equals(source) &
           rubrics.deletedAt.isNull() &
           rubrics.chapter.isNotNull() &
-          rubrics.chapter.isNotEmpty());
+          rubrics.chapter.isNotValue(""));
     final rows = await q.get();
     return rows.map((row) => row.read(rubrics.chapter)!).toList()..sort();
   }

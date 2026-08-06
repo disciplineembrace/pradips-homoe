@@ -3,7 +3,6 @@
 /// Local writes are immediate (SQLite). Server sync happens via outbox.
 library;
 
-import 'dart:convert';
 import 'package:drift/drift.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../core/network/connectivity.dart';
