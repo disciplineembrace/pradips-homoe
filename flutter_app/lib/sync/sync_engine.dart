@@ -4,11 +4,11 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import '../../core/config/app_config.dart';
-import '../../core/network/connectivity.dart';
-import '../../core/network/api_exceptions.dart';
-import '../../core/network/dio_client.dart';
-import '../local/database.dart';
+import '../core/config/app_config.dart';
+import '../core/network/connectivity.dart';
+import '../core/network/api_exceptions.dart';
+import '../core/network/dio_client.dart';
+import '../data/local/database.dart';
 
 /// Sync progress for UI display.
 class SyncProgress {

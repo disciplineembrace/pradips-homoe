@@ -9,8 +9,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers.dart';
-import '../../sync/sync_engine.dart';
+import '../providers.dart';
+import '../sync/sync_engine.dart';
 
 class SyncProgressBar extends ConsumerStatefulWidget {
   const SyncProgressBar({super.key});
