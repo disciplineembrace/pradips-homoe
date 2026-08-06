@@ -402,17 +402,6 @@ function QuickClinicalSearchImpl() {
                       {highlightMatch(r.snippet, q)}
                     </p>
                   )}
-                  {/* Clinical categories */}
-                  {r.categories && (
-                    <div className="mt-2 space-y-1">
-                      {Object.entries(r.categories).map(([cat, val]) => (
-                        <div key={cat} className="text-xs flex gap-2">
-                          <span className="font-semibold text-[#173B2D] min-w-[140px]">{CATEGORY_LABELS[cat] || cat}:</span>
-                          <span className="text-stone-600 flex-1">{highlightMatch(val, q)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                   {/* View source link */}
                   <div className="mt-2">
                     <Link href={r.href} className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
@@ -443,13 +432,6 @@ function QuickClinicalSearchImpl() {
                         {r.subsection && <span className="text-xs text-[#7C8F6E]">{r.subsection}</span>}
                       </div>
                       <p className="text-stone-700 text-xs">{highlightMatch(r.snippet, q)}</p>
-                      {r.categories && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {Object.keys(r.categories).map(cat => (
-                            <span key={cat} className="text-xs px-1.5 py-0.5 bg-[#F5EFE0] text-[#173B2D] rounded">{CATEGORY_LABELS[cat]?.replace(/[^\w\s]/g, '') || cat}</span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
