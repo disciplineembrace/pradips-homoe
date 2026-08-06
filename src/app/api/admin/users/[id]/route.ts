@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (typeof body.email === 'string' && body.email.includes('@')) {
     updates.email = body.email.toLowerCase();
   }
-  if (body.status === 'active' || body.status === 'disabled') {
+  if (body.status === 'active' || body.status === 'disabled' || body.status === 'suspended') {
     if (target.status !== body.status) {
       updates.status = body.status;
       auditActions.push(body.status === 'disabled' ? 'user_disable' : 'user_enable');
