@@ -19,7 +19,7 @@ import { ProfileSettings } from './profile-settings';
 import { CasePaper } from './case-paper';
 import { ReportSheet } from './report-sheet';
 import { StepGuide } from './step-guide';
-import { SynthesisCircle, LeafGrowth, SkeletonTable, EmptyState, WorkflowSteps, PulseDot } from './components';
+import { SynthesisCircle, LeafGrowth, SkeletonTable, EmptyState, WorkflowSteps, PulseDot, Icons } from './components';
 
 // ============================================================
 // MAIN COMPONENT
@@ -355,7 +355,7 @@ export default function SynthesisPage() {
   const enabledCount = selectedRubrics.filter(r => r.enabled).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EC]">
+    <div className="min-h-screen flex flex-col bg-[#F8F5EC] synthesis-bg">
       <Navbar />
       <main className="flex-1 w-full px-3 md:px-6 py-4 md:py-6">
 
@@ -400,18 +400,18 @@ export default function SynthesisPage() {
               </div>
             </div>
 
-            {/* Stats Grid — 2x3 grid matching uploaded design */}
+            {/* Stats Grid — 2x3 grid with SVG icons */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
               {[
-                { label: 'Rubrics', value: stats.rubrics.toLocaleString(), icon: '📋' },
-                { label: 'Remedies', value: stats.remedies.toLocaleString(), icon: '💊' },
-                { label: 'Relationships', value: '1,156,961', icon: '🔗' },
-                { label: 'Authors', value: '933', icon: '✍️' },
-                { label: 'Chapters', value: stats.chapters, icon: '📖' },
-                { label: 'Cross Refs', value: stats.crossRefs.toLocaleString(), icon: '🔀' },
+                { label: 'Rubrics', value: stats.rubrics.toLocaleString(), Icon: Icons.Rubrics },
+                { label: 'Remedies', value: stats.remedies.toLocaleString(), Icon: Icons.Remedies },
+                { label: 'Relationships', value: '1,156,961', Icon: Icons.Relationships },
+                { label: 'Authors', value: '933', Icon: Icons.Authors },
+                { label: 'Chapters', value: stats.chapters, Icon: Icons.Chapters },
+                { label: 'Cross Refs', value: stats.crossRefs.toLocaleString(), Icon: Icons.CrossRefs },
               ].map(s => (
                 <div key={s.label} className="bg-[#FFFDF8] rounded-lg shadow-sm border border-[#E5DCC8] p-4 text-center hover:shadow-md transition-shadow">
-                  <div className="text-2xl mb-1">{s.icon}</div>
+                  <div className="flex justify-center mb-1"><s.Icon size={24} /></div>
                   <div className="text-lg font-bold text-[#0F3D2E]">{s.value}</div>
                   <div className="text-xs text-[#6B7280] uppercase tracking-wider">{s.label}</div>
                 </div>
@@ -429,14 +429,14 @@ export default function SynthesisPage() {
             {/* Navigation Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: 'How It Works', icon: '📚', onClick: () => setShowStepGuide(true), desc: '9-step workflow guide' },
-                { label: 'Chapters', icon: '📖', view: 'browse' as const, desc: 'Browse rubric hierarchy' },
-                { label: 'Search', icon: '🔍', view: 'search' as const, desc: 'Search 180K+ rubrics' },
-                { label: `Case Paper${selectedRubrics.length > 0 ? ` (${enabledCount})` : ''}`, icon: '📋', view: 'case' as const, desc: 'Patient details & rubrics' },
-                { label: `History (${cases.length})`, icon: '📂', view: 'history' as const, desc: 'Saved cases' },
-                { label: 'Profile', icon: '👤', view: 'profile' as const, desc: 'Doctor/Clinic branding' },
-                { label: 'Report', icon: '📄', onClick: () => results.length > 0 && setShowReport(true), desc: 'View repertorization report' },
-                { label: 'New Case', icon: '➕', onClick: () => handleNewCase(), desc: 'Start fresh repertorization' },
+                { label: 'How It Works', Icon: Icons.HowItWorks, onClick: () => setShowStepGuide(true), desc: '9-step workflow guide' },
+                { label: 'Chapters', Icon: Icons.Chapters, view: 'browse' as const, desc: 'Browse rubric hierarchy' },
+                { label: 'Search', Icon: Icons.Search, view: 'search' as const, desc: 'Search 180K+ rubrics' },
+                { label: `Case Paper${selectedRubrics.length > 0 ? ` (${enabledCount})` : ''}`, Icon: Icons.Case, view: 'case' as const, desc: 'Patient details & rubrics' },
+                { label: `History (${cases.length})`, Icon: Icons.History, view: 'history' as const, desc: 'Saved cases' },
+                { label: 'Profile', Icon: Icons.Profile, view: 'profile' as const, desc: 'Doctor/Clinic branding' },
+                { label: 'Report', Icon: Icons.Report, onClick: () => results.length > 0 && setShowReport(true), desc: 'View repertorization report' },
+                { label: 'New Case', Icon: Icons.NewCase, onClick: () => handleNewCase(), desc: 'Start fresh repertorization' },
               ].map(item => (
                 <button
                   key={item.label}
@@ -447,7 +447,7 @@ export default function SynthesisPage() {
                       : 'border-[#E5DCC8] hover:shadow-md hover:border-[#D4AF37]'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{item.icon}</div>
+                  <div className="mb-1"><item.Icon size={24} /></div>
                   <div className="text-sm font-semibold text-[#0F3D2E]">{item.label}</div>
                   <div className="text-xs text-[#6B7280]">{item.desc}</div>
                 </button>
@@ -1028,6 +1028,23 @@ export default function SynthesisPage() {
           @page {
             size: A4;
             margin: 10mm;
+          }
+        }
+
+        /* Subtle botanical background pattern for Synthesis section only */
+        .synthesis-bg {
+          background-image:
+            radial-gradient(circle at 20% 50%, rgba(30, 107, 82, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(15, 61, 46, 0.02) 0%, transparent 50%);
+          background-attachment: fixed;
+        }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          .synthesis-bg * {
+            animation: none !important;
+            transition: none !important;
           }
         }
       `}</style>
