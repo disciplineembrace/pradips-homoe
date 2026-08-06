@@ -1003,16 +1003,6 @@ export default function SynthesisPage() {
         />
       )}
 
-      {/* ===== BACK TO TOP BUTTON ===== */}
-      {view !== 'dashboard' && (
-        <button
-          onClick={() => setView('dashboard')}
-          className="fixed bottom-4 right-4 px-3 py-2 bg-[#173B2D] text-white rounded-lg text-xs font-semibold shadow-lg hover:bg-[#0f2a20] z-30"
-        >
-          ← Dashboard
-        </button>
-      )}
-
       {/* ===== PRINT STYLES ===== */}
       <style jsx global>{`
         @media print {
