@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -17,6 +17,17 @@ type Result = {
   snippet: string;
   href: string;
   sourcePages?: string;
+  categories?: {
+    location?: string;
+    sensation?: string;
+    modality?: string;
+    concomitant?: string;
+    causation?: string;
+    time?: string;
+    side?: string;
+    peculiar?: string;
+    extension?: string;
+  };
 };
 
 const SUBJECTS = [
@@ -49,22 +60,38 @@ const SOURCES_BY_SUBJECT: Record<string, { value: string; label: string }[]> = {
   ],
 };
 
+const VIEW_MODES = [
+  { value: 'indications', label: 'Indications — Point-wise' },
+  { value: 'remedy-wise', label: 'Remedy-wise' },
+  { value: 'source-wise', label: 'Source-wise' },
+  { value: 'differentiate', label: 'Differentiate Remedies' },
+];
+
 const MATCH_STYLES: Record<string, { label: string; color: string; bg: string; border: string }> = {
   exact: { label: 'EXACT MATCH', color: 'text-red-800', bg: 'bg-red-50', border: 'border-red-400' },
   close: { label: 'CLOSE MATCH', color: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-400' },
   related: { label: 'RELATED', color: 'text-green-800', bg: 'bg-green-50', border: 'border-green-400' },
 };
 
-// Highlight matched words in snippet text
+const CATEGORY_LABELS: Record<string, string> = {
+  location: '📍 Location',
+  sensation: '⚡ Sensation',
+  modality: '🔄 Modality',
+  concomitant: '➕ Concomitant',
+  causation: '💥 Causation',
+  time: '🕐 Time',
+  side: '↔️ Side',
+  peculiar: '⭐ Peculiar / Characteristic',
+  extension: '↗️ Extension / Direction',
+};
+
+// Highlight matched words
 function highlightMatch(text: string, query: string): React.ReactNode {
   if (!query || !text) return text;
   const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
   if (words.length === 0) return text;
-
-  // Build regex for all query words (case-insensitive)
   const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
-
   const parts = text.split(regex);
   return parts.map((part, idx) => {
     if (words.some(w => part.toLowerCase() === w)) {
@@ -80,17 +107,22 @@ function highlightMatch(text: string, query: string): React.ReactNode {
 
 function QuickClinicalSearchImpl() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [session, setSession] = useState<any>(null);
   const [q, setQ] = useState('');
   const [subject, setSubject] = useState('all');
   const [source, setSource] = useState('all');
+  const [viewMode, setViewMode] = useState('indications');
   const [results, setResults] = useState<Result[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [page, setPage] = useState(1);
+  const [expandedResult, setExpandedResult] = useState<string | null>(null);
+  const [differentiateRemedies, setDifferentiateRemedies] = useState<string[]>([]);
   const pageSize = 20;
 
+  // Restore state from URL on mount
   useEffect(() => {
     fetch('/api/auth/session')
       .then(r => r.json())
@@ -99,234 +131,382 @@ function QuickClinicalSearchImpl() {
         setSession(d);
       })
       .catch(() => router.push('/login'));
+
+    // Restore from URL params
+    const urlQ = searchParams.get('q');
+    const urlSubject = searchParams.get('subject');
+    const urlSource = searchParams.get('source');
+    const urlView = searchParams.get('view');
+    if (urlQ) {
+      setQ(urlQ);
+      if (urlSubject) setSubject(urlSubject);
+      if (urlSource) setSource(urlSource);
+      if (urlView) setViewMode(urlView);
+      // Auto-search
+      setTimeout(() => doSearch(urlQ, urlSubject || 'all', urlSource || 'all', 1), 100);
+    }
   }, [router]);
 
-  // Reset source when subject changes
-  useEffect(() => {
-    setSource('all');
-  }, [subject]);
-
-  const doSearch = useCallback(async (searchPage: number = 1) => {
-    if (q.trim().length < 2) return;
+  const doSearch = useCallback(async (searchQ: string, searchSubject: string, searchSource: string, searchPage: number) => {
+    if (!searchQ.trim() || searchQ.trim().length < 2) return;
     setLoading(true);
     setSearched(true);
-    setPage(searchPage);
-    
-    const params = new URLSearchParams();
-    params.set('q', q.trim());
-    params.set('subject', subject);
-    params.set('source', source);
-    params.set('page', String(searchPage));
-    params.set('pageSize', String(pageSize));
-    
+    setError('');
     try {
-      const r = await fetch(`/api/clinical-search?${params.toString()}`);
-      if (r.status === 401) { router.push('/login'); return; }
-      const d = await r.json();
+      const params = new URLSearchParams({
+        q: searchQ.trim(),
+        subject: searchSubject,
+        source: searchSource,
+        page: String(searchPage),
+        pageSize: String(pageSize),
+      });
+      const res = await fetch(`/api/clinical-search?${params}`);
+      const d = await res.json();
       setResults(d.results || []);
       setTotal(d.total || 0);
     } catch {
       setResults([]);
       setTotal(0);
+      setError('Search failed. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [q, subject, source, router]);
+  }, []);
 
-  // Group results by type
-  const groupedResults = {
-    'Materia Medica': results.filter(r => r.type === 'remedy'),
-    'Repertory': results.filter(r => r.type === 'rubric'),
-  };
+  const [error, setError] = useState('');
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const availableSources = SOURCES_BY_SUBJECT[subject] || [{ value: 'all', label: 'All Sources' }];
-
-  if (!session) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin"></div>
-        </div>
-        <Footer />
-      </div>
-    );
+  function handleSearch() {
+    if (q.trim().length < 2) return;
+    setPage(1);
+    doSearch(q, subject, source, 1);
+    // Update URL for state persistence
+    const params = new URLSearchParams({ q: q.trim(), subject, source, view: viewMode });
+    router.replace(`/quick-clinical-search?${params}`);
   }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+    doSearch(q, subject, source, newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Group results for different views
+  const groupedByRemedy = results.filter(r => r.type === 'remedy').reduce((acc, r) => {
+    if (!acc[r.name]) acc[r.name] = [];
+    acc[r.name].push(r);
+    return acc;
+  }, {} as Record<string, Result[]>);
+
+  const groupedBySource = results.reduce((acc, r) => {
+    const key = r.author || r.source || 'Unknown';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(r);
+    return acc;
+  }, {} as Record<string, Result[]>);
+
+  // Differentiate remedies data
+  const topRemedies = Object.keys(groupedByRemedy).slice(0, 5);
+  const allCategories = new Set<string>();
+  results.forEach(r => {
+    if (r.categories) {
+      Object.keys(r.categories).forEach(c => allCategories.add(c));
+    }
+  });
+
+  if (!session) return (
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin mb-4"></div>
+          <p className="text-sm text-[#7C8F6E]">Loading...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  const totalPages = Math.ceil(total / pageSize);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
       <main className="flex-1 max-w-6xl mx-auto px-4 py-6 w-full">
         {/* Header */}
-        <header className="mb-6">
-          <h1 className="font-serif text-3xl text-[#173B2D]">Quick Clinical Search</h1>
-          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Search across all verified library sources</p>
-          <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
-        </header>
+        <div className="mb-4">
+          <h1 className="font-serif text-2xl md:text-3xl text-[#173B2D]">Quick Clinical Search</h1>
+          <p className="text-xs text-[#7C8F6E] mt-1">Search verified source data — disease, symptom, indication, rubric or clinical term</p>
+          <div className="w-16 h-0.5 bg-[#C8A24A] mt-2"></div>
+        </div>
 
-        {/* Search Box */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="relative mb-4">
+        {/* Search box */}
+        <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 mb-4">
+          <div className="flex gap-2 mb-3">
             <input
               type="text"
               placeholder="Search disease, condition, symptom, indication, rubric or clinical term..."
               value={q}
               onChange={e => setQ(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') doSearch(1); }}
-              className="w-full px-4 py-3 pl-12 border-2 border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              className="flex-1 px-4 py-2.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#173B2D] focus:ring-1 focus:ring-[#173B2D]"
             />
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C8F6E] text-lg">🔍</span>
+            <button
+              onClick={handleSearch}
+              disabled={loading || q.trim().length < 2}
+              className="px-6 py-2.5 bg-[#173B2D] text-white rounded-lg text-sm font-semibold hover:bg-[#0f2a20] disabled:opacity-50 transition-colors"
+            >
+              {loading ? '...' : 'Search'}
+            </button>
           </div>
-          
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-xs font-semibold text-[#7C8F6E] uppercase tracking-wider mb-1 block">Search In</label>
-              <select
-                value={subject}
-                onChange={e => setSubject(e.target.value)}
-                className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm bg-white text-[#173B2D] focus:outline-none focus:border-[#173B2D]"
-              >
+
+          {/* Filters */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Search In</label>
+              <select value={subject} onChange={e => { setSubject(e.target.value); setSource('all'); }}
+                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
                 {SUBJECTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-xs font-semibold text-[#7C8F6E] uppercase tracking-wider mb-1 block">Source</label>
-              <select
-                value={source}
-                onChange={e => setSource(e.target.value)}
-                className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm bg-white text-[#173B2D] focus:outline-none focus:border-[#173B2D]"
-              >
-                {availableSources.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            <div>
+              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Source</label>
+              <select value={source} onChange={e => setSource(e.target.value)}
+                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
+                {(SOURCES_BY_SUBJECT[subject] || SOURCES_BY_SUBJECT['all']).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            
-            <button
-              onClick={() => doSearch(1)}
-              disabled={q.trim().length < 2 || loading}
-              className="bg-[#173B2D] text-[#C8A24A] px-8 py-2 rounded font-semibold text-sm hover:bg-[#2a5443] disabled:opacity-40 transition-colors"
-            >
-              {loading ? 'Searching...' : 'SEARCH'}
-            </button>
+            <div>
+              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">View By</label>
+              <select value={viewMode} onChange={e => setViewMode(e.target.value)}
+                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
+                {VIEW_MODES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button onClick={handleSearch} className="w-full px-4 py-1.5 bg-stone-200 text-stone-700 rounded text-xs font-semibold hover:bg-stone-300">
+                ↻ Apply Filters
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Error */}
+        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">{error}</div>}
+
         {/* Results */}
-        {searched && (
-          <div>
-            {/* Count */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm text-[#7C8F6E]">
-                {loading ? 'Searching...' : `${total} result${total !== 1 ? 's' : ''}${q ? ` for "${q}"` : ''}`}
-              </div>
-            </div>
+        {searched && !loading && results.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-8 text-center">
+            <p className="text-sm text-[#7C8F6E]">No verified indication found in the selected sources.</p>
+            <p className="text-xs text-stone-400 mt-2">Try different keywords or broaden your search filters.</p>
+          </div>
+        )}
 
-            {/* No results */}
-            {!loading && total === 0 && (
-              <div className="bg-white rounded-lg shadow p-8 text-center">
-                <p className="text-[#7C8F6E] mb-4">No verified result found in the selected website sources.</p>
-                {subject !== 'all' && (
-                  <button
-                    onClick={() => { setSubject('all'); setSource('all'); }}
-                    className="text-[#173B2D] underline text-sm"
-                  >Search All Subjects</button>
-                )}
-              </div>
-            )}
-
-            {/* Grouped Results */}
-            {!loading && total > 0 && (
-              <div className="space-y-6">
-                {Object.entries(groupedResults).map(([groupName, groupResults]) => {
-                  if (groupResults.length === 0) return null;
-                  return (
-                    <div key={groupName}>
-                      <h2 className="font-serif text-lg text-[#173B2D] mb-3 pb-1 border-b border-[#E8DCC3]">{groupName}</h2>
-                      <div className="space-y-3">
-                        {groupResults.map((r, idx) => {
-                          const matchStyle = MATCH_STYLES[r.matchType] || MATCH_STYLES.related;
-                          return (
-                            <Link
-                              key={`${r.id}-${idx}`}
-                              href={r.href}
-                              className={`block bg-white rounded-lg shadow hover:shadow-md p-4 transition-shadow border-l-4 ${matchStyle.border} ${matchStyle.bg}`}
-                            >
-                              {/* Match type badge with grade color */}
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${matchStyle.color} bg-white border ${matchStyle.border}`}>
-                                  {matchStyle.label}
-                                </span>
-                                <span className="text-xs text-[#7C8F6E]">{r.matchText}</span>
-                                {r.type === 'remedy' && (
-                                  <span className="text-xs text-stone-400">· Materia Medica</span>
-                                )}
-                                {r.type === 'rubric' && (
-                                  <span className="text-xs text-stone-400">· Repertory</span>
-                                )}
-                              </div>
-
-                              {/* Source + Remedy info */}
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="text-xs font-semibold bg-[#173B2D] text-[#C8A24A] px-2 py-0.5 rounded">{r.author}</span>
-                                <span className="font-serif text-base text-[#173B2D] font-semibold">{r.name}</span>
-                                {r.subsection && (
-                                  <span className="text-xs bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded">{r.subsection}</span>
-                                )}
-                                {r.sourcePages && (
-                                  <span className="text-xs text-[#7C8F6E]">Page: {r.sourcePages}</span>
-                                )}
-                              </div>
-
-                              {/* Source text snippet — highlighted */}
-                              {r.snippet && (
-                                <p className="text-sm text-stone-700 leading-relaxed bg-white p-3 rounded border border-stone-200">
-                                  {highlightMatch(r.snippet, q)}
-                                </p>
-                              )}
-                            </Link>
-                          );
-                        })}
-                      </div>
+        {/* ===== INDICATIONS — POINT-WISE VIEW ===== */}
+        {results.length > 0 && viewMode === 'indications' && (
+          <div className="space-y-4">
+            <div className="text-sm text-[#7C8F6E]">{total} results found</div>
+            {results.map((r, idx) => {
+              const matchStyle = MATCH_STYLES[r.matchType] || MATCH_STYLES.related;
+              const isExpanded = expandedResult === `${r.id}-${idx}`;
+              return (
+                <div key={`${r.id}-${idx}`} className={`bg-white rounded-lg shadow-sm border-l-4 ${matchStyle.border} ${matchStyle.bg} p-4`}>
+                  {/* Match badge + source */}
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${matchStyle.color} bg-white border ${matchStyle.border}`}>
+                      {matchStyle.label}
+                    </span>
+                    <span className="text-xs text-[#7C8F6E]">{r.matchText}</span>
+                    {r.type === 'remedy' && <span className="text-xs text-stone-400">· Materia Medica</span>}
+                    {r.type === 'rubric' && <span className="text-xs text-stone-400">· Repertory</span>}
+                  </div>
+                  {/* Source + remedy info */}
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold bg-[#173B2D] text-[#C8A24A] px-2 py-0.5 rounded">{r.author}</span>
+                    <Link href={r.href} className="font-serif text-base text-[#173B2D] font-semibold hover:underline">{r.name}</Link>
+                    {r.subsection && <span className="text-xs bg-[#F5EFE0] text-[#173B2D] px-2 py-0.5 rounded">{r.subsection}</span>}
+                    {r.sourcePages && <span className="text-xs text-[#7C8F6E]">Page: {r.sourcePages}</span>}
+                  </div>
+                  {/* Snippet with highlighted matches */}
+                  {r.snippet && (
+                    <p className="text-sm text-stone-700 leading-relaxed bg-white p-3 rounded border border-stone-200">
+                      {highlightMatch(r.snippet, q)}
+                    </p>
+                  )}
+                  {/* Clinical categories */}
+                  {r.categories && (
+                    <div className="mt-2 space-y-1">
+                      {Object.entries(r.categories).map(([cat, val]) => (
+                        <div key={cat} className="text-xs flex gap-2">
+                          <span className="font-semibold text-[#173B2D] min-w-[140px]">{CATEGORY_LABELS[cat] || cat}:</span>
+                          <span className="text-stone-600 flex-1">{highlightMatch(val, q)}</span>
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
+                  )}
+                  {/* View source link */}
+                  <div className="mt-2">
+                    <Link href={r.href} className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                      → View Original Source
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== REMEDY-WISE VIEW ===== */}
+        {results.length > 0 && viewMode === 'remedy-wise' && (
+          <div className="space-y-4">
+            <div className="text-sm text-[#7C8F6E]">{total} results across {Object.keys(groupedByRemedy).length} remedies</div>
+            {Object.entries(groupedByRemedy).map(([remedyName, remedyResults]) => (
+              <div key={remedyName} className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
+                <div className="px-4 py-2.5 bg-[#173B2D] text-[#C8A24A]">
+                  <span className="font-serif text-lg font-semibold">{remedyName}</span>
+                  <span className="text-xs ml-2 text-stone-300">({remedyResults.length} indications)</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {remedyResults.map((r, idx) => (
+                    <div key={idx} className="text-sm border-b border-stone-100 pb-2 last:border-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-semibold bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded">{r.author}</span>
+                        {r.subsection && <span className="text-xs text-[#7C8F6E]">{r.subsection}</span>}
+                      </div>
+                      <p className="text-stone-700 text-xs">{highlightMatch(r.snippet, q)}</p>
+                      {r.categories && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {Object.keys(r.categories).map(cat => (
+                            <span key={cat} className="text-xs px-1.5 py-0.5 bg-[#F5EFE0] text-[#173B2D] rounded">{CATEGORY_LABELS[cat]?.replace(/[^\w\s]/g, '') || cat}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ===== SOURCE-WISE VIEW ===== */}
+        {results.length > 0 && viewMode === 'source-wise' && (
+          <div className="space-y-4">
+            <div className="text-sm text-[#7C8F6E]">{total} results across {Object.keys(groupedBySource).length} sources</div>
+            {Object.entries(groupedBySource).map(([sourceName, sourceResults]) => (
+              <div key={sourceName} className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
+                <div className="px-4 py-2.5 bg-stone-100 border-b border-stone-200">
+                  <span className="font-serif text-lg font-semibold text-[#173B2D]">{sourceName}</span>
+                  <span className="text-xs ml-2 text-[#7C8F6E]">({sourceResults.length} results)</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {sourceResults.map((r, idx) => (
+                    <div key={idx} className="text-sm border-b border-stone-100 pb-2 last:border-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link href={r.href} className="font-semibold text-[#173B2D] hover:underline">{r.name}</Link>
+                        <span className="text-xs text-stone-400">{r.matchText}</span>
+                      </div>
+                      <p className="text-stone-700 text-xs">{highlightMatch(r.snippet, q)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ===== DIFFERENTIATE REMEDIES VIEW ===== */}
+        {results.length > 0 && viewMode === 'differentiate' && (
+          <div className="space-y-4">
+            <div className="text-sm text-[#7C8F6E]">
+              Top {topRemedies.length} remedies for comparison. Select up to 5 to differentiate.
+            </div>
+            {/* Remedy selection */}
+            <div className="flex flex-wrap gap-2">
+              {topRemedies.map(name => (
+                <button
+                  key={name}
+                  onClick={() => {
+                    setDifferentiateRemedies(prev =>
+                      prev.includes(name) ? prev.filter(n => n !== name) : prev.length < 5 ? [...prev, name] : prev
+                    );
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full font-semibold transition-colors ${
+                    differentiateRemedies.includes(name)
+                      ? 'bg-[#173B2D] text-white'
+                      : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+            {/* Comparison table */}
+            {differentiateRemedies.length >= 2 && (
+              <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-stone-100">
+                      <th className="border border-stone-200 px-3 py-2 text-left text-stone-600 font-semibold sticky left-0 bg-stone-100">Feature</th>
+                      {differentiateRemedies.map(name => (
+                        <th key={name} className="border border-stone-200 px-3 py-2 text-center text-[#173B2D] font-semibold min-w-[150px]">{name}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {['location', 'sensation', 'modality', 'concomitant', 'causation', 'time', 'side', 'peculiar', 'extension'].map(cat => {
+                      const hasAny = differentiateRemedies.some(name =>
+                        groupedByRemedy[name]?.some(r => r.categories?.[cat as keyof typeof r.categories])
+                      );
+                      if (!hasAny) return null;
+                      return (
+                        <tr key={cat}>
+                          <td className="border border-stone-200 px-3 py-2 font-semibold text-stone-600 sticky left-0 bg-white">
+                            {CATEGORY_LABELS[cat] || cat}
+                          </td>
+                          {differentiateRemedies.map(name => {
+                            const remedyResult = groupedByRemedy[name]?.find(r => r.categories?.[cat as keyof typeof r.categories]);
+                            const val = remedyResult?.categories?.[cat as keyof typeof remedyResult.categories];
+                            return (
+                              <td key={name} className="border border-stone-200 px-2 py-2 text-stone-700">
+                                {val ? highlightMatch(val, q) : <span className="text-stone-400 italic">Not clearly established in selected source data.</span>}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8">
-                <button
-                  onClick={() => doSearch(page - 1)}
-                  disabled={page === 1 || loading}
-                  className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
-                >← Prev</button>
-                <span className="text-sm text-[#7C8F6E]">Page {page} of {totalPages}</span>
-                <button
-                  onClick={() => doSearch(page + 1)}
-                  disabled={page === totalPages || loading}
-                  className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
-                >Next →</button>
-              </div>
+            {differentiateRemedies.length < 2 && (
+              <p className="text-sm text-[#7C8F6E] text-center py-4">Select at least 2 remedies to compare.</p>
             )}
           </div>
         )}
 
-        {/* Initial state */}
-        {!searched && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-[#7C8F6E]">Enter a search term above to search across all verified library sources.</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <span className="text-xs text-[#7C8F6E]">Try:</span>
-              {['fear of death', 'headache', 'constipation', 'aggravation morning', 'skin eruption'].map(term => (
-                <button
-                  key={term}
-                  onClick={() => { setQ(term); }}
-                  className="text-xs bg-[#F5EFE0] border border-[#E8DCC3] rounded px-2 py-1 hover:bg-[#E8DCC3] text-[#173B2D]"
-                >{term}</button>
-              ))}
-            </div>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1 || loading}
+              className="px-3 py-1.5 text-sm bg-white border border-stone-200 rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
+            >← Prev</button>
+            <span className="text-sm text-[#7C8F6E]">Page {page} of {totalPages}</span>
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages || loading}
+              className="px-3 py-1.5 text-sm bg-white border border-stone-200 rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]"
+            >Next →</button>
+          </div>
+        )}
+
+        {/* Disclaimer */}
+        {results.length > 0 && (
+          <div className="mt-6 p-3 bg-stone-50 border border-stone-200 rounded text-xs text-stone-500 text-center">
+            This feature is a source-retrieval and educational aid. Clinical judgment remains separate.
+            Ranking does not constitute a confirmed diagnosis or treatment recommendation.
           </div>
         )}
       </main>
@@ -337,7 +517,7 @@ function QuickClinicalSearchImpl() {
 
 export default function QuickClinicalSearchPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F5EFE0]"><p className="text-[#7C8F6E]">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F5EFE0]"><div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin"></div></div>}>
       <QuickClinicalSearchImpl />
     </Suspense>
   );
