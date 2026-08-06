@@ -19,6 +19,7 @@ import { ProfileSettings } from './profile-settings';
 import { CasePaper } from './case-paper';
 import { ReportSheet } from './report-sheet';
 import { StepGuide } from './step-guide';
+import { SynthesisCircle, LeafGrowth, SkeletonTable, EmptyState, WorkflowSteps, PulseDot } from './components';
 
 // ============================================================
 // MAIN COMPONENT
@@ -339,13 +340,10 @@ export default function SynthesisPage() {
   // ============================================================
   if (!session || loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <div className="min-h-screen flex flex-col bg-[#F8F5EC]">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin mb-4"></div>
-            <p className="text-sm text-[#7C8F6E]">Loading Synthesis...</p>
-          </div>
+          <SynthesisCircle text="Loading Synthesis Data..." />
         </div>
       </div>
     );
@@ -357,26 +355,26 @@ export default function SynthesisPage() {
   const enabledCount = selectedRubrics.filter(r => r.enabled).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+    <div className="min-h-screen flex flex-col bg-[#F8F5EC]">
       <Navbar />
       <main className="flex-1 w-full px-3 md:px-6 py-4 md:py-6">
 
         {/* ===== HEADER ===== */}
         <header className="mb-4 md:mb-6">
           <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className="font-serif text-2xl md:text-3xl text-[#173B2D]">SYNTHESIS REPERTORY</h1>
+            <h1 className="font-serif text-2xl md:text-3xl text-[#0F3D2E]">SYNTHESIS REPERTORY</h1>
             {/* Active case indicator */}
             {selectedRubrics.length > 0 && (
               <button
                 onClick={() => setView('case')}
-                className="px-2.5 py-1 bg-blue-600 text-white rounded-full text-xs font-semibold hover:bg-blue-700 transition-colors"
+                className="px-2.5 py-1 bg-[#2563EB] text-white rounded-full text-xs font-semibold hover:bg-blue-700 transition-colors"
               >
-                Case {patient.caseNo ? `#${patient.caseNo}` : 'Draft'} • {enabledCount} Rubrics
+                <PulseDot color="#FFFDF8" /> Case {patient.caseNo ? `#${patient.caseNo}` : 'Draft'} • {enabledCount} Rubrics
               </button>
             )}
           </div>
-          <p className="text-xs uppercase tracking-[0.15em] text-[#7C8F6E] mt-1">Updated Version by Dr. Pradip</p>
-          <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#6B7280] mt-1">Updated Version by Dr. Pradip</p>
+          <div className="w-16 h-0.5 bg-[#D4AF37] mt-3"></div>
         </header>
 
         {/* Error */}
@@ -390,11 +388,16 @@ export default function SynthesisPage() {
         {/* ===== DASHBOARD VIEW ===== */}
         {view === 'dashboard' && (
           <div>
-            {/* Hero — matches uploaded design */}
-            <div className="bg-[#173B2D] rounded-xl p-6 md:p-8 text-center mb-6">
-              <h2 className="font-serif text-xl md:text-2xl text-[#C8A24A] mb-1">Synthesis Repertory</h2>
-              <p className="text-sm text-stone-300">Professional Repertorization Engine</p>
-              <p className="text-xs text-stone-400 mt-1">Updated by Dr Pradip</p>
+            {/* Workflow Steps */}
+            <WorkflowSteps currentStep={1} />
+
+            {/* Hero — premium clinical theme */}
+            <div className="bg-gradient-to-br from-[#0F3D2E] to-[#123C30] rounded-xl p-6 md:p-8 mb-6 shadow-lg border border-[#D4AF37]/20">
+              <div className="text-center">
+                <h2 className="font-serif text-xl md:text-2xl text-[#D4AF37] mb-1">Synthesis Repertory</h2>
+                <p className="text-sm text-stone-200">Professional Repertorization Engine</p>
+                <p className="text-xs text-[#D4AF37]/70 mt-1 uppercase tracking-[0.15em]">Updated by Dr. Pradip</p>
+              </div>
             </div>
 
             {/* Stats Grid — 2x3 grid matching uploaded design */}
@@ -407,10 +410,10 @@ export default function SynthesisPage() {
                 { label: 'Chapters', value: stats.chapters, icon: '📖' },
                 { label: 'Cross Refs', value: stats.crossRefs.toLocaleString(), icon: '🔀' },
               ].map(s => (
-                <div key={s.label} className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 text-center">
+                <div key={s.label} className="bg-[#FFFDF8] rounded-lg shadow-sm border border-[#E5DCC8] p-4 text-center hover:shadow-md transition-shadow">
                   <div className="text-2xl mb-1">{s.icon}</div>
-                  <div className="text-lg font-bold text-[#173B2D]">{s.value}</div>
-                  <div className="text-xs text-stone-500 uppercase tracking-wider">{s.label}</div>
+                  <div className="text-lg font-bold text-[#0F3D2E]">{s.value}</div>
+                  <div className="text-xs text-[#6B7280] uppercase tracking-wider">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -438,15 +441,15 @@ export default function SynthesisPage() {
                 <button
                   key={item.label}
                   onClick={() => item.onClick ? item.onClick() : setView(item.view)}
-                  className={`bg-white rounded-lg shadow-sm border p-4 text-left transition-all ${
+                  className={`bg-[#FFFDF8] rounded-lg shadow-sm border p-4 text-left transition-all ${
                     item.label === 'How It Works'
-                      ? 'border-[#C8A24A] hover:bg-[#FFF8E7] hover:border-[#C8A24A]'
-                      : 'border-stone-200 hover:shadow-md hover:border-[#C8A24A]'
+                      ? 'border-[#D4AF37] hover:bg-[#F8F5EC] hover:border-[#D4AF37]'
+                      : 'border-[#E5DCC8] hover:shadow-md hover:border-[#D4AF37]'
                   }`}
                 >
                   <div className="text-2xl mb-1">{item.icon}</div>
-                  <div className="text-sm font-semibold text-[#173B2D]">{item.label}</div>
-                  <div className="text-xs text-stone-500">{item.desc}</div>
+                  <div className="text-sm font-semibold text-[#0F3D2E]">{item.label}</div>
+                  <div className="text-xs text-[#6B7280]">{item.desc}</div>
                 </button>
               ))}
             </div>
@@ -535,7 +538,7 @@ export default function SynthesisPage() {
                       const currentNode = breadcrumb[breadcrumb.length - 1];
                       const children = treeChildren[currentNode.i];
                       const isLoading = loadingChildren.has(currentNode.i);
-                      if (isLoading) return <div className="text-center py-4 text-sm text-stone-400">Loading rubrics...</div>;
+                      if (isLoading) return <div className="py-2"><LeafGrowth text="Loading Chapters..." /></div>;
                       if (!children) return <div className="text-center py-4 text-sm text-stone-400">No children loaded.</div>;
                       if (children.length === 0) return <div className="text-center py-4 text-sm text-stone-400">No sub-rubrics. This may be a terminal rubric.</div>;
                       return (
@@ -577,12 +580,9 @@ export default function SynthesisPage() {
                 </div>
                 <div className="p-3 max-h-[500px] overflow-y-auto">
                   {!activeRubric ? (
-                    <p className="text-sm text-stone-500 text-center py-8">Select a rubric to view remedies.</p>
+                    <EmptyState icon="💊" title="No Rubric Selected" message="Select a rubric to view its remedies and grades." />
                   ) : loadingRemedies ? (
-                    <div className="text-center py-8">
-                      <div className="inline-block w-8 h-8 border-3 border-stone-200 border-t-[#173B2D] rounded-full animate-spin mb-2"></div>
-                      <p className="text-sm text-stone-500">Loading remedies...</p>
-                    </div>
+                    <SynthesisCircle text="Loading Remedies and Grades..." />
                   ) : (
                     <div>
                       <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded">
@@ -697,9 +697,9 @@ export default function SynthesisPage() {
               </div>
               <div className="p-3 max-h-[500px] overflow-y-auto">
                 {searchResults.length === 0 && !searching && searchQuery ? (
-                  <p className="text-sm text-stone-500 text-center py-8">No results. Try a different search term.</p>
+                  <EmptyState icon="🔍" title="No Rubrics Found" message="Try a different search term or browse chapters instead." />
                 ) : searchResults.length === 0 ? (
-                  <p className="text-sm text-stone-500 text-center py-8">Start typing to search 180,386 rubrics.</p>
+                  <EmptyState icon="🔍" title="Search Rubrics" message="Start typing to search 180,386 rubrics across all chapters." />
                 ) : (
                   <div className="space-y-1">
                     {searchResults.map(r => (
@@ -799,8 +799,8 @@ export default function SynthesisPage() {
                     <span className="text-2xl font-bold text-[#173B2D]">75%</span>
                   </div>
                 </div>
-                <p className="text-sm text-stone-500 mt-3">Please wait...</p>
-                <p className="text-xs text-stone-400">Calculating best matches</p>
+                <p className="text-sm text-[#6B7280] mt-3">Please wait...</p>
+                <p className="text-xs text-[#6B7280]">Calculating Verified Results...</p>
               </div>
             </div>
           </div>
@@ -872,7 +872,7 @@ export default function SynthesisPage() {
                 {(() => {
                   const allCases = cases;
                   if (allCases.length === 0) {
-                    return <p className="text-sm text-stone-500 text-center py-8">No saved cases yet.</p>;
+                    return <EmptyState icon="📂" title="No Case History" message="Your saved repertorization cases will appear here." actionLabel="Start New Case" onAction={() => handleNewCase()} />;
                   }
                   return (
                     <div className="space-y-2">
