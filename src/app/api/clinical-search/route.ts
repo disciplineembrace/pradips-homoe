@@ -207,8 +207,17 @@ export async function GET(req: NextRequest) {
 
   // Search rubrics
   for (const r of rubrics) {
-    const title = (r.title || '').toLowerCase();
-    const path = (r.path || '').toLowerCase();
+    // Skip malformed/OCR-artifact rubrics (titles starting with punctuation
+    // or shorter than 3 chars). These pollute search results.
+    const rawTitle = r.title || '';
+    const isMalformed = rawTitle.length < 3 || /^[,.'";:\-_/\\]+/.test(rawTitle);
+    if (isMalformed && !r.fullPath) continue;
+
+    // Prefer fullPath for display (gives full hierarchy context);
+    // fall back to title for rubrics without fullPath.
+    const displayName = r.fullPath || rawTitle;
+    const title = displayName.toLowerCase();
+    const path = (r.fullPath || r.path || '').toLowerCase();
     const remediesList = ((r.remedies || []) as string[]).map((rem: any) => {
       if (typeof rem === 'string') return rem.split('|')[0];
       return typeof rem === 'object' && rem?.name ? rem.name : String(rem);
@@ -222,28 +231,37 @@ export async function GET(req: NextRequest) {
     if (title.includes(queryPhrase) || path.includes(queryPhrase)) {
       matchType = 'exact';
       matchText = 'Exact phrase match in rubric';
-      snippet = r.path || r.title;
+      snippet = displayName;
     } else if (queryWords.length > 1 && queryWords.every(w => combinedText.includes(w))) {
       matchType = 'close';
       matchText = 'All terms found in rubric';
-      snippet = r.path || r.title;
+      snippet = displayName;
     } else if (queryWords.some(w => combinedText.includes(w))) {
       matchType = 'related';
       matchText = 'Related rubric';
-      snippet = r.path || r.title;
+      snippet = displayName;
     }
 
     if (matchType !== 'related' || queryWords.some(w => combinedText.includes(w))) {
+      // Parse remedies into grade-wise summary for display
+      const parsedRemedies = (r.remedies || []).map((rem: any) => {
+        if (typeof rem === 'string') {
+          const parts = rem.split('|');
+          return { abbrev: parts[0], grade: parseInt(parts[1] || '1', 10) };
+        }
+        return null;
+      }).filter(Boolean);
+
       results.push({
         type: 'rubric',
         id: r.id,
-        name: r.title,
+        name: displayName,
         author: r.source || r.author || '',
         source: r.source || r.author || '',
-        subsection: r.path || '',
+        subsection: r.chapter || r.path || '',
         matchType,
         matchText,
-        snippet: snippet + ((r.remedies && r.remedies.length > 0) ? ` — Remedies: ${r.remedies.slice(0, 10).join(', ')}${r.remedies.length > 10 ? '...' : ''}` : ''),
+        snippet: snippet + ((parsedRemedies.length > 0) ? ` — ${parsedRemedies.length} remedies (G4:${parsedRemedies.filter(pr => pr.grade === 4).length}, G3:${parsedRemedies.filter(pr => pr.grade === 3).length}, G2:${parsedRemedies.filter(pr => pr.grade === 2).length}, G1:${parsedRemedies.filter(pr => pr.grade === 1).length})` : ''),
         href: `/repertory`,
         sourcePages: '',
       });
