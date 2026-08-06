@@ -166,3 +166,49 @@ Stage Summary:
 - 6 commits ready to push to GitHub (user needs to run: git push origin main OR bash push-to-github.sh with GH_TOKEN set).
 - Production build succeeds. Standalone server runs cleanly.
 - No data loss, no function changes outside Synthesis rubric hierarchy scope.
+
+---
+Task ID: 154
+Agent: main
+Task: Complete incomplete work in Quick Clinical Search and Repertory sections. User reported "Quick Clinical Search and Repertory section ka work complete nahi huaa" (work not complete).
+
+Investigation Results:
+- Repertory Section (/repertory): API returned `title` (child fragment) but NOT `fullPath`. UI showed fragments like "morning" instead of "ABSENT-MINDED - morning". No chapter filter. No grade-colored remedy badges — remedies shown as plain text. No grade legend.
+- Quick Clinical Search (/quick-clinical-search): API used `r.title` for display, which included 121 OCR-artifact rubrics with malformed titles (e.g. `,' p. Fever, with`). No grade breakdown shown for rubric matches.
+
+Fixes Applied:
+
+Repertory Section:
+- Updated /api/rubrics/route.ts to return: fullPath, chapter, level, parentId, remedies (parsed {abbrev, grade}), byGrade summary {4:[], 3:[], 2:[], 1:[]}, remedyCount.
+- Completely rewrote /repertory/page.tsx:
+  - Grade-colored remedy badges: G4=Red (#DC2626), G3=Green (#166534), G2=Blue (#1E40AF), G1=Black (#374151).
+  - RemediesByGrade component: sorts Grade 4→3→2→1, alphabetical within grade.
+  - Chapter filter dropdown (populated from /api/rubrics/chapters?author=X).
+  - Grade legend at top of search panel.
+  - Rubric cards show: fullPath (bold serif), chapter badge (gold), level, remedy count.
+  - Preserves original source grading — Kent/Phatak/Murphy/Boericke grades never mixed.
+  - Favorite + bookmark support retained.
+
+Quick Clinical Search:
+- Updated /api/clinical-search/route.ts:
+  - Skip malformed/OCR-artifact rubrics (titles <3 chars or starting with punctuation) when no fullPath.
+  - Prefer fullPath for display (gives full hierarchy context like "ANXIETY - fever, during").
+  - Parse "abbrev|grade" format for accurate grade counts.
+  - Include grade-wise breakdown in snippet: "75 remedies (G4:0, G3:21, G2:48, G1:6)".
+  - subsection field now shows chapter name.
+
+Verification:
+- /repertory: HTTP 200. Kent author shows 64,646 rubrics with full paths + grade badges.
+- /quick-clinical-search: HTTP 200. Kent search for "fever" returns 323 clean results with grade breakdowns.
+- /api/rubrics: HTTP 200. Returns fullPath + byGrade for every rubric.
+- /api/rubrics/chapters: HTTP 200. Returns 27 chapters for Kent (Abdomen, Back, Chest, etc.).
+- /api/clinical-search: HTTP 200. Returns clean Kent results with grade summaries.
+- TypeScript: 0 errors in modified files.
+- All other sections unchanged (Synthesis, Dashboard, Materia Medica, etc. all HTTP 200).
+
+Stage Summary:
+- Repertory section fully redesigned: full paths, grade-colored badges, chapter filter, grade legend.
+- Quick Clinical Search improved: malformed entries skipped, fullPath preferred, grade breakdown in snippets.
+- 8 local commits ready to push to GitHub (user needs to run: git push origin main).
+- No source data modified. No other sections changed. No global CSS.
+- Production-ready.
