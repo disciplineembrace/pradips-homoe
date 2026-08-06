@@ -1,8 +1,7 @@
 /// API exception types for structured error handling.
 ///
-/// All errors include a user-friendly message and a technical detail
-/// for logging. Sensitive data (tokens, passwords) is never included
-/// in error messages or logs.
+/// All errors include a user-friendly message. Sensitive data (tokens,
+/// passwords) is never included in error messages or logs.
 library;
 
 /// Base class for all API exceptions.
@@ -23,7 +22,7 @@ class NoConnectionException extends ApiException {
 }
 
 /// Request timed out.
-class Timeout ApiException {
+class TimeoutException extends ApiException {
   const TimeoutException([String? detail])
       : super('Request timed out. Please try again.', detail);
 }
@@ -56,7 +55,8 @@ class MalformedResponseException extends ApiException {
 
 /// Local database (SQLite) error.
 class DatabaseException extends ApiException {
-  const DatabaseException(String message, [String? detail]) : super(message, detail);
+  const DatabaseException(String message, [String? detail])
+      : super(message, detail);
 }
 
 /// Sync conflict that couldn't be auto-resolved.
@@ -71,5 +71,6 @@ class PartialSyncException extends ApiException {
   final int received;
   final int expected;
   const PartialSyncException(this.received, this.expected, [String? detail])
-      : super('Sync incomplete: received $received of $expected records.', detail);
+      : super(
+            'Sync incomplete: received $received of $expected records.', detail);
 }
