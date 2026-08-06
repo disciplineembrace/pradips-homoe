@@ -7,7 +7,6 @@ library;
 import 'package:drift/drift.dart';
 
 class Rubrics extends Table {
-  /// Primary key — must be non-null, no clientDefault.
   TextColumn get serverId => text()();
   TextColumn get parentId => text().nullable()();
   TextColumn get source => text()(); // Kent, Phatak, Murphy, Boericke

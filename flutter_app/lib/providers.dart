@@ -71,15 +71,11 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
   final repo = AuthRepository(dio, secureStorage);
 
-  // Wire up logout callback to clear the encrypted database
-  // When the user logs out, the local database + encryption key are deleted.
   repo.onLogout = () async {
     try {
       final db = ref.read(databaseProvider);
       await db.clearOnLogout();
-    } catch (_) {
-      // Non-fatal — database cleanup failure doesn't block logout
-    }
+    } catch (_) {}
   };
 
   return repo;

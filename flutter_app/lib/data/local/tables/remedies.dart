@@ -7,8 +7,7 @@ library;
 import 'package:drift/drift.dart';
 
 class Remedies extends Table {
-  /// Server-side stable unique ID (e.g. 'boericke-belladonna').
-  /// Primary key — must be non-null, no clientDefault.
+  /// Server-side stable unique ID (e.g. 'boericke-belladonna')
   TextColumn get serverId => text()();
   TextColumn get name => text()();
   TextColumn get author => text().withDefault(const Constant(''))();

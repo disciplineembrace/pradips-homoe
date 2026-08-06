@@ -6,7 +6,6 @@ library;
 import 'package:drift/drift.dart';
 
 class Books extends Table {
-  /// Primary key — must be non-null, no clientDefault.
   TextColumn get serverId => text()();
   TextColumn get title => text()();
   TextColumn get subtitle => text().nullable()();

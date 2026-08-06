@@ -121,34 +121,21 @@ class AuthRepository {
   ///   1. Call server logout API (non-fatal if it fails)
   ///   2. Delete session token from secure storage
   ///   3. Delete user data from secure storage
-  ///   4. Close + delete the encrypted SQLite database (clears all cached content + user data)
+  ///   4. Close + delete the encrypted SQLite database
   ///   5. Delete the SQLCipher encryption key from secure storage
-  ///
-  /// This ensures NO sensitive data remains on the device after logout.
-  /// The next login will trigger a fresh initial sync.
   Future<void> logout() async {
     try {
       await _dio.post(AppConfig.logoutEndpoint);
-    } catch (_) {
-      // Non-fatal if logout API fails — we clear local state anyway
-    }
+    } catch (_) {}
 
-    // Clear session token
     await _secureStorage.delete(key: AppConfig.secureStorageKey);
     await _secureStorage.delete(key: AppConfig.secureStorageUserKey);
 
-    // Clear encrypted local database + encryption key
-    // (delegates to AppDatabase.clearOnLogout which deletes the DB file
-    // and the encryption key from secure storage)
-    // This is wired up by the provider layer which has access to the database.
-    // The auth repository signals logout completion via the onLogout callback.
     _onLogout?.call();
 
     _currentUser = null;
   }
 
-  /// Callback invoked on logout — used to trigger database cleanup.
-  /// Set by the provider layer which has access to AppDatabase.
   void Function()? _onLogout;
   set onLogout(void Function()? callback) => _onLogout = callback;
 
