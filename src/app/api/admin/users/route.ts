@@ -12,21 +12,60 @@ import { hashPin, isValidPin, logAudit, getClientIp } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAdmin();
   if (errorResponse) return errorResponse;
 
+  const url = new URL(req.url);
+  const search = url.searchParams.get('search') || '';
+  const roleFilter = url.searchParams.get('role') || 'all';
+  const statusFilter = url.searchParams.get('status') || 'all';
+
+  // Build where clause
+  const where: any = {};
+  if (roleFilter !== 'all') where.role = roleFilter;
+  if (statusFilter !== 'all') where.status = statusFilter;
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
   const users = await db.user.findMany({
+    where,
     orderBy: { createdAt: 'desc' },
     select: {
       id: true, name: true, email: true,
       role: true, status: true,
       pinFailCount: true, pinLockedUntil: true,
-      lastLoginAt: true, lastPinAt: true, createdAt: true,
+      lastLoginAt: true, lastPinAt: true, createdAt: true, updatedAt: true,
+      _count: {
+        select: {
+          loginLogs: { where: { event: 'login_success' } },
+        },
+      },
     },
   });
 
-  return NextResponse.json({ users });
+  // Get last login log with IP and user agent for each user
+  const usersWithActivity = await Promise.all(
+    users.map(async (u) => {
+      const lastLogin = await db.loginLog.findFirst({
+        where: { userId: u.id, event: 'login_success' },
+        orderBy: { createdAt: 'desc' },
+        select: { ip: true, userAgent: true, createdAt: true },
+      });
+      return {
+        ...u,
+        loginCount: u._count.loginLogs,
+        lastLoginIp: lastLogin?.ip || null,
+        lastLoginUserAgent: lastLogin?.userAgent || null,
+      };
+    })
+  );
+
+  return NextResponse.json({ users: usersWithActivity });
 }
 
 export async function POST(req: NextRequest) {
