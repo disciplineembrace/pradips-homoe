@@ -54,3 +54,71 @@ Stage Summary:
 - Floating "← Dashboard" button stays removed. Bottom navigation unchanged.
 - Production-ready, no data loss.
 
+
+---
+Task ID: 152
+Agent: main
+Task: Redesign Synthesis Updated Case Details + Select Rubrics + Results screens per strict spec. Color palette: primary green #0F4A38, gold #C79A32, bg #F8F6EF, border #DED8C9. Add workflow indicator, case badge, hero illustration, mobile-friendly remedy cards. Remove bright blue primary controls. Keep bottom nav, dashboard structure, source data, repertorization logic untouched.
+
+Work Log:
+- Read uploaded reference PDF (2 pages) via VLM skill — extracted complete design spec: page title with gold underline, hero illustration (mortar & pestle + green leaves + amber homeopathic bottle + white globules), case badge (light green pill), 4-step workflow indicator (Case Details → Select Rubrics → Results → Report) with completed/active/pending states and dashed connectors, case details form with validation + char counter, selected rubrics cards with case-weight 1-4 buttons (green not blue), View Remedies outlined button, red trash icon, action buttons (Start Repertorization solid green + Save Case outlined), remedy result cards (Top 10) with rank badges (gold for #1), reminders card with leaf accent.
+- Created new file `/home/z/my-project/src/app/synthesis/synthesis-ui.tsx` (~440 lines) with shared components:
+  - `SYNTH_COLORS` constant object — single source of truth for the palette.
+  - `PageTitle` — "Synthesis Repertory" + gold underline + "Updated Version by Dr. Pradip" subtitle.
+  - `CaseBadge` — light-green pill showing real case ID + rubric count (no bright blue).
+  - `WorkflowIndicator` — 4-step indicator; active = solid green + gold ring; completed = green check; pending = gray outline with dashed connectors.
+  - `HeroIllustration` — pure SVG of mortar & pestle + green leaves + amber bottle + white globules on ivory backdrop; responsive clamp(96px, 28vw, 160px).
+  - `RemindersCard` — green-tinted card with bell icon + leaf accent + clinical tip text.
+  - `GradeLegend` — Grade 4=Red, 3=Green, 2=Blue, 1=Grey (matches source grading scale).
+  - `RemedyResultCard` — rank badge (gold tint for #1, gray for #2-3, plain for #4+) + remedy abbrev + italic full name + Score/Coverage/Rubrics metrics + chevron.
+  - `ClearAllConfirmDialog` — confirmation dialog for clearing all selected rubrics (does NOT touch source rubrics).
+- Completely rewrote `/home/z/my-project/src/app/synthesis/case-paper.tsx` with new design:
+  - Page title row + hero illustration (hidden on mobile `hidden sm:block` to keep form visible).
+  - CaseBadge using real patient.caseNo + rubrics.length.
+  - WorkflowIndicator auto-advancing based on results/rubrics state (step 1/2/3).
+  - Case Details card with all 7 fields: Patient Name*, Case No* (with regenerate button), Age, Sex (segmented control), Date*, Contact (Optional), Notes (Optional, 0/500 char counter).
+  - Inline validation: required fields, numeric age (0-150), valid email/phone for contact. Errors clear on edit. Data NOT cleared on validation error.
+  - Cancel + Save & Continue buttons with loading state "Saving Case Details...".
+  - Selected Rubrics card with: sequence number (green circle), full rubric path (uppercase, two-line wrapping via break-words), remedy count (with Loading/Failed states), Case Weight 1/2/3/4 buttons (selected = solid green/white text, unselected = white/green border — NO BLUE), Included/Excluded toggle, View Remedies outlined button (opens browse view with remedy panel), red trash icon.
+  - "Clear All" button (red outline) opens ClearAllConfirmDialog — only removes user's selected rubrics, never source rubrics.
+  - Action buttons: "Start Repertorization" (solid green, play icon, "Calculating Verified Results..." loading state) + "Save Case" (white/green border, save icon).
+  - RemindersCard at the bottom.
+- Added new state in `page.tsx`: `rubricRemedyLoadingMap` and `rubricRemedyFailedMap` (per-symptomId flags) to show accurate "Loading remedy count..." / "Remedy count unavailable" / verified count on each selected-rubric card. Never shows 0 while loading or after a failed fetch.
+- Updated `loadRubricRemedies` in `page.tsx` to set loading/failed flags and to update the `remedyCount` on any already-selected rubric with the matching symptomId (so the case-paper UI displays the verified count from the actual rubric-remedy relationships).
+- Updated `addRubricToCase` to auto-trigger `loadRubricRemedies(symptomId)` when adding a rubric whose remedy count is not yet known.
+- Updated `handleOpenCase` to backfill remedy counts for any rubric that was saved with count 0 (older saved cases) — does NOT modify the source DB, only refreshes the user-owned saved case's display count.
+- Wired up `onViewRemedies` callback in CasePaper usage — opens the rubric in browse view with the remedies panel (which uses real source grade-wise remedy data from the API).
+- Redesigned Results view in `page.tsx`:
+  - PageTitle (compact) + CaseBadge + WorkflowIndicator (step 3 active).
+  - "Result — Remedy Ranking" header with Report Preview button.
+  - Top 10 remedies rendered as RemedyResultCard list (mobile-friendly cards instead of crowded wide table).
+  - GradeLegend shown below the cards.
+  - Secondary actions: Save Case (outlined) + New Case (solid green).
+- Replaced all bright-blue primary controls across Synthesis section per spec "Avoid: Bright blue primary controls":
+  - Dashboard header active-case badge: blue → green pill.
+  - Browse view step badge, "← All Chapters" link, "+ Add" button, active rubric highlight, "+ Add to Case" button, cross-ref links.
+  - Search view step badge, active result highlight, "+ Add" button.
+  - Repertorization progress step badge.
+  - History & Profile view "← Back" links.
+  - Profile view "Preview Report" button.
+  - Step-guide tip box (blue-50/blue-700 → green-tinted with #0F4A38 text).
+  - Report-sheet "Show/Hide Matrix" link (blue-600 → #0F4A38).
+  - Report-sheet weight cells in tables (text-blue-700 → #0F4A38 — case weight, not source grade).
+  - PRESERVED Grade 2 = Blue in storage.ts GRADE_COLORS (correct per source grading scale legend).
+- Removed unused imports/state in case-paper.tsx (useEffect, useMemo, expandedRubricId, onAdvanceToSelectRubrics no-op).
+- TypeScript: `npx tsc --noEmit` shows zero synthesis-related errors.
+- Dev server: `GET /synthesis` returns HTTP 200, no runtime errors in dev log.
+- Verified: floating "← Dashboard" button still removed; bottom navigation (Home / Chapters / Search / Case / More) intact; menubar, dashboard structure, other sections, source rubrics/remedies/grades, repertorization formula, other users' data all untouched.
+
+Stage Summary:
+- Case Details screen redesigned with strict palette: #0F4A38 primary green, #C79A32 gold accent, #F8F6EF page bg, white cards, #DED8C9 borders.
+- PageTitle + gold underline + CaseBadge (real case data) + HeroIllustration (mortar & pestle + leaves + bottle + globules) + 4-step WorkflowIndicator.
+- Case Details card with all 7 fields, inline validation, char counter, Cancel/Save & Continue buttons with loading state.
+- Selected Rubrics card with sequence number, full rubric path (two-line wrap), verified remedy count (with Loading/Failed states), Case Weight 1-4 buttons (green not blue), Included/Excluded toggle, View Remedies outlined button, red trash icon, Clear All (with confirm dialog).
+- Action buttons: Start Repertorization (solid green, play icon, "Calculating Verified Results..." loading) + Save Case (outlined).
+- Results screen redesigned with RemedyResultCard list (Top 10) + GradeLegend + Save/New Case actions.
+- All bright-blue primary controls replaced with green/gold. Grade 2 = Blue preserved (source grading scale).
+- Remedy counts come from actual rubric-remedy relationships (API `/api/synthesis?action=remedies`), never fabricated.
+- Floating "← Dashboard" button stays removed. Bottom navigation unchanged.
+- No source data, no other section, no other users' data, no global CSS modified.
+- Production-ready, no data loss, no function changes outside this exact redesign scope.

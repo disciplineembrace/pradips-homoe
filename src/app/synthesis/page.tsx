@@ -20,6 +20,10 @@ import { CasePaper } from './case-paper';
 import { ReportSheet } from './report-sheet';
 import { StepGuide } from './step-guide';
 import { EditCaseModal, DeleteConfirmDialog } from './case-actions';
+import {
+  SYNTH_COLORS, PageTitle, CaseBadge, WorkflowIndicator,
+  GradeLegend, RemedyResultCard,
+} from './synthesis-ui';
 import { SynthesisCircle, LeafGrowth, SkeletonTable, EmptyState, WorkflowSteps, PulseDot, Icons } from './components';
 
 // ============================================================
@@ -49,6 +53,12 @@ export default function SynthesisPage() {
   const [activeRubric, setActiveRubric] = useState<TreeNode | SearchResult | null>(null);
   const [rubricRemedies, setRubricRemedies] = useState<Record<number, { byGrade: Record<number, { abbrev: string; full: string }[]>; total: number }>>({});
   const [loadingRemedies, setLoadingRemedies] = useState(false);
+  // Per-symptomId loading/failed flags — used by CasePaper to show
+  // accurate "Loading remedy count..." / "Remedy count unavailable"
+  // states on each selected-rubric card. We do NOT show 0 while
+  // still loading or after a failed fetch.
+  const [rubricRemedyLoadingMap, setRubricRemedyLoadingMap] = useState<Record<number, boolean>>({});
+  const [rubricRemedyFailedMap, setRubricRemedyFailedMap] = useState<Record<number, boolean>>({});
   const [crossRefs, setCrossRefs] = useState<CrossRef[]>([]);
   const [loadingCrossRefs, setLoadingCrossRefs] = useState(false);
 
@@ -229,12 +239,21 @@ export default function SynthesisPage() {
   const loadRubricRemedies = async (symptomId: number) => {
     if (rubricRemedies[symptomId]) return;
     setLoadingRemedies(true);
+    setRubricRemedyLoadingMap(prev => ({ ...prev, [symptomId]: true }));
+    setRubricRemedyFailedMap(prev => { const n = { ...prev }; delete n[symptomId]; return n; });
     try {
       const res = await fetch(`/api/synthesis?action=remedies&symptomId=${symptomId}`);
+      if (!res.ok) throw new Error('remedy fetch failed');
       const d = await res.json();
       setRubricRemedies(prev => ({ ...prev, [symptomId]: { byGrade: d.byGrade || {}, total: d.total || 0 } }));
-    } catch {}
+      // Update remedyCount on any already-selected rubric with this symptomId
+      // so the case-paper UI shows the verified count.
+      setSelectedRubrics(prev => prev.map(r => r.symptomId === symptomId ? { ...r, remedyCount: d.total || 0 } : r));
+    } catch {
+      setRubricRemedyFailedMap(prev => ({ ...prev, [symptomId]: true }));
+    }
     setLoadingRemedies(false);
+    setRubricRemedyLoadingMap(prev => { const n = { ...prev }; delete n[symptomId]; return n; });
   };
 
   const loadCrossRefs = async (symptomId: number) => {
@@ -288,6 +307,12 @@ export default function SynthesisPage() {
     };
     setSelectedRubrics(prev => [...prev, newRubric]);
     setResults([]);
+    // If we haven't fetched remedy counts for this rubric yet, do so
+    // now so the case-paper UI can display the verified count instead
+    // of showing 0 while loading. The fetcher sets loading/failed maps.
+    if (!rubricRemedies[symptomId]) {
+      loadRubricRemedies(symptomId);
+    }
   };
 
   const removeRubric = (symptomId: number) => {
@@ -364,6 +389,14 @@ export default function SynthesisPage() {
       setResults(fresh.results);
       // Persist as active session case (does NOT create a duplicate saved case)
       saveActiveCase({ patient: fresh.patient, rubrics: fresh.rubrics, results: fresh.results });
+      // Backfill remedy counts for any rubric that was saved with count 0
+      // (e.g. older saved cases) — this does NOT modify the source DB,
+      // only refreshes the user-owned saved case's display count.
+      fresh.rubrics.forEach(r => {
+        if (r.remedyCount === 0 && !rubricRemedies[r.symptomId]) {
+          loadRubricRemedies(r.symptomId);
+        }
+      });
       showToast('success', `Case "${fresh.patient.patientName || 'Unknown Patient'}" loaded.`);
       setView('case');
     } catch {
@@ -526,13 +559,18 @@ export default function SynthesisPage() {
         <header className="mb-4 md:mb-6">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="font-serif text-2xl md:text-3xl text-[#0F3D2E]">SYNTHESIS REPERTORY</h1>
-            {/* Active case indicator */}
+            {/* Active case indicator — uses Synthesis palette (no bright blue) */}
             {selectedRubrics.length > 0 && (
               <button
                 onClick={() => setView('case')}
-                className="px-2.5 py-1 bg-[#2563EB] text-white rounded-full text-xs font-semibold hover:bg-blue-700 transition-colors"
+                className="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+                style={{
+                  backgroundColor: SYNTH_COLORS.success,
+                  color: SYNTH_COLORS.primary,
+                  border: '1px solid rgba(15, 74, 56, 0.18)',
+                }}
               >
-                <PulseDot color="#FFFDF8" /> Case {patient.caseNo ? `#${patient.caseNo}` : 'Draft'} • {enabledCount} Rubrics
+                <PulseDot color={SYNTH_COLORS.primary} /> Case {patient.caseNo ? `#${patient.caseNo}` : 'Draft'} • {enabledCount} Rubrics
               </button>
             )}
           </div>
@@ -623,7 +661,8 @@ export default function SynthesisPage() {
                 <h3 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Workflow Steps</h3>
                 <button
                   onClick={() => setShowStepGuide(true)}
-                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                  className="text-xs hover:underline"
+                  style={{ color: SYNTH_COLORS.primary }}
                 >
                   View Full Guide →
                 </button>
@@ -647,8 +686,8 @@ export default function SynthesisPage() {
           <div>
             {/* Step badge */}
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
-              <span className="text-sm font-semibold text-[#173B2D]">Browse Chapters & Rubrics</span>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>1</div>
+              <span className="text-sm font-semibold" style={{ color: SYNTH_COLORS.primary }}>Browse Chapters & Rubrics</span>
             </div>
             {/* Breadcrumb */}
             {breadcrumb.length > 0 && (
@@ -678,7 +717,7 @@ export default function SynthesisPage() {
                     {breadcrumb.length === 0 ? 'Select Chapter' : `Rubrics in ${breadcrumb[breadcrumb.length - 1].n}`}
                   </h2>
                   {breadcrumb.length > 0 && (
-                    <button onClick={() => setBreadcrumb([])} className="text-xs text-blue-600 hover:underline">← All Chapters</button>
+                    <button onClick={() => setBreadcrumb([])} className="text-xs hover:underline" style={{ color: SYNTH_COLORS.primary }}>← All Chapters</button>
                   )}
                 </div>
                 <div className="p-3 max-h-[500px] overflow-y-auto">
@@ -710,7 +749,7 @@ export default function SynthesisPage() {
                             <div
                               key={child.i}
                               className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                activeRubric && getRubricId(activeRubric) === child.i ? 'bg-blue-50 border border-blue-300' : 'hover:bg-stone-50 border border-transparent'
+                                activeRubric && getRubricId(activeRubric) === child.i ? 'bg-[#E6F4EC] border border-[#0F4A38]' : 'hover:bg-stone-50 border border-transparent'
                               }`}
                               onClick={() => navigateInto(child)}
                             >
@@ -723,7 +762,7 @@ export default function SynthesisPage() {
                               <span className="text-sm flex-1 truncate text-[#173B2D]">{child.n}</span>
                               <button
                                 onClick={(e) => { e.stopPropagation(); addRubricToCase(child); }}
-                                className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                                className="px-2 py-0.5 text-xs text-white rounded" style={{ backgroundColor: SYNTH_COLORS.primary }}
                               >
                                 {selectedRubrics.some(r => r.symptomId === child.i) ? '✓ Added' : '+ Add'}
                               </button>
@@ -748,7 +787,7 @@ export default function SynthesisPage() {
                     <SynthesisCircle text="Loading Remedies and Grades..." />
                   ) : (
                     <div>
-                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <div className="mb-3 p-3 rounded" style={{ backgroundColor: SYNTH_COLORS.success, border: '1px solid rgba(15, 74, 56, 0.2)' }}>
                         <div className="text-xs text-stone-500 uppercase tracking-wider mb-1">Current Rubric</div>
                         <div className="text-sm font-medium text-[#173B2D]">{getRubricPath(activeRubric)}</div>
                         <div className="text-xs text-stone-500 mt-1">
@@ -762,8 +801,9 @@ export default function SynthesisPage() {
                         className={`w-full mb-3 px-4 py-2 rounded text-sm font-semibold transition-colors ${
                           selectedRubrics.some(r => r.symptomId === getRubricId(activeRubric))
                             ? 'bg-green-100 text-green-700 cursor-default'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                            : ''
                         }`}
+                        style={!selectedRubrics.some(r => r.symptomId === getRubricId(activeRubric)) ? { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' } : undefined}
                       >
                         {selectedRubrics.some(r => r.symptomId === getRubricId(activeRubric)) ? '✓ Added to Case' : '+ Add to Case'}
                       </button>
@@ -815,7 +855,7 @@ export default function SynthesisPage() {
                                   const node: TreeNode = { i: cr.id, f: 0, n: cr.text, l: cr.dest_level, c: cr.dest_chapter_id, p: cr.dest_path };
                                   navigateInto(node);
                                 }}
-                                className="block text-left text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                className="block text-left text-xs hover:underline" style={{ color: SYNTH_COLORS.primary }}
                               >
                                 → {cr.text}
                               </button>
@@ -836,7 +876,7 @@ export default function SynthesisPage() {
           <div>
             {/* Step badge */}
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>2</div>
               <span className="text-sm font-semibold text-[#173B2D]">Search Rubric</span>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 mb-4">
@@ -869,7 +909,7 @@ export default function SynthesisPage() {
                       <div
                         key={r.id}
                         className={`flex items-center gap-2 p-2.5 border rounded cursor-pointer transition-colors ${
-                          activeRubric && getRubricId(activeRubric) === r.id ? 'border-[#173B2D] bg-blue-50' : 'border-stone-200 hover:bg-stone-50'
+                          activeRubric && getRubricId(activeRubric) === r.id ? 'border-[#0F4A38] bg-[#E6F4EC]' : 'border-stone-200 hover:bg-stone-50'
                         }`}
                         onClick={() => {
                           setActiveRubric(r);
@@ -884,8 +924,9 @@ export default function SynthesisPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); addRubricToCase(r); }}
                           className={`px-2 py-1 text-xs rounded ${
-                            selectedRubrics.some(sr => sr.symptomId === r.id) ? 'bg-green-100 text-green-700' : 'bg-blue-600 text-white hover:bg-blue-700'
+                            selectedRubrics.some(sr => sr.symptomId === r.id) ? 'bg-green-100 text-green-700' : ''
                           }`}
+                          style={!selectedRubrics.some(sr => sr.symptomId === r.id) ? { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' } : undefined}
                         >
                           {selectedRubrics.some(sr => sr.symptomId === r.id) ? '✓' : '+ Add'}
                         </button>
@@ -911,7 +952,30 @@ export default function SynthesisPage() {
             onRepertorize={repertorize}
             onClearAll={clearAll}
             onSaveCase={handleSaveCase}
+            onViewRemedies={(symptomId) => {
+              // Find the rubric in the current tree/search results and open
+              // the remedies panel by setting it as the active rubric.
+              // If we can't find the original object, construct a minimal
+              // SearchResult-like object from the selected rubric.
+              const sr = selectedRubrics.find(r => r.symptomId === symptomId);
+              if (!sr) return;
+              setActiveRubric({
+                id: sr.symptomId,
+                name: sr.name,
+                path: sr.path,
+                level: sr.level,
+                chapterId: sr.chapterId,
+                fatherId: 0,
+              } as SearchResult);
+              // Ensure remedy data is loaded
+              loadRubricRemedies(sr.symptomId);
+              loadCrossRefs(sr.symptomId);
+              // Switch to browse view so the remedies panel is visible
+              setView('browse');
+            }}
             repertorizing={repertorizing}
+            rubricRemedyLoading={rubricRemedyLoadingMap}
+            rubricRemedyFailed={rubricRemedyFailedMap}
           />
         )}
 
@@ -920,7 +984,7 @@ export default function SynthesisPage() {
           <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden max-w-lg mx-auto">
             {/* Step header with blue badge */}
             <div className="px-4 py-3 border-b border-stone-200 bg-stone-50 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>4</div>
               <h2 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Repertorization in Progress</h2>
             </div>
             <div className="p-6 md:p-8">
@@ -969,56 +1033,128 @@ export default function SynthesisPage() {
           </div>
         )}
 
-        {/* ===== RESULTS VIEW (Step 5) — shown when results are available ===== */}
+        {/* ===== RESULTS VIEW — shown when results are available ===== */}
         {view === 'case' && !repertorizing && results.length > 0 && (
-          <div className="mt-4 bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-stone-200 bg-stone-50 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">5</div>
-              <h2 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Remedy Ranking</h2>
-              <button
-                onClick={() => setShowReport(true)}
-                className="ml-auto px-3 py-1 text-xs bg-[#173B2D] text-white rounded font-semibold hover:bg-[#0f2a20]"
+          <div className="space-y-4">
+            {/* Page title row */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <PageTitle compact />
+                <div className="mt-1">
+                  <CaseBadge caseNo={patient.caseNo} rubricCount={selectedRubrics.length} />
+                </div>
+              </div>
+            </div>
+
+            {/* Workflow indicator — Step 3 (Results) active */}
+            <WorkflowIndicator currentStep={3} />
+
+            {/* Results header + Report Preview */}
+            <div
+              className="rounded-xl bg-white shadow-sm overflow-hidden"
+              style={{ border: `1px solid ${SYNTH_COLORS.border}` }}
+            >
+              <div
+                className="px-4 py-3 border-b flex items-center justify-between gap-2"
+                style={{
+                  borderColor: SYNTH_COLORS.border,
+                  backgroundColor: '#FBFAF6',
+                }}
               >
-                Report Preview
+                <div>
+                  <h2
+                    className="text-sm font-bold uppercase tracking-wider"
+                    style={{ color: SYNTH_COLORS.primary }}
+                  >
+                    Result — Remedy Ranking
+                  </h2>
+                  <div
+                    className="mt-1 h-[2px] w-12"
+                    style={{ backgroundColor: SYNTH_COLORS.gold }}
+                  />
+                </div>
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+                  style={{
+                    backgroundColor: SYNTH_COLORS.primary,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6" />
+                  </svg>
+                  Report Preview
+                </button>
+              </div>
+
+              {/* Mobile-friendly remedy cards (Top 10) */}
+              <div className="p-3 space-y-2">
+                <p className="text-xs mb-2" style={{ color: SYNTH_COLORS.textSecondary }}>
+                  Top {Math.min(10, results.length)} remedies — sorted by verified repertorization score.
+                </p>
+                {results.slice(0, 10).map((r, idx) => (
+                  <RemedyResultCard
+                    key={r.abbrev}
+                    rank={idx + 1}
+                    abbrev={r.abbrev}
+                    full={r.full}
+                    score={r.totalScore}
+                    coverageCount={r.coverageCount}
+                    coverageTotal={r.coverageTotal}
+                    coverageLabel={r.coverage}
+                    rubricCount={r.coverageCount}
+                    onClick={() => {
+                      // Open the existing ReportSheet which contains the
+                      // detailed analysis (grade contribution, covered/missing
+                      // rubrics, etc.). The report preview already includes
+                      // Top 10 remedies with grade breakdowns.
+                      setShowReport(true);
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Grade legend — shown because grade colors appear in the
+                  report detail view (which opens from any result card). */}
+              <div className="px-3 pb-3">
+                <GradeLegend />
+              </div>
+            </div>
+
+            {/* Save Case + Start New (secondary actions) */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleSaveCase}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  color: SYNTH_COLORS.primary,
+                  border: `1.5px solid ${SYNTH_COLORS.primary}`,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                Save Case
               </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-stone-100">
-                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold w-12">Rank</th>
-                    <th className="border border-stone-200 px-3 py-2 text-left text-stone-600 font-semibold">Remedy</th>
-                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold">Score</th>
-                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold">Coverage</th>
-                    <th className="border border-stone-200 px-3 py-2 text-center text-stone-600 font-semibold">Σ Sym</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.slice(0, 25).map((r, idx) => (
-                    <tr key={r.abbrev} className={idx < 3 ? 'bg-stone-50' : 'hover:bg-stone-50'}>
-                      <td className="border border-stone-200 px-3 py-2 text-center font-mono text-stone-500">{idx + 1}</td>
-                      <td className="border border-stone-200 px-3 py-2">
-                        <span className="font-mono font-bold text-[#173B2D]">{r.abbrev}</span>
-                        <span className="text-stone-400 ml-1 text-xs">{r.full}</span>
-                      </td>
-                      <td className="border border-stone-200 px-3 py-2 text-center font-bold text-[#173B2D]">{r.totalScore}</td>
-                      <td className="border border-stone-200 px-3 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                          r.coverageCount === r.coverageTotal ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-600'
-                        }`}>{r.coverage}</span>
-                      </td>
-                      <td className="border border-stone-200 px-3 py-2 text-center text-stone-600">{r.coverageCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {/* Grade legend */}
-            <div className="px-4 py-2 border-t border-stone-200 bg-stone-50 flex gap-3 flex-wrap text-xs">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500"></span> Grade 4</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-700"></span> Grade 3</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-700"></span> Grade 2</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-stone-400"></span> Grade 1</span>
+              <button
+                onClick={handleNewCase}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={{
+                  backgroundColor: SYNTH_COLORS.primary,
+                  color: '#FFFFFF',
+                  border: `1.5px solid ${SYNTH_COLORS.primary}`,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5v14" />
+                </svg>
+                New Case
+              </button>
             </div>
           </div>
         )}
@@ -1029,7 +1165,7 @@ export default function SynthesisPage() {
             <div className="bg-white rounded-lg shadow-sm border border-stone-200">
               <div className="px-4 py-2.5 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#173B2D] uppercase tracking-wider">Saved Cases</h2>
-                <button onClick={() => setView('dashboard')} className="text-xs text-blue-600 hover:underline">← Back</button>
+                <button onClick={() => setView('dashboard')} className="text-xs hover:underline" style={{ color: SYNTH_COLORS.primary }}>← Back</button>
               </div>
               <div className="p-3">
                 {(() => {
@@ -1150,7 +1286,7 @@ export default function SynthesisPage() {
                 <h2 className="font-serif text-lg text-[#173B2D]">Report Profile / Clinic Profile</h2>
                 <p className="text-xs text-stone-500">User-specific branding for Synthesis reports only</p>
               </div>
-              <button onClick={() => setView('dashboard')} className="text-xs text-blue-600 hover:underline">← Back</button>
+              <button onClick={() => setView('dashboard')} className="text-xs hover:underline" style={{ color: SYNTH_COLORS.primary }}>← Back</button>
             </div>
 
             {/* Profile summary */}
@@ -1180,7 +1316,8 @@ export default function SynthesisPage() {
             {results.length > 0 && (
               <button
                 onClick={() => setShowReport(true)}
-                className="ml-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+                className="ml-2 px-5 py-2 text-white rounded-lg text-sm font-semibold"
+                style={{ backgroundColor: SYNTH_COLORS.primary }}
               >
                 Preview Report
               </button>
