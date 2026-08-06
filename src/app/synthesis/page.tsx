@@ -24,6 +24,7 @@ import {
   SYNTH_COLORS, PageTitle, CaseBadge, WorkflowIndicator,
   GradeLegend, RemedyResultCard,
 } from './synthesis-ui';
+import { RubricTree } from './rubric-tree';
 import { SynthesisCircle, LeafGrowth, SkeletonTable, EmptyState, WorkflowSteps, PulseDot, Icons } from './components';
 
 // ============================================================
@@ -48,6 +49,15 @@ export default function SynthesisPage() {
   const [treeChildren, setTreeChildren] = useState<Record<number, TreeNode[]>>({});
   const [loadingChildren, setLoadingChildren] = useState<Set<number>>(new Set());
   const [breadcrumb, setBreadcrumb] = useState<TreeNode[]>([]); // current path
+  // Browse mode: 'tree' = recursive expand/collapse hierarchy view (new),
+  // 'list' = single-level breadcrumb navigation (legacy). Default 'tree'
+  // per the rubric-hierarchy spec. Tree state (expanded nodes, loaded
+  // children) is preserved when toggling back, so the user's last-opened
+  // branch is remembered.
+  const [browseMode, setBrowseMode] = useState<'tree' | 'list'>('tree');
+  // Chapter-level tree roots (for tree view): loaded once from the chapters
+  // list and reused as the top-level nodes of the RubricTree.
+  const [treeRoots, setTreeRoots] = useState<TreeNode[]>([]);
 
   // Active rubric (for remedy display)
   const [activeRubric, setActiveRubric] = useState<TreeNode | SearchResult | null>(null);
