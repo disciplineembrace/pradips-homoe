@@ -1,0 +1,66 @@
+# Codemagic CI/CD configuration for Pradip's Homeo Flutter Android app.
+#
+# The Flutter project is located at `flutter_app/` (not at repo root).
+# All commands `cd` into that directory first.
+#
+# Live website (Next.js) is NOT affected by this build — only builds
+# the Flutter APK artifact.
+
+workflows:
+  android-apk:
+    name: Pradip Homeo Android APK
+
+    max_build_duration: 60
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Check Flutter environment
+        # Safe version checks only — flutter doctor -v can crash in
+        # Codemagic headless environments due to Android SDK licensing
+        # or emulator diagnostics. Version checks are sufficient to
+        # confirm Flutter + Dart are installed and are NOT suppressed.
+        script: |
+          cd flutter_app
+          flutter --version
+          dart --version
+
+      - name: Install dependencies
+        script: |
+          cd flutter_app
+          flutter pub get
+
+      - name: Generate code (Drift build_runner)
+        script: |
+          cd flutter_app
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze project
+        script: |
+          cd flutter_app
+          flutter analyze
+
+      - name: Run tests
+        script: |
+          cd flutter_app
+          flutter test
+
+      - name: Build release APK
+        script: |
+          cd flutter_app
+          flutter build apk --release
+
+      - name: Verify APK
+        script: |
+          cd flutter_app
+          echo "=== Checking APK file exists ==="
+          test -f build/app/outputs/flutter-apk/app-release.apk
+          echo "=== APK file details ==="
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+          echo "=== SHA-256 checksum ==="
+          sha256sum build/app/outputs/flutter-apk/app-release.apk
+
+    artifacts:
+      - flutter_app/build/app/outputs/flutter-apk/app-release.apk
