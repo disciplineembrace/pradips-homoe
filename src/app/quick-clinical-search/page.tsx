@@ -67,6 +67,24 @@ const VIEW_MODES = [
   { value: 'differentiate', label: 'Differentiate Remedies' },
 ];
 
+const SORT_MODES = [
+  { value: 'relevant', label: 'Most Relevant' },
+  { value: 'characteristic', label: 'Most Characteristic' },
+  { value: 'source', label: 'Source Order' },
+  { value: 'remedy-az', label: 'Remedy A-Z' },
+];
+
+const TYPE_FILTERS = [
+  { value: 'peculiar', label: '⭐ Peculiar' },
+  { value: 'modality', label: '🔄 Modality' },
+  { value: 'concomitant', label: '➕ Concomitant' },
+  { value: 'causation', label: '💥 Causation' },
+  { value: 'sensation', label: '⚡ Sensation' },
+  { value: 'location', label: '📍 Location' },
+  { value: 'time', label: '🕐 Time' },
+  { value: 'side', label: '↔️ Side' },
+];
+
 const MATCH_STYLES: Record<string, { label: string; color: string; bg: string; border: string }> = {
   exact: { label: 'EXACT MATCH', color: 'text-red-800', bg: 'bg-red-50', border: 'border-red-400' },
   close: { label: 'CLOSE MATCH', color: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-400' },
@@ -113,6 +131,8 @@ function QuickClinicalSearchImpl() {
   const [subject, setSubject] = useState('all');
   const [source, setSource] = useState('all');
   const [viewMode, setViewMode] = useState('indications');
+  const [sortMode, setSortMode] = useState('relevant');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [results, setResults] = useState<Result[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -190,14 +210,42 @@ function QuickClinicalSearchImpl() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // Apply client-side sorting and type filtering
+  const sortedFilteredResults = (() => {
+    let filtered = [...results];
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(r => r.categories && r.categories[typeFilter as keyof typeof r.categories]);
+    }
+
+    // Sort
+    if (sortMode === 'characteristic') {
+      // Sort by number of categories (more categories = more characteristic)
+      filtered.sort((a, b) => {
+        const aCats = a.categories ? Object.keys(a.categories).length : 0;
+        const bCats = b.categories ? Object.keys(b.categories).length : 0;
+        if (bCats !== aCats) return bCats - aCats;
+        return 0;
+      });
+    } else if (sortMode === 'source') {
+      filtered.sort((a, b) => (a.author || '').localeCompare(b.author || ''));
+    } else if (sortMode === 'remedy-az') {
+      filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+    // 'relevant' keeps server-side sort order
+
+    return filtered;
+  })();
+
   // Group results for different views
-  const groupedByRemedy = results.filter(r => r.type === 'remedy').reduce((acc, r) => {
+  const groupedByRemedy = sortedFilteredResults.filter(r => r.type === 'remedy').reduce((acc, r) => {
     if (!acc[r.name]) acc[r.name] = [];
     acc[r.name].push(r);
     return acc;
   }, {} as Record<string, Result[]>);
 
-  const groupedBySource = results.reduce((acc, r) => {
+  const groupedBySource = sortedFilteredResults.reduce((acc, r) => {
     const key = r.author || r.source || 'Unknown';
     if (!acc[key]) acc[key] = [];
     acc[key].push(r);
@@ -260,7 +308,7 @@ function QuickClinicalSearchImpl() {
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
             <div>
               <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Search In</label>
               <select value={subject} onChange={e => { setSubject(e.target.value); setSource('all'); }}
@@ -280,6 +328,24 @@ function QuickClinicalSearchImpl() {
               <select value={viewMode} onChange={e => setViewMode(e.target.value)}
                 className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
                 {VIEW_MODES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
+              </select>
+            </div>
+          </div>
+          {/* Second row: Sort + Type filter */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Sort By</label>
+              <select value={sortMode} onChange={e => setSortMode(e.target.value)}
+                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
+                {SORT_MODES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#7C8F6E] mb-1">Type Filter</label>
+              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+                className="w-full px-2 py-1.5 border border-stone-300 rounded text-xs focus:outline-none focus:border-[#173B2D]">
+                <option value="all">All Types</option>
+                {TYPE_FILTERS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div className="flex items-end">
@@ -302,10 +368,10 @@ function QuickClinicalSearchImpl() {
         )}
 
         {/* ===== INDICATIONS — POINT-WISE VIEW ===== */}
-        {results.length > 0 && viewMode === 'indications' && (
+        {sortedFilteredResults.length > 0 && viewMode === 'indications' && (
           <div className="space-y-4">
             <div className="text-sm text-[#7C8F6E]">{total} results found</div>
-            {results.map((r, idx) => {
+            {sortedFilteredResults.map((r, idx) => {
               const matchStyle = MATCH_STYLES[r.matchType] || MATCH_STYLES.related;
               const isExpanded = expandedResult === `${r.id}-${idx}`;
               return (
