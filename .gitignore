@@ -14,3 +14,4 @@ work/
 backups/
 upload/
 scripts/fresh_dubey/
+scripts/create_test_user.js

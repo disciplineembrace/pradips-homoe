@@ -456,7 +456,7 @@ export function RubricTreeNode({
           loading={remedyLoading}
           failed={remedyFailed}
           sourceRepertory={sourceRepertory}
-          onAddRubric={handleAddClick}
+          onAddRubric={() => onAddRubric(node)}
           rubricAlreadyAdded={isAdded}
         />
       )}

@@ -160,7 +160,16 @@ export default function SynthesisPage() {
     // Load chapters
     fetch('/api/synthesis?action=chapters')
       .then(r => r.json())
-      .then(d => { setChapters(d.chapters || []); setLoading(false); })
+      .then(d => {
+        const chs = d.chapters || [];
+        setChapters(chs);
+        // Build tree roots (top-level nodes) for the recursive tree view.
+        // Each chapter becomes a top-level TreeNode with f=0 (no parent).
+        setTreeRoots(chs.map((c: Chapter) => ({
+          i: c.id, f: 0, n: c.name, l: 1, c: c.id, p: c.path,
+        })));
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
     // Load saved cases count for dashboard
     setCases(loadCases());
@@ -694,13 +703,98 @@ export default function SynthesisPage() {
         {/* ===== BROWSE VIEW (Chapter → Rubric → Sub-rubric) ===== */}
         {view === 'browse' && (
           <div>
-            {/* Step badge */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>1</div>
-              <span className="text-sm font-semibold" style={{ color: SYNTH_COLORS.primary }}>Browse Chapters & Rubrics</span>
+            {/* Step badge + view-mode toggle */}
+            <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>1</div>
+                <span className="text-sm font-semibold" style={{ color: SYNTH_COLORS.primary }}>Browse Chapters & Rubrics</span>
+              </div>
+              {/* Tree / List mode toggle — preserves all state when switching */}
+              <div
+                className="inline-flex rounded-md overflow-hidden border"
+                style={{ border: `1px solid ${SYNTH_COLORS.border}` }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setBrowseMode('tree')}
+                  className="px-3 py-1 text-xs font-semibold transition-colors"
+                  style={
+                    browseMode === 'tree'
+                      ? { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }
+                      : { backgroundColor: '#FFFFFF', color: SYNTH_COLORS.textSecondary }
+                  }
+                  title="Recursive tree view with expand/collapse (unlimited hierarchy depth)"
+                >
+                  🌳 Tree View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrowseMode('list')}
+                  className="px-3 py-1 text-xs font-semibold transition-colors"
+                  style={
+                    browseMode === 'list'
+                      ? { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }
+                      : { backgroundColor: '#FFFFFF', color: SYNTH_COLORS.textSecondary }
+                  }
+                  title="Single-level breadcrumb navigation (legacy)"
+                >
+                  📋 List View
+                </button>
+              </div>
             </div>
-            {/* Breadcrumb */}
-            {breadcrumb.length > 0 && (
+
+            {/* ===== TREE VIEW — recursive, lazy-loaded, unlimited depth ===== */}
+            {browseMode === 'tree' && (
+              <div
+                className="rounded-xl bg-white shadow-sm overflow-hidden"
+                style={{ border: `1px solid ${SYNTH_COLORS.border}` }}
+              >
+                <div
+                  className="px-4 py-3 border-b flex items-center justify-between gap-2"
+                  style={{
+                    borderColor: SYNTH_COLORS.border,
+                    backgroundColor: '#FBFAF6',
+                  }}
+                >
+                  <div>
+                    <h2
+                      className="text-sm font-bold uppercase tracking-wider"
+                      style={{ color: SYNTH_COLORS.primary }}
+                    >
+                      Rubric Hierarchy — Full Tree
+                    </h2>
+                    <div
+                      className="mt-1 h-[2px] w-12"
+                      style={{ backgroundColor: SYNTH_COLORS.gold }}
+                    />
+                    <p className="text-xs mt-1.5" style={{ color: SYNTH_COLORS.textSecondary }}>
+                      Tap ▶ to expand any rubric and reveal unlimited nested sub-rubrics. Tap <strong>Remedies</strong> to view grade-wise remedies for any rubric.
+                    </p>
+                  </div>
+                </div>
+                <div className="p-2 max-h-[600px] overflow-y-auto">
+                  <RubricTree
+                    nodes={treeRoots}
+                    expandedNodes={expandedNodes}
+                    treeChildren={treeChildren}
+                    loadingChildren={loadingChildren}
+                    rubricRemedies={rubricRemedies}
+                    rubricRemedyLoadingMap={rubricRemedyLoadingMap}
+                    rubricRemedyFailedMap={rubricRemedyFailedMap}
+                    selectedRubrics={selectedRubrics}
+                    onToggleExpand={toggleNode}
+                    onLoadChildren={loadChildren}
+                    onLoadRemedies={loadRubricRemedies}
+                    onAddRubric={addRubricToCase}
+                    onNavigateInto={navigateInto}
+                    sourceRepertory="Synthesis"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Breadcrumb (only used in List View mode) */}
+            {browseMode === 'list' && breadcrumb.length > 0 && (
               <div className="mb-3 p-2 bg-white rounded-lg border border-stone-200 flex items-center gap-1 text-sm overflow-x-auto">
                 <button onClick={() => setView('dashboard')} className="text-stone-400 hover:text-[#173B2D]">≡</button>
                 {breadcrumb.map((node, idx) => (
@@ -719,6 +813,8 @@ export default function SynthesisPage() {
               </div>
             )}
 
+            {/* ===== LIST VIEW — single-level breadcrumb navigation (legacy) ===== */}
+            {browseMode === 'list' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* LEFT: Tree / Children */}
               <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-stone-200">
@@ -878,6 +974,7 @@ export default function SynthesisPage() {
                 </div>
               </div>
             </div>
+            )} {/* end List View mode */}
           </div>
         )}
 
