@@ -15,7 +15,7 @@ export default function AdminLogsPage() {
       if (!d.authenticated) { router.push('/login'); return; }
       if (d.role !== 'admin') { router.push('/dashboard'); return; }
       setSession(d);
-      loadLogs();
+      // loadLogs will be called by the [type, session] useEffect below
     });
   }, [router]);
   

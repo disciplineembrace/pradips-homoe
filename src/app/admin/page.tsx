@@ -12,7 +12,7 @@ export default function AdminHomePage() {
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) { router.push('/login'); return; }
-      if (d.user.role !== 'admin') { router.push('/dashboard'); return; }
+      if (d.role !== 'admin') { router.push('/dashboard'); return; }
       setSession(d);
       // Load stats
       Promise.all([
@@ -68,7 +68,7 @@ export default function AdminHomePage() {
             />
             <div>
               <h1 className="font-serif italic text-xl text-amber-200 tracking-wide">Pradip&apos;s Homoe — Admin</h1>
-              <p className="text-xs text-stone-400">{session?.name} · {session.user?.role}</p>
+              <p className="text-xs text-stone-400">{session?.name} · {session?.role}</p>
             </div>
           </div>
           <div className="flex gap-2">
