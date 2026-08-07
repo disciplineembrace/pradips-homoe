@@ -31,9 +31,6 @@ dependencies:
   # Connectivity detection
   connectivity_plus: ^6.0.3
 
-  # Background sync
-  workmanager: ^0.5.2
-
   # Utilities
   json_annotation: ^4.9.0
   logger: ^2.3.0
