@@ -12,6 +12,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:drift/drift.dart';
 import '../core/config/app_config.dart';
 import '../core/network/api_exceptions.dart';
 import '../core/network/connectivity.dart';
@@ -130,9 +131,9 @@ class OutboxProcessor {
       // Find the local bookmark by entityId and update it
       final localBookmarks = await (_db.select(_db.bookmarks)
             ..where((b) =>
-                b.userId.equals(op.userId) &
-                b.entityId.equals(op.entityId) &
-                b.deletedAt.isNull()))
+                b.userId.equals(op.userId))
+            ..where((b) => b.entityId.equals(op.entityId))
+            ..where((b) => b.deletedAt.isNull()))
           .get();
       for (final bm in localBookmarks) {
         await _db.bookmarkDao.markSynced(bm.localId, serverId: serverId);

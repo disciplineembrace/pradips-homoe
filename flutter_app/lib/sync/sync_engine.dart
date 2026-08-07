@@ -452,7 +452,8 @@ class SyncEngine {
     if (entityType == 'bookmark') {
       final localBookmarks = await (_db.select(_db.bookmarks)
             ..where((b) =>
-                b.entityId.equals(entityId) & b.deletedAt.isNull()))
+                b.entityId.equals(entityId))
+            ..where((b) => b.deletedAt.isNull()))
           .get();
       for (final bm in localBookmarks) {
         await _db.bookmarkDao.markSynced(bm.localId, serverId: serverId);
@@ -475,11 +476,15 @@ class SyncEngine {
   Future<int> _getLocalCount(String entityType) async {
     switch (entityType) {
       case 'remedies':
-        return _db.remedies.count().get();
+        return _db.remedyDao.countRemedies();
       case 'rubrics':
-        return _db.rubrics.count().get();
+        return _db.rubricDao.countRubrics();
       case 'books':
-        return _db.books.count().get();
+        final countExp = _db.books.serverId.count();
+        final query = _db.selectOnly(_db.books)
+          ..addColumns([countExp])
+          ..where(_db.books.deletedAt.isNull());
+        return query.map((row) => row.read(countExp) ?? 0).getSingle();
       default:
         return 0;
     }
