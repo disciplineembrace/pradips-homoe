@@ -7,7 +7,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/auth_repository.dart';
 import '../../providers.dart';
 import '../../widgets/offline_indicator.dart';
 import '../../widgets/sync_progress.dart';

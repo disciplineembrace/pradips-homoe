@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/api_exceptions.dart';
-import '../../data/remote/api_client.dart';
 import '../../data/remote/dtos/dtos.dart';
 import '../../providers.dart';
 
@@ -156,7 +155,7 @@ class _QuickSearchScreenState extends ConsumerState<QuickSearchScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedSubject,
+                    initialValue: _selectedSubject,
                     decoration: const InputDecoration(
                       labelText: 'Search In',
                       isDense: true,
@@ -176,7 +175,7 @@ class _QuickSearchScreenState extends ConsumerState<QuickSearchScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedSource,
+                    initialValue: _selectedSource,
                     decoration: const InputDecoration(
                       labelText: 'Source',
                       isDense: true,

@@ -12,7 +12,6 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:drift/drift.dart';
 import '../core/config/app_config.dart';
 import '../core/network/api_exceptions.dart';
 import '../core/network/connectivity.dart';

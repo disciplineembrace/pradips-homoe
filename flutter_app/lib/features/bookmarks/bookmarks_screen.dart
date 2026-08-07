@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/local/database.dart';
-import '../../data/repositories/bookmark_repository.dart';
 import '../../providers.dart';
 
 class BookmarksScreen extends ConsumerStatefulWidget {
