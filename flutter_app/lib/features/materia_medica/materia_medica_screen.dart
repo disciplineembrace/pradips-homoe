@@ -62,11 +62,13 @@ class _MateriaMedicaScreenState extends ConsumerState<MateriaMedicaScreen> {
     try {
       final repo = ref.read(remedyRepositoryProvider);
       final query = _searchController.text.trim();
-      final remedies = await repo.getRemedies(
-        author: _selectedAuthor == 'All' ? null : _selectedAuthor,
-        query: query.isNotEmpty ? query : null,
-        limit: 100,
-      );
+      final remedies = await repo
+          .getRemedies(
+            author: _selectedAuthor == 'All' ? null : _selectedAuthor,
+            query: query.isNotEmpty ? query : null,
+            limit: 100,
+          )
+          .timeout(const Duration(seconds: 15));
       if (mounted) {
         setState(() {
           _remedies = remedies;
@@ -76,7 +78,8 @@ class _MateriaMedicaScreenState extends ConsumerState<MateriaMedicaScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          // Never expose raw exception details (may contain SQL, keys, etc.)
+          _error = 'Unable to load remedies. Please check your connection and try again.';
           _loading = false;
         });
       }

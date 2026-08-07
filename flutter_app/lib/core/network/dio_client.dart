@@ -1,11 +1,11 @@
 /// Dio HTTP client with authentication, retry, and error handling.
 ///
 /// All API calls go through this client. It:
-///   - Attaches the session cookie/token to every request
+///   - Attaches the session cookie to every request (cookie-based auth)
 ///   - Handles 401 (auth expired) by attempting session refresh
 ///   - Converts DioErrors to typed ApiExceptions
 ///   - Enforces HTTPS-only communication
-///   - Logs requests with sensitive data redacted
+///   - Never logs tokens, keys, or sensitive data
 library;
 
 import 'package:dio/dio.dart';
@@ -27,32 +27,34 @@ class DioClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      // Validate that we only use HTTPS in production
       validateStatus: (status) => status != null && status >= 200 && status < 300,
+      // Enable cookie support — the website uses httpOnly cookies for auth.
+      // Dio automatically stores and sends cookies when followRedirects is true.
+      followRedirects: true,
     ));
 
     // Add auth interceptor
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Attach session cookie if available
+        // The website uses httpOnly cookies for session management.
+        // After login, the server sets a Set-Cookie header which Dio
+        // automatically stores in its cookie jar (when using CookieJar).
+        // However, Dio doesn't persist cookies across app restarts by default.
+        //
+        // For the Flutter app, we store the session token from the login
+        // response in flutter_secure_storage and manually attach it as
+        // a Cookie header on every request.
         final token = await _secureStorage.read(key: AppConfig.secureStorageKey);
         if (token != null && token.isNotEmpty) {
-          // The website uses httpOnly cookies for sessions.
-          // For the Flutter app, we send the token as a Cookie header
-          // OR as a Bearer token (the API accepts both).
+          // Send as cookie — this matches the website's auth mechanism.
           options.headers['Cookie'] = 'ph_session=$token';
-          options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
       },
       onError: (error, handler) async {
-        // On 401, attempt session refresh once
         if (error.response?.statusCode == 401) {
-          // Try to refresh session — if that fails, propagate the error
-          // (the auth repository will handle logout/redirect)
           final refreshed = await _attemptSessionRefresh();
           if (refreshed) {
-            // Retry the original request
             try {
               final retryResponse = await _dio.fetch(error.requestOptions);
               return handler.resolve(retryResponse);
@@ -67,7 +69,6 @@ class DioClient {
   }
 
   /// Attempt to refresh the session by calling the session endpoint.
-  /// Returns true if the session is still valid.
   Future<bool> _attemptSessionRefresh() async {
     try {
       final response = await _dio.get(AppConfig.sessionEndpoint);
@@ -76,7 +77,7 @@ class DioClient {
         return true;
       }
     } catch (_) {
-      // Session is invalid — user will be redirected to login
+      // Session is invalid
     }
     return false;
   }
@@ -157,12 +158,13 @@ class DioClient {
   }
 
   /// Convert DioException to typed ApiException.
+  /// NEVER includes sensitive data (tokens, keys) in error messages.
   ApiException _convertDioError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return TimeoutException(e.message);
+        return TimeoutException('Request timed out');
       case DioExceptionType.connectionError:
         return const NoConnectionException();
       case DioExceptionType.badResponse:
@@ -180,7 +182,7 @@ class DioClient {
         }
         return ServerException(message, statusCode);
       default:
-        return ServerException('Unexpected error', 500, e.message);
+        return ServerException('Unexpected error', 500);
     }
   }
 }

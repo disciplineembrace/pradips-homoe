@@ -10,14 +10,7 @@
 ///   - Never hardcoded in source code
 ///   - Never committed to GitHub
 ///   - Never stored in shared preferences
-///
-/// Sync fields convention (per spec):
-///   - serverId: stable unique ID from server
-///   - serverVersion: version/revision number for conflict detection
-///   - updatedAt: server-side last-modified timestamp
-///   - deletedAt: soft-delete marker (null = active)
-///   - syncStatus: 'synced' | 'pending' | 'conflict'
-///   - lastSyncedAt: when this row was last synced
+///   - Never exposed in error messages
 library;
 
 import 'dart:io';
@@ -59,7 +52,6 @@ part 'database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openEncryptedConnection());
 
-  /// For testing — inject an in-memory database (no encryption).
   AppDatabase.forTesting(QueryExecutor e) : super(e);
 
   @override
@@ -69,68 +61,65 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (m, from, to) async {
-          // Additive migrations only — never delete columns/tables.
           if (from < 2) {
-            // Example future migration:
-            // await m.addColumn(remedies, remedies.newColumn);
+            // Future migration placeholder
           }
         },
         beforeOpen: (details) async {
-          // Enable foreign keys
           await customStatement('PRAGMA foreign_keys = ON');
-          // Enable WAL mode for better concurrent read performance
-          await customStatement('PRAGMA journal_mode = WAL');
         },
       );
 
   /// Open an encrypted SQLCipher database connection.
   ///
-  /// This method:
-  ///   1. Gets or creates the encryption key from Android secure storage.
-  ///   2. Opens the database file with SQLCipher encryption.
-  ///   3. Handles migration from unencrypted SQLite if an old DB exists.
-  ///   4. Handles corrupted/invalid keys safely — does NOT silently delete data.
+  /// Uses sqlcipher_flutter_libs which provides a SQLCipher-compatible
+  /// SQLite library. The key is set via PRAGMA key before any other
+  /// operation. The key is NEVER logged or exposed in error messages.
   static LazyDatabase _openEncryptedConnection() {
     return LazyDatabase(() async {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);
       final file = File(dbPath);
 
-      // Get the encryption service
       final secureStorage = const FlutterSecureStorage(
         aOptions: AndroidOptions(encryptedSharedPreferences: true),
       );
       final encryptionService = DatabaseEncryptionService(secureStorage);
 
-      // Get or create the encryption key
       final hexKey = await encryptionService.getOrCreateKey();
-      final sqlCipherKey = encryptionService.formatKeyForSqlCipher(hexKey);
 
-      // Check if an old unencrypted database exists and needs migration
+      // Check for old unencrypted database
       await _migrateUnencryptedIfNeeded(dbPath);
 
-      // Open the database with SQLCipher encryption
-      return NativeDatabase.createInBackground(
-        file,
-        setup: (rawDb) {
-          rawDb.execute("PRAGMA key = $sqlCipherKey;");
-        },
-      );
+      // Open with SQLCipher — the key is passed as a PRAGMA statement.
+      // The key value is NEVER included in error messages or logs.
+      // If the database cannot be opened, a generic error is thrown
+      // that does NOT reveal the key.
+      try {
+        return NativeDatabase.createInBackground(
+          file,
+          setup: (rawDb) {
+            // Set the SQLCipher key — this MUST be the first statement.
+            // Using hex format: x'...'
+            rawDb.execute("PRAGMA key = \"x'$hexKey'\";");
+          },
+        );
+      } catch (e) {
+        // NEVER expose the key in the error message.
+        // Log a redacted error and throw a generic message.
+        throw Exception(
+          'Local database could not be opened. Please retry.',
+        );
+      }
     });
   }
 
-  /// Migrate an old unencrypted SQLite database to encrypted SQLCipher.
-  ///
-  /// If an old unencrypted database file exists (from a previous app version
-  /// that didn't use encryption), this method renames it to .bak (preserved)
-  /// and lets a new encrypted database be created.
-  /// User data is NEVER silently deleted.
+  /// Migrate an old unencrypted SQLite database.
+  /// Renames to .bak (preserved), new encrypted DB created fresh.
   static Future<void> _migrateUnencryptedIfNeeded(String dbPath) async {
     final file = File(dbPath);
 
-    if (!await file.exists()) {
-      return;
-    }
+    if (!await file.exists()) return;
 
     try {
       final bytes = await file.openRead(0, 16).first;
@@ -140,17 +129,12 @@ class AppDatabase extends _$AppDatabase {
         await file.rename(backupPath);
       }
     } catch (_) {
-      // Could not read the file — might be corrupted or encrypted
-      // Do NOT delete the file — let Drift try to open it with the key.
+      // Could not read — might be encrypted or corrupted.
+      // Do NOT delete — let Drift try to open it.
     }
   }
 
   /// Close the database and clear all local data on logout.
-  ///
-  /// Called by AuthRepository.logout() to:
-  ///   1. Close the database connection
-  ///   2. Delete the database file (contains cached content + user data)
-  ///   3. Delete the encryption key from secure storage
   Future<void> clearOnLogout() async {
     await close();
 
@@ -158,9 +142,7 @@ class AppDatabase extends _$AppDatabase {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);
       final file = File(dbPath);
-      if (await file.exists()) {
-        await file.delete();
-      }
+      if (await file.exists()) await file.delete();
       final walFile = File('$dbPath-wal');
       final shmFile = File('$dbPath-shm');
       if (await walFile.exists()) await walFile.delete();

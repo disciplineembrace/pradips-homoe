@@ -3,6 +3,7 @@
 /// Fully wired to real data sources via RubricRepository.
 /// Lazy-loads rubric children on expand.
 /// Grade-colored remedy badges: G4=Red, G3=Green, G2=Blue, G1=Black.
+/// Includes timeout + error handling to prevent infinite spinners.
 library;
 
 import 'dart:async';
@@ -29,10 +30,10 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
   final _childrenCache = <String, List<Rubric>>{};
   final _loadingChildren = <String>{};
   bool _loading = false;
+  String? _error;
 
   static const _authors = ['Kent', 'Phatak', 'Murphy', 'Boericke'];
 
-  // Grade colors: G4=Red, G3=Green, G2=Blue, G1=Black
   static const _gradeColors = {
     4: Color(0xFFDC2626),
     3: Color(0xFF166534),
@@ -48,23 +49,43 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
   }
 
   Future<void> _loadChapters() async {
-    final repo = ref.read(rubricRepositoryProvider);
-    final chapters = await repo.getChapters(_selectedAuthor);
-    if (mounted) setState(() => _chapters = chapters);
+    try {
+      final repo = ref.read(rubricRepositoryProvider);
+      final chapters = await repo
+          .getChapters(_selectedAuthor)
+          .timeout(const Duration(seconds: 15));
+      if (mounted) setState(() => _chapters = chapters);
+    } catch (_) {
+      // Non-fatal — chapters will be empty
+    }
   }
 
   Future<void> _loadRoots() async {
-    setState(() => _loading = true);
-    final repo = ref.read(rubricRepositoryProvider);
-    final roots = await repo.getRoots(
-      _selectedAuthor,
-      chapter: _selectedChapter.isEmpty ? null : _selectedChapter,
-    );
-    if (mounted) {
-      setState(() {
-        _roots = roots;
-        _loading = false;
-      });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final repo = ref.read(rubricRepositoryProvider);
+      final roots = await repo
+          .getRoots(
+            _selectedAuthor,
+            chapter: _selectedChapter.isEmpty ? null : _selectedChapter,
+          )
+          .timeout(const Duration(seconds: 15));
+      if (mounted) {
+        setState(() {
+          _roots = roots;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Unable to load rubrics. Please check your connection and try again.';
+        });
+      }
     }
   }
 
@@ -78,7 +99,9 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
         setState(() => _loadingChildren.add(id));
         try {
           final repo = ref.read(rubricRepositoryProvider);
-          final children = await repo.getChildren(id);
+          final children = await repo
+              .getChildren(id)
+              .timeout(const Duration(seconds: 10));
           if (mounted) {
             setState(() {
               _childrenCache[id] = children;
@@ -86,7 +109,12 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
             });
           }
         } catch (_) {
-          if (mounted) setState(() => _loadingChildren.remove(id));
+          if (mounted) {
+            setState(() {
+              _loadingChildren.remove(id);
+              _childrenCache[id] = [];
+            });
+          }
         }
       }
     }
@@ -126,6 +154,7 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
                           _selectedChapter = '';
                           _expandedNodes.clear();
                           _childrenCache.clear();
+                          _error = null;
                         });
                         _loadChapters();
                         _loadRoots();
@@ -152,6 +181,7 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
                   _selectedChapter = value == 'All Chapters' ? '' : value!;
                   _expandedNodes.clear();
                   _childrenCache.clear();
+                  _error = null;
                 });
                 _loadRoots();
               },
@@ -186,12 +216,42 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : _roots.isEmpty
-                    ? const Center(child: Text('No rubrics found.\nSync to load data.'))
-                    : ListView.builder(
-                        itemCount: _roots.length,
-                        itemBuilder: (context, index) => _buildNode(_roots[index], 0),
-                      ),
+                : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            Text(_error!, textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.grey)),
+                            const SizedBox(height: 16),
+                            FilledButton(
+                              onPressed: _loadRoots,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _roots.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.library_books, size: 48, color: Colors.grey),
+                                const SizedBox(height: 16),
+                                const Text('No rubrics found.',
+                                    style: TextStyle(color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                const Text('Sync from Settings to load data.',
+                                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _roots.length,
+                            itemBuilder: (context, index) => _buildNode(_roots[index], 0),
+                          ),
           ),
         ],
       ),
@@ -206,14 +266,12 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
 
     return Column(
       children: [
-        // Node row
         InkWell(
           onTap: () => _toggleExpand(node),
           child: Padding(
             padding: EdgeInsets.only(left: level * 16.0, top: 8, bottom: 8, right: 8),
             child: Row(
               children: [
-                // Expand/collapse arrow
                 if (isLoading)
                   const SizedBox(
                     width: 20, height: 20,
@@ -222,13 +280,11 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
                 else if (children != null && children.isNotEmpty)
                   Icon(
                     isExpanded ? Icons.expand_more : Icons.chevron_right,
-                    size: 20,
-                    color: Colors.grey,
+                    size: 20, color: Colors.grey,
                   )
                 else
                   const SizedBox(width: 20),
                 const SizedBox(width: 4),
-                // Title + remedy count
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +301,6 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
                     ],
                   ),
                 ),
-                // Grade-colored remedy badges (first 5)
                 ...remedies.take(5).map((r) {
                   final grade = (r['grade'] as num?)?.toInt() ?? 1;
                   final abbrev = r['abbrev']?.toString() ?? '';
@@ -268,7 +323,6 @@ class _RepertoryScreenState extends ConsumerState<RepertoryScreen> {
             ),
           ),
         ),
-        // Children (recursively rendered when expanded)
         if (isExpanded && children != null)
           ...children.map((child) => _buildNode(child, level + 1)),
       ],
