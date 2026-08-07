@@ -39,7 +39,57 @@ export default function RemedyDetailPage() {
     </div>
   );
   if (!remedy) return null;
-  
+
+  // Parse Boericke-style section headings (e.g., "Mind.--", "Head.--")
+  // and render them as bold red subtitles within the full text.
+  function renderFullText(text: string) {
+    if (!text) return null;
+
+    // Split text by section heading pattern: "Word.--"
+    const parts = text.split(/(\n(?:[A-Z][a-z]+)\.--)/);
+    
+    // If no headings found, render as plain text
+    if (parts.length <= 1) {
+      return <p className="text-stone-700 whitespace-pre-line leading-relaxed">{text}</p>;
+    }
+
+    const elements: React.ReactNode[] = [];
+    let currentText = '';
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      const headingMatch = part.match(/^\n([A-Z][a-z]+)\.--$/);
+      
+      if (headingMatch) {
+        if (currentText.trim()) {
+          elements.push(
+            <p key={`text-${i}`} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
+              {currentText.trim()}
+            </p>
+          );
+          currentText = '';
+        }
+        elements.push(
+          <h4 key={`heading-${i}`} className="font-bold text-red-700 text-base mt-4 mb-1">
+            {headingMatch[1]}
+          </h4>
+        );
+      } else {
+        currentText += part;
+      }
+    }
+
+    if (currentText.trim()) {
+      elements.push(
+        <p key="text-final" className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
+          {currentText.trim()}
+        </p>
+      );
+    }
+
+    return <div>{elements}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-stone-100">
       <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
@@ -78,7 +128,7 @@ export default function RemedyDetailPage() {
           {remedy.full && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Full Description</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.full}</p>
+              {renderFullText(remedy.full)}
             </section>
           )}
           
