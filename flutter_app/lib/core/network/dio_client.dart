@@ -9,7 +9,6 @@
 ///   - Converts DioErrors to typed ApiExceptions with safe messages
 library;
 
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
