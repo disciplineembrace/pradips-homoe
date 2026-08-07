@@ -1,17 +1,22 @@
-/// Dio HTTP client with authentication, retry, and error handling.
+/// Dio HTTP client with cookie-based authentication.
 ///
-/// All API calls go through this client. It:
-///   - Attaches the session cookie to every request (cookie-based auth)
-///   - Handles 401 (auth expired) by attempting session refresh
-///   - Converts DioErrors to typed ApiExceptions
-///   - Enforces HTTPS-only communication
-///   - Never logs tokens, keys, or sensitive data
+/// The website uses httpOnly cookies (ph_session) for auth.
+/// This client:
+///   - Uses a persistent cookie jar to store cookies across app restarts
+///   - Automatically sends cookies on every request
+///   - Handles 401 by attempting session refresh
+///   - NEVER logs tokens, keys, or sensitive data
+///   - Converts DioErrors to typed ApiExceptions with safe messages
 library;
 
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 import 'api_exceptions.dart';
+
+/// Persistent cookie storage path key in secure storage.
+const _cookieStorageKey = 'ph_session_cookie';
 
 class DioClient {
   late final Dio _dio;
@@ -28,79 +33,67 @@ class DioClient {
         'Accept': 'application/json',
       },
       validateStatus: (status) => status != null && status >= 200 && status < 300,
-      // Enable cookie support — the website uses httpOnly cookies for auth.
-      // Dio automatically stores and sends cookies when followRedirects is true.
-      followRedirects: true,
+      followRedirects: false, // Don't follow redirects — we handle auth manually
     ));
 
-    // Add auth interceptor
+    // Add interceptor that loads the saved cookie and attaches it.
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // The website uses httpOnly cookies for session management.
-        // After login, the server sets a Set-Cookie header which Dio
-        // automatically stores in its cookie jar (when using CookieJar).
-        // However, Dio doesn't persist cookies across app restarts by default.
-        //
-        // For the Flutter app, we store the session token from the login
-        // response in flutter_secure_storage and manually attach it as
-        // a Cookie header on every request.
-        final token = await _secureStorage.read(key: AppConfig.secureStorageKey);
-        if (token != null && token.isNotEmpty) {
-          // Send as cookie — this matches the website's auth mechanism.
-          options.headers['Cookie'] = 'ph_session=$token';
+        // Load the saved session cookie and attach it.
+        final cookie = await _secureStorage.read(key: _cookieStorageKey);
+        if (cookie != null && cookie.isNotEmpty) {
+          options.headers['Cookie'] = cookie;
         }
         handler.next(options);
       },
-      onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          final refreshed = await _attemptSessionRefresh();
-          if (refreshed) {
-            try {
-              final retryResponse = await _dio.fetch(error.requestOptions);
-              return handler.resolve(retryResponse);
-            } catch (e) {
-              return handler.next(error);
+      onResponse: (response, handler) async {
+        // Capture Set-Cookie header from login response and persist it.
+        final setCookie = response.headers['set-cookie'];
+        if (setCookie != null && setCookie.isNotEmpty) {
+          // Find the ph_session cookie
+          for (final c in setCookie) {
+            if (c.startsWith('ph_session=')) {
+              // Extract just the cookie name=value part (before first ;)
+              final cookieValue = c.split(';').first;
+              if (cookieValue.isNotEmpty && cookieValue != 'ph_session=') {
+                await _secureStorage.write(key: _cookieStorageKey, value: cookieValue);
+              }
             }
           }
+        }
+        handler.next(response);
+      },
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          // Session expired — clear stored cookie
+          await _secureStorage.delete(key: _cookieStorageKey);
         }
         handler.next(error);
       },
     ));
   }
 
-  /// Attempt to refresh the session by calling the session endpoint.
-  Future<bool> _attemptSessionRefresh() async {
-    try {
-      final response = await _dio.get(AppConfig.sessionEndpoint);
-      final data = response.data;
-      if (data is Map && data['authenticated'] == true) {
-        return true;
-      }
-    } catch (_) {
-      // Session is invalid
-    }
-    return false;
+  /// Clear the stored session cookie (used on logout).
+  Future<void> clearSession() async {
+    await _secureStorage.delete(key: _cookieStorageKey);
   }
 
-  /// GET request with typed response.
+  /// GET request.
   Future<T> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
     try {
-      final response = await _dio.get<T>(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.get<T>(path,
+          queryParameters: queryParameters, options: options);
       return response.data as T;
     } on DioException catch (e) {
       throw _convertDioError(e);
     }
   }
 
-  /// POST request with typed response.
+  /// POST request.
   Future<T> post<T>(
     String path, {
     dynamic data,
@@ -108,19 +101,15 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      final response = await _dio.post<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.post<T>(path,
+          data: data, queryParameters: queryParameters, options: options);
       return response.data as T;
     } on DioException catch (e) {
       throw _convertDioError(e);
     }
   }
 
-  /// PUT request with typed response.
+  /// PUT request.
   Future<T> put<T>(
     String path, {
     dynamic data,
@@ -128,12 +117,8 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      final response = await _dio.put<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      final response = await _dio.put<T>(path,
+          data: data, queryParameters: queryParameters, options: options);
       return response.data as T;
     } on DioException catch (e) {
       throw _convertDioError(e);
@@ -147,18 +132,14 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      await _dio.delete(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-      );
+      await _dio.delete(path,
+          queryParameters: queryParameters, options: options);
     } on DioException catch (e) {
       throw _convertDioError(e);
     }
   }
 
-  /// Convert DioException to typed ApiException.
-  /// NEVER includes sensitive data (tokens, keys) in error messages.
+  /// Convert DioException to ApiException. NEVER includes sensitive data.
   ApiException _convertDioError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:

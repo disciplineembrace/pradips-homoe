@@ -1,16 +1,8 @@
 /// Drift database definition for Pradip's Homeo offline cache.
 ///
-/// This SQLite database is the app's LOCAL offline storage only.
-/// The server (Neon PostgreSQL + Supabase) remains the source of truth.
-///
 /// ENCRYPTION:
-///   The database is encrypted using SQLCipher. The encryption key is:
-///   - Generated on first app launch (256-bit random)
-///   - Stored ONLY in Android secure storage (Android Keystore)
-///   - Never hardcoded in source code
-///   - Never committed to GitHub
-///   - Never stored in shared preferences
-///   - Never exposed in error messages
+///   SQLCipher with 256-bit key stored in Android Keystore.
+///   Key NEVER appears in error messages, logs, or source code.
 library;
 
 import 'dart:io';
@@ -60,21 +52,12 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            // Future migration placeholder
-          }
-        },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
         },
       );
 
   /// Open an encrypted SQLCipher database connection.
-  ///
-  /// Uses sqlcipher_flutter_libs which provides a SQLCipher-compatible
-  /// SQLite library. The key is set via PRAGMA key before any other
-  /// operation. The key is NEVER logged or exposed in error messages.
   static LazyDatabase _openEncryptedConnection() {
     return LazyDatabase(() async {
       final dbFolder = await getApplicationDocumentsDirectory();
@@ -85,40 +68,29 @@ class AppDatabase extends _$AppDatabase {
         aOptions: AndroidOptions(encryptedSharedPreferences: true),
       );
       final encryptionService = DatabaseEncryptionService(secureStorage);
-
       final hexKey = await encryptionService.getOrCreateKey();
 
-      // Check for old unencrypted database
+      // Migrate old unencrypted DB if exists
       await _migrateUnencryptedIfNeeded(dbPath);
 
-      // Open with SQLCipher — the key is passed as a PRAGMA statement.
-      // The key value is NEVER included in error messages or logs.
-      // If the database cannot be opened, a generic error is thrown
-      // that does NOT reveal the key.
       try {
         return NativeDatabase.createInBackground(
           file,
           setup: (rawDb) {
-            // Set the SQLCipher key — this MUST be the first statement.
-            // Using hex format: x'...'
-            rawDb.execute("PRAGMA key = \"x'$hexKey'\";");
+            // SQLCipher PRAGMA key — hex format without double quotes.
+            // SQL: PRAGMA key = x'abcdef...';
+            rawDb.execute("PRAGMA key = x'$hexKey';");
           },
         );
       } catch (e) {
-        // NEVER expose the key in the error message.
-        // Log a redacted error and throw a generic message.
-        throw Exception(
-          'Local database could not be opened. Please retry.',
-        );
+        // NEVER expose the key. Throw a generic error.
+        throw Exception('Local database could not be opened. Please retry.');
       }
     });
   }
 
-  /// Migrate an old unencrypted SQLite database.
-  /// Renames to .bak (preserved), new encrypted DB created fresh.
   static Future<void> _migrateUnencryptedIfNeeded(String dbPath) async {
     final file = File(dbPath);
-
     if (!await file.exists()) return;
 
     try {
@@ -129,15 +101,12 @@ class AppDatabase extends _$AppDatabase {
         await file.rename(backupPath);
       }
     } catch (_) {
-      // Could not read — might be encrypted or corrupted.
       // Do NOT delete — let Drift try to open it.
     }
   }
 
-  /// Close the database and clear all local data on logout.
   Future<void> clearOnLogout() async {
     await close();
-
     try {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbPath = p.join(dbFolder.path, AppConfig.dbFileName);

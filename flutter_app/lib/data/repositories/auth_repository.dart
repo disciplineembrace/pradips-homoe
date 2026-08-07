@@ -1,11 +1,13 @@
 /// Authentication repository — PIN-based login via existing website API.
 ///
-/// Uses the EXISTING /api/auth/login endpoint. No separate auth system.
-/// Session token stored in flutter_secure_storage (Android Keystore).
-/// The website uses httpOnly cookies — the app stores the JWT token
-/// from the login response and sends it as a Cookie header.
+/// The website uses httpOnly cookies (ph_session) for auth:
+///   1. POST /api/auth/login → server sets Set-Cookie: ph_session=<JWT>
+///   2. DioClient captures Set-Cookie header and stores it in secure storage
+///   3. On subsequent requests, DioClient sends Cookie: ph_session=<JWT>
+///   4. POST /api/auth/logout → server clears the cookie
 ///
 /// No passwords are stored. No service keys. No database credentials.
+/// The JWT token is stored ONLY in flutter_secure_storage (Android Keystore).
 library;
 
 import 'dart:convert';
@@ -51,26 +53,21 @@ class AuthRepository {
 
   AuthRepository(this._dio, this._secureStorage);
 
-  /// Restore session from secure storage on app launch.
+  /// Restore session on app launch.
   ///
-  /// The app stores the JWT token from the login response in
-  /// flutter_secure_storage. On app restart, we read the token
-  /// and verify it's still valid by calling /api/auth/session.
+  /// The DioClient stores the ph_session cookie in secure storage.
+  /// On app restart, we check if the session is still valid by calling
+  /// /api/auth/session. If valid, we fetch user info from /api/me.
   Future<bool> restoreSession() async {
     try {
-      final token = await _secureStorage.read(key: AppConfig.secureStorageKey);
-      if (token == null || token.isEmpty) return false;
-
-      // Verify session is still valid
       final response = await _dio.get<Map<String, dynamic>>(AppConfig.sessionEndpoint);
       if (response['authenticated'] == true) {
-        // Fetch user data
+        // Try to fetch user data
         try {
           final userResponse = await _dio.get<Map<String, dynamic>>(AppConfig.meEndpoint);
           _currentUser = AuthUser.fromJson(userResponse);
         } catch (_) {
-          // Session is valid but /api/me failed — still authenticated
-          // Try to restore from stored user data
+          // /api/me failed — try stored user data
           final storedUser = await _secureStorage.read(key: AppConfig.secureStorageUserKey);
           if (storedUser != null && storedUser.isNotEmpty) {
             try {
@@ -82,10 +79,8 @@ class AuthRepository {
         }
         return true;
       }
-      // Session expired — clear storage
-      await _secureStorage.delete(key: AppConfig.secureStorageKey);
-      return false;
-    } on ApiException {
+      // Session expired
+      await _dio.clearSession();
       return false;
     } catch (_) {
       return false;
@@ -94,15 +89,14 @@ class AuthRepository {
 
   /// Login with email + 6-digit PIN.
   ///
-  /// The website API at /api/auth/login:
+  /// The website API:
   ///   1. Validates email + PIN
-  ///   2. Sets an httpOnly cookie (ph_session) containing the JWT
-  ///   3. Returns JSON with { success, user, redirect }
+  ///   2. Sets httpOnly cookie via Set-Cookie header
+  ///   3. Returns JSON: { success, user, redirect }
   ///
-  /// For the Flutter app:
-  ///   - Dio captures the Set-Cookie header automatically
-  ///   - We ALSO store the JWT token from the response for persistence
-  ///   - On subsequent requests, DioClient sends it as Cookie: ph_session=<token>
+  /// The DioClient's onResponse interceptor captures the Set-Cookie header
+  /// and stores the ph_session cookie in flutter_secure_storage.
+  /// On subsequent requests, the cookie is automatically attached.
   Future<AuthUser> login({
     required String email,
     required String pin,
@@ -123,40 +117,6 @@ class AuthRepository {
     );
 
     if (response['success'] == true) {
-      // The website sets an httpOnly cookie. Dio captures Set-Cookie headers
-      // automatically. However, Dio doesn't persist cookies across app restarts.
-      // So we extract the JWT from the response (if available) and store it
-      // in flutter_secure_storage for persistence.
-      //
-      // The JWT token may be in:
-      //   1. response['token'] — if the API returns it directly
-      //   2. response headers Set-Cookie — Dio captures this automatically
-      //
-      // If no token is in the response body, we generate a session ID
-      // from the user data to use as a persistent key. The actual auth
-      // is handled by the cookie that Dio sends on subsequent requests.
-      final token = response['token'] as String?;
-      if (token != null && token.isNotEmpty) {
-        await _secureStorage.write(key: AppConfig.secureStorageKey, value: token);
-      } else {
-        // The API doesn't return a token in the body — it only sets a cookie.
-        // Dio will send the cookie on subsequent requests within this session.
-        // For persistence across app restarts, we store a marker that
-        // indicates the user is logged in. The actual JWT is in the cookie
-        // which Dio manages.
-        //
-        // However, since Dio doesn't persist cookies, we need to handle
-        // session restoration differently. We'll store the user data
-        // and on restore, check /api/auth/session. If the cookie has
-        // expired (server-side), the user will need to re-login.
-        //
-        // For now, store a session marker.
-        await _secureStorage.write(
-          key: AppConfig.secureStorageKey,
-          value: 'session_active',
-        );
-      }
-
       // Store user data
       final userJson = response['user'] as Map<String, dynamic>? ?? {};
       _currentUser = AuthUser.fromJson(userJson);
@@ -164,24 +124,22 @@ class AuthRepository {
         key: AppConfig.secureStorageUserKey,
         value: jsonEncode(_currentUser!.toJson()),
       );
-
       return _currentUser!;
     }
 
     throw AuthException(response['error']?.toString() ?? 'Login failed.');
   }
 
-  /// Logout — clear local session + encrypted database + encryption key.
+  /// Logout — clear session + local database + encryption key.
   Future<void> logout() async {
     try {
       await _dio.post(AppConfig.logoutEndpoint);
     } catch (_) {}
 
-    await _secureStorage.delete(key: AppConfig.secureStorageKey);
+    await _dio.clearSession();
     await _secureStorage.delete(key: AppConfig.secureStorageUserKey);
 
     _onLogout?.call();
-
     _currentUser = null;
   }
 
