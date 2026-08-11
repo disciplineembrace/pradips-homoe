@@ -3,7 +3,6 @@
   "data_source": "/home/z/my-project/data/remedies.json",
   "summary": {
     "total_authors_in_db": 9,
-    "total_authors_in_ui": 9,
     "total_remedies": 3734,
     "total_duplicates": 20,
     "duplicates_with_identical_content": 0,
@@ -13,7 +12,54 @@
     "total_short_full": 6,
     "total_embedded_page_numbers": 509,
     "total_unicode_ligature_errors": 180,
-    "total_orphan_author_tabs": 0
+    "total_broken_word_mid_caps": 218
+  },
+  "source_availability_per_author": {
+    "Murphy": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided. Production DB is only data source."
+    },
+    "Boericke": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided. (boericke-repertory.json exists but is repertory rubrics, NOT materia medica)"
+    },
+    "Allen": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided."
+    },
+    "Sankaran": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided."
+    },
+    "Farrington": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided."
+    },
+    "Boeger": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided."
+    },
+    "Kent": {
+      "has_source_file": true,
+      "source_path": "/data/kent-remedies-fresh.json",
+      "note": "Source file was available and merged in previous commit."
+    },
+    "Phatak": {
+      "has_source_file": true,
+      "source_path": "/data/phatak-remedies-fresh.json",
+      "note": "Source file was available and merged in previous commit."
+    },
+    "Mathur": {
+      "has_source_file": false,
+      "source_path": null,
+      "note": "No source PDF/file provided."
+    }
   },
   "per_author": {
     "Allen": {
@@ -25,7 +71,11 @@
       "min_full_length": 444,
       "max_full_length": 124484,
       "embedded_page_numbers": 1,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 2,
+      "records_with_detectable_subtitles": 184,
+      "total_subtitles_detected": 1130,
+      "subtitle_pattern": "standalone known section name (Mind, Head, Eyes, etc.)"
     },
     "Boeger": {
       "database_remedy_count": 308,
@@ -36,7 +86,11 @@
       "min_full_length": 102,
       "max_full_length": 8517,
       "embedded_page_numbers": 306,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 0,
+      "records_with_detectable_subtitles": 306,
+      "total_subtitles_detected": 1765,
+      "subtitle_pattern": "Title-case labels (Region, Worse, Better) + ALL-CAPS labels (SKIN, GLANDS)"
     },
     "Boericke": {
       "database_remedy_count": 688,
@@ -47,7 +101,11 @@
       "min_full_length": 50,
       "max_full_length": 10547,
       "embedded_page_numbers": 111,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 7,
+      "records_with_detectable_subtitles": 673,
+      "total_subtitles_detected": 5612,
+      "subtitle_pattern": "\"Word.--\" (e.g., \"Head.--\")"
     },
     "Farrington": {
       "database_remedy_count": 137,
@@ -58,7 +116,11 @@
       "min_full_length": 104,
       "max_full_length": 68838,
       "embedded_page_numbers": 90,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 13,
+      "records_with_detectable_subtitles": 0,
+      "total_subtitles_detected": 0,
+      "subtitle_pattern": "no subtitle pattern (prose narrative)"
     },
     "Kent": {
       "database_remedy_count": 184,
@@ -69,7 +131,11 @@
       "min_full_length": 372,
       "max_full_length": 84024,
       "embedded_page_numbers": 0,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 3,
+      "records_with_detectable_subtitles": 0,
+      "total_subtitles_detected": 0,
+      "subtitle_pattern": "no subtitle pattern (prose narrative)"
     },
     "Mathur": {
       "database_remedy_count": 180,
@@ -80,7 +146,11 @@
       "min_full_length": 2891,
       "max_full_length": 27487,
       "embedded_page_numbers": 0,
-      "unicode_ligature_errors": 180
+      "unicode_ligature_errors": 180,
+      "broken_word_mid_caps": 1,
+      "records_with_detectable_subtitles": 0,
+      "total_subtitles_detected": 0,
+      "subtitle_pattern": "no subtitle pattern (prose with bullet points)"
     },
     "Murphy": {
       "database_remedy_count": 1383,
@@ -91,7 +161,11 @@
       "min_full_length": 192,
       "max_full_length": 41171,
       "embedded_page_numbers": 0,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 115,
+      "records_with_detectable_subtitles": 1383,
+      "total_subtitles_detected": 4395,
+      "subtitle_pattern": "\"CAPS - \" (e.g., \"PHARMACY - \")"
     },
     "Phatak": {
       "database_remedy_count": 569,
@@ -102,7 +176,11 @@
       "min_full_length": 54,
       "max_full_length": 13470,
       "embedded_page_numbers": 0,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 77,
+      "records_with_detectable_subtitles": 566,
+      "total_subtitles_detected": 6216,
+      "subtitle_pattern": "\"CAPS:\" (e.g., \"MIND:\")"
     },
     "Sankaran": {
       "database_remedy_count": 99,
@@ -113,251 +191,255 @@
       "min_full_length": 420,
       "max_full_length": 12952,
       "embedded_page_numbers": 1,
-      "unicode_ligature_errors": 0
+      "unicode_ligature_errors": 0,
+      "broken_word_mid_caps": 0,
+      "records_with_detectable_subtitles": 0,
+      "total_subtitles_detected": 0,
+      "subtitle_pattern": "no subtitle pattern (prose narrative)"
     }
   },
   "duplicates": [
     {
       "author": "Phatak",
-      "name": "Agaricus Muscarius",
+      "name": "agaricus muscarius",
       "id1": "phatak-mm-agaricus-muscarius",
       "id2": "phatak-mm-agaricus-muscarius-2",
       "full1_length": 1708,
       "full2_length": 5147,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Antimonium Tartaricum",
+      "name": "antimonium tartaricum",
       "id1": "phatak-mm-antimonium-tartaricum",
       "id2": "phatak-mm-antimonium-tartaricum-2",
       "full1_length": 1653,
       "full2_length": 4580,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Baryta Carbonica",
+      "name": "baryta carbonica",
       "id1": "phatak-mm-baryta-carbonica",
       "id2": "phatak-mm-baryta-carbonica-2",
       "full1_length": 1770,
       "full2_length": 4487,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Bromium",
+      "name": "bromium",
       "id1": "phatak-mm-bromium",
       "id2": "phatak-mm-bromium-2",
       "full1_length": 1543,
       "full2_length": 2330,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Cactus Grandiflorus",
+      "name": "cactus grandiflorus",
       "id1": "phatak-mm-cactus-grandiflorus",
       "id2": "phatak-mm-cactus-grandiflorus-2",
       "full1_length": 1573,
       "full2_length": 2611,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Caladium Seguinum",
+      "name": "caladium seguinum",
       "id1": "phatak-mm-caladium-seguinum",
       "id2": "phatak-mm-caladium-seguinum-2",
       "full1_length": 1503,
       "full2_length": 1224,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Chelidonium",
+      "name": "chelidonium",
       "id1": "phatak-mm-chelidonium",
       "id2": "phatak-mm-chelidonium-2",
       "full1_length": 1666,
       "full2_length": 3456,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Coffea Cruda",
+      "name": "coffea cruda",
       "id1": "phatak-mm-coffea-cruda",
       "id2": "phatak-mm-coffea-cruda-2",
       "full1_length": 1616,
       "full2_length": 1408,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Cuprum Metallicum",
+      "name": "cuprum metallicum",
       "id1": "phatak-mm-cuprum-metallicum",
       "id2": "phatak-mm-cuprum-metallicum-2",
       "full1_length": 1802,
       "full2_length": 4719,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Digitalis",
+      "name": "digitalis",
       "id1": "phatak-mm-digitalis",
       "id2": "phatak-mm-digitalis-2",
       "full1_length": 1621,
       "full2_length": 3567,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Graphites",
+      "name": "graphites",
       "id1": "phatak-mm-graphites",
       "id2": "phatak-mm-graphites-2",
       "full1_length": 1834,
       "full2_length": 7763,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Lilium Tigrinum",
+      "name": "lilium tigrinum",
       "id1": "phatak-mm-lilium-tigrinum",
       "id2": "phatak-mm-lilium-tigrinum-2",
       "full1_length": 1716,
       "full2_length": 3654,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Mercurius Corrosivus",
+      "name": "mercurius corrosivus",
       "id1": "phatak-mm-mercurius-corrosivus",
       "id2": "phatak-mm-mercurius-corrosivus-2",
       "full1_length": 1475,
       "full2_length": 2577,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Natrum Muriaticum",
+      "name": "natrum muriaticum",
       "id1": "phatak-mm-natrum-muriaticum",
       "id2": "phatak-mm-natrum-muriaticum-2",
       "full1_length": 1753,
       "full2_length": 7930,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Nitricum Acidum",
+      "name": "nitricum acidum",
       "id1": "phatak-mm-nitricum-acidum",
       "id2": "phatak-mm-nitricum-acidum-2",
       "full1_length": 1753,
       "full2_length": 6491,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Plumbum Metallicum",
+      "name": "plumbum metallicum",
       "id1": "phatak-mm-plumbum-metallicum",
       "id2": "phatak-mm-plumbum-metallicum-2",
       "full1_length": 1818,
       "full2_length": 3735,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Radium",
+      "name": "radium",
       "id1": "phatak-mm-radium",
       "id2": "phatak-mm-radium-2",
       "full1_length": 1481,
       "full2_length": 1808,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Tarentula Hispania",
+      "name": "tarentula hispania",
       "id1": "phatak-mm-tarentula-hispania",
       "id2": "phatak-mm-tarentula-hispania-2",
       "full1_length": 1686,
       "full2_length": 4264,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Theridion",
+      "name": "theridion",
       "id1": "phatak-mm-theridion",
       "id2": "phatak-mm-theridion-2",
       "full1_length": 1625,
       "full2_length": 1821,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     },
     {
       "author": "Phatak",
-      "name": "Valeriana",
+      "name": "valeriana",
       "id1": "phatak-mm-valeriana",
       "id2": "phatak-mm-valeriana-2",
       "full1_length": 1626,
       "full2_length": 1833,
       "contents_identical": false,
       "needs_source_review": true,
-      "note": "Contents DIFFER — needs source review to determine which (if either) is canonical."
+      "note": "Contents DIFFER — needs source review."
     }
   ],
-  "orphan_author_tabs": [],
   "limitations": [
-    "No source PDFs available — cannot perform true source-based verification.",
-    "No OCR pipeline available — cannot re-run OCR to compare against source.",
-    "Medical content was NEVER fabricated or filled from AI knowledge (Phase 21).",
-    "OCR errors (page numbers, ligatures) are FLAGGED only — not auto-corrected (Phase 18).",
-    "Duplicate records with differing content are FLAGGED — not auto-merged (needs source review).",
-    "This report is a DATABASE INSPECTION report, not a source-verification report.",
+    "NO source PDFs/files are available for Murphy, Boericke, Allen, Sankaran, Farrington, Boeger, Mathur.",
+    "True source-based verification is IMPOSSIBLE without source files.",
+    "Per Phase 21: medical content was NEVER fabricated or filled from AI knowledge.",
+    "Per Phase 18: OCR errors (page numbers, ligatures, broken words) are FLAGGED only — not auto-corrected.",
+    "Per Phase 28: this report does NOT claim 100% verification.",
+    "This is a DATABASE INSPECTION report, not a source-verification report.",
     "To achieve true source verification: provide original source PDFs and re-run OCR comparison pipeline."
   ],
   "formatting_changes_applied": [
-    "Remedy main title rendered as RED + BOLD (Materia-Medica-scoped CSS class mm-remedy-title).",
+    "Remedy main title rendered as RED + BOLD (mm-remedy-title class).",
     "Boericke subtitles (Word.--) detected and rendered as RED + BOLD.",
     "Murphy subtitles (CAPS - ) detected and rendered as RED + BOLD.",
     "Phatak subtitles (CAPS:) detected and rendered as RED + BOLD.",
-    "Allen standalone section lines (Mind, Head, Eyes, etc.) detected and rendered as RED + BOLD.",
-    "Other authors (Farrington, Boeger, Kent, Sankaran, Mathur) — no subtitle detection applied (content rendered as plain text to avoid false positives).",
+    "Allen standalone section lines (Mind/Head/Eyes/etc.) detected and rendered as RED + BOLD.",
+    "Boeger title-case labels (Region/Worse/Better/Description/Symptoms) + ALL-CAPS labels (SKIN/GLANDS/NERVES) detected and rendered as RED + BOLD.",
+    "Sankaran, Farrington, Mathur, Kent: no subtitle detection applied (prose narrative — avoid false positives).",
     "Embedded page-number lines flagged as small grey [p. N] markers (not deleted — flagged for source review).",
-    "Inline markdown markers (**bold**, *italic*, _underline_) preserved if present (current DB has none — no-op).",
-    "Capital emphasis NOT auto-applied — would require source formatting metadata we do not have (Phase 9).",
-    "Orphan Dubey tab removed from Materia Medica UI (DB has 0 Dubey records; re-enable only after source import)."
+    "Inline markdown markers (**bold**, *italic*, _underline_) preserved if present.",
+    "Capital emphasis NOT auto-applied — would require source formatting metadata (Phase 9 safe default).",
+    "Orphan Dubey tab removed from Materia Medica UI (DB has 0 Dubey records)."
   ]
 }

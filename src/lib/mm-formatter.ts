@@ -130,6 +130,45 @@ function detectAllenSubtitle(line: string, prevBlank: boolean): string | null {
   return null;
 }
 
+// Boeger (Boger): uses distinctive section labels that are either Title-Case
+// known labels (Region, Worse, Better, Description, Symptoms) or ALL-CAPS
+// short labels (SKIN, GLANDS, NERVES, BLOOD, TISSUES, etc.).
+// These are high-confidence because they appear at line start, are short,
+// and match a known vocabulary.
+const BOEGER_KNOWN_LABELS = new Set([
+  // Title-case labels
+  'Region', 'Worse', 'Better', 'Description', 'Symptoms',
+  // ALL-CAPS labels commonly seen in Boeger
+  'SKIN', 'BLOOD', 'TISSUES', 'GLANDS', 'NERVES', 'MIND', 'HEAD',
+  'EYES', 'EARS', 'NOSE', 'FACE', 'MOUTH', 'THROAT', 'STOMACH',
+  'ABDOMEN', 'RECTUM', 'URINARY', 'GENITALS', 'MALE', 'FEMALE',
+  'RESPIRATORY', 'CHEST', 'HEART', 'BACK', 'EXTREMITITIES', 'SLEEP',
+  'FEVER', 'MODALITIES', 'RELATIONSHIPS', 'DOSE',
+]);
+
+function detectBoegerSubtitle(line: string): string | null {
+  const trimmed = line.trim();
+  if (trimmed.length === 0 || trimmed.length > 40) return null;
+  // Match exact known label (with or without trailing colon)
+  const candidate = trimmed.replace(/:$/, '').trim();
+  if (BOEGER_KNOWN_LABELS.has(candidate)) {
+    return candidate;
+  }
+  // Also match ALL-CAPS lines that are 1-3 words (Boeger uses these as section
+  // headers e.g. "EXPOSURE TO COLD", "HEAT", "CONTINUED MOTION")
+  // But only if the line is a standalone label (not a sentence).
+  // Reject if it contains lowercase letters or sentence-ending punctuation.
+  if (
+    /^[A-Z][A-Z\s]{2,}$/.test(candidate) &&
+    !/[.!?,;:]/.test(candidate) &&
+    candidate.split(/\s+/).length <= 4 &&
+    candidate.length <= 30
+  ) {
+    return candidate;
+  }
+  return null;
+}
+
 // ============================================================
 // INLINE MARKER PRESERVATION
 // If the source text contains markdown-style inline markers (**bold**,
@@ -245,6 +284,8 @@ export function formatRemedyText(opts: {
       subtitle = detectPhatakSubtitle(trimmedLine);
     } else if (author === 'Allen') {
       subtitle = detectAllenSubtitle(trimmedLine, prevBlank);
+    } else if (author === 'Boeger') {
+      subtitle = detectBoegerSubtitle(trimmedLine);
     }
 
     if (subtitle) {
@@ -258,8 +299,9 @@ export function formatRemedyText(opts: {
         remainder = trimmedLine.replace(/^[A-Z][A-Z ]{2,}-\s+/, '');
       } else if (author === 'Phatak') {
         remainder = trimmedLine.replace(/^[A-Z][A-Z ]{2,}:\s+/, '');
-      } else if (author === 'Allen') {
-        // For Allen, the subtitle is a standalone line — remainder is empty
+      } else if (author === 'Allen' || author === 'Boeger') {
+        // For Allen and Boeger, the subtitle is a standalone line —
+        // remainder is empty
         remainder = '';
       }
       if (remainder.trim()) {
@@ -294,6 +336,7 @@ export interface VerificationIssue {
     | 'short_full'
     | 'embedded_page_number'
     | 'unicode_ligature_error'
+    | 'broken_word_mid_caps'
     | 'orphan_author_tab';
   detail: string;
   needsSourceReview: boolean;
@@ -301,6 +344,12 @@ export interface VerificationIssue {
 
 // Common Unicode ligature OCR errors found in Mathur
 const LIGATURE_ERRORS = /[ƟƩ⋃ƪǶǾ]/;
+
+// Broken-word pattern: lowercase letter immediately followed by uppercase
+// letter immediately followed by lowercase (e.g., "woRd", "suGar").
+// This often indicates an OCR line-break artifact where a hyphenated word
+// was rejoined incorrectly. NOT a definitive error — needs source review.
+const BROKEN_WORD_PATTERN = /[a-z][A-Z][a-z]/;
 
 export function inspectRemedy(r: {
   id: string; name: string; author: string;
@@ -353,6 +402,18 @@ export function inspectRemedy(r: {
       remedyId: r.id, remedyName: r.name, author: r.author,
       issueType: 'unicode_ligature_error',
       detail: 'Text contains Unicode ligature characters (Ɵ, Ʃ, etc.) — likely OCR errors for "ti", "tt".',
+      needsSourceReview: true,
+    });
+  }
+  // Broken words (mid-word capitalization) — possible OCR line-break artifact
+  if (BROKEN_WORD_PATTERN.test(full)) {
+    // Find a sample to include in the detail
+    const match = full.match(/[a-z][A-Z][a-z]\w*/);
+    const sample = match ? match[0] : '';
+    issues.push({
+      remedyId: r.id, remedyName: r.name, author: r.author,
+      issueType: 'broken_word_mid_caps',
+      detail: `Text contains possible broken word (mid-word capitalization, e.g., "${sample}"). May be OCR line-break artifact — needs source review.`,
       needsSourceReview: true,
     });
   }
