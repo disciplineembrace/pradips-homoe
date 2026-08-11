@@ -236,9 +236,26 @@ function detectSystemHighlight(sentence: string): 'highlight-yellow' | 'highligh
 }
 
 // Split text into sentences (simplified — splits on . ! ? followed by space)
+// NOTE: Avoids lookbehind regex (?<=...) because it requires ES2018+ target.
+// The current tsconfig targets ES2017, so lookbehind causes a SyntaxError
+// at runtime in the browser — leading to a client-side crash (white screen).
+// This manual split is ES2017-safe.
 function splitIntoSentences(text: string): string[] {
-  // Preserve the delimiters by using a capture group
-  return text.split(/(?<=[.!?])\s+/);
+  const sentences: string[] = [];
+  let current = '';
+  for (let i = 0; i < text.length; i++) {
+    current += text[i];
+    // If current char is . ! or ? and next char is whitespace, end sentence
+    if ((text[i] === '.' || text[i] === '!' || text[i] === '?') &&
+        i + 1 < text.length && /\s/.test(text[i + 1])) {
+      sentences.push(current);
+      current = '';
+    }
+  }
+  if (current.trim()) {
+    sentences.push(current);
+  }
+  return sentences;
 }
 
 export function parseInlineMarkers(text: string): InlineSpan[] {

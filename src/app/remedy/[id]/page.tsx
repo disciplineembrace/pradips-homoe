@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
 import { HighlightToolbar } from '@/components/HighlightToolbar';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -147,6 +148,7 @@ export default function RemedyDetailPage() {
   const [highlightVersion, setHighlightVersion] = useState(0);
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-stone-100">
       <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -230,5 +232,6 @@ export default function RemedyDetailPage() {
         </p>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
