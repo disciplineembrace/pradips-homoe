@@ -7,6 +7,19 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  // Exclude large source PDFs from the standalone build output.
+  // They are dev-only inputs for OCR pipelines, NOT runtime assets.
+  outputFileTracingExcludes: {
+    '*': [
+      './data/sources/**/*',
+      './data/remedies.json.bak-*',
+      './data/remedies-by-id.json',
+      './scripts/**/*',
+      './upload/**/*',
+      './tool-results/**/*',
+      './skills/**/*',
+    ],
+  },
 };
 
 export default nextConfig;

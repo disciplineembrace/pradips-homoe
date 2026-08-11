@@ -5,3 +5,5 @@ tool-results/
 .next/
 worklog.md
 *.bak-*
+data/sources/
+data/remedies.json.bak-*
