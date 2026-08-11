@@ -1,0 +1,3 @@
+{
+  "/api/remedies/[id]/materia-medica/route": "app/api/remedies/[id]/materia-medica/route.js"
+}

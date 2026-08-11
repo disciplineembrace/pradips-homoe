@@ -1,0 +1,3 @@
+{
+  "/api/auth/webauthn/status/route": "app/api/auth/webauthn/status/route.js"
+}
