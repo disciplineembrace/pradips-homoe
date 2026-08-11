@@ -36,7 +36,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Pradip's Homoe" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
+    apple: "/logo.png",
+    shortcut: "/logo.png",
   },
   openGraph: {
     title: "Pradip's Homoe",

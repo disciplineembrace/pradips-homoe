@@ -430,21 +430,30 @@ export function ReportSheet({ patient, rubrics, results, profile, onClose }: Pro
 
       {/* ============================================================
           PRINT STYLES — A4 optimized, hides all website UI
+          IMPORTANT:
+          - We use `visibility: hidden` (not `display: none`) on body * so the
+            layout is preserved, then re-show only the report content.
+          - We NEVER use `display: none` on `.no-print-modal` or
+            `.no-print-modal-inner` because those WRAP the print-only-content.
+            Using `display: none` on them would also hide the report (the
+            "blank PDF pages" bug).
+          - Only specific decorative bars (`.no-print-bar`, `.no-print-toggle`)
+            get `display: none`.
       ============================================================ */}
       <style jsx global>{`
         @media print {
-          /* Hide EVERYTHING on the page */
+          /* Hide EVERYTHING on the page (preserves layout, just invisible) */
           body * {
             visibility: hidden !important;
           }
 
-          /* Show only the report content */
+          /* Show only the report content + its descendants */
           .print-only-content,
           .print-only-content * {
             visibility: visible !important;
           }
 
-          /* Position report at top-left of page */
+          /* Position report at top-left of page, full width */
           .print-only-content {
             position: absolute !important;
             left: 0 !important;
@@ -454,22 +463,39 @@ export function ReportSheet({ patient, rubrics, results, profile, onClose }: Pro
             overflow: visible !important;
             padding: 15mm !important;
             background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
           }
 
-          /* Hide modal overlay, header bar, toggle bar */
-          .no-print-modal,
-          .no-print-modal-inner,
+          /* Hide the modal overlay wrapper, modal inner box visually.
+             NOTE: do NOT use display:none here — that would hide the
+             print-only-content child too. Use visibility which is already
+             hidden via body *. The modal overlay's black background also
+             needs to be removed. */
+          .no-print-modal {
+            background: transparent !important;
+            position: static !important;
+            inset: auto !important;
+            z-index: auto !important;
+            padding: 0 !important;
+          }
+          .no-print-modal-inner {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            max-width: none !important;
+            max-height: none !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+
+          /* These are decorative UI bars — safe to fully remove from layout */
           .no-print-bar,
           .no-print-toggle,
           .no-print-clickable {
             display: none !important;
-          }
-
-          /* Remove shadows and borders from modal */
-          .print-only-content {
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
           }
 
           /* A4 page setup */

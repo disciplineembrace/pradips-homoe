@@ -611,16 +611,34 @@ export default function SynthesisPage() {
             {/* Workflow Steps */}
             <WorkflowSteps currentStep={1} />
 
-            {/* Hero — premium clinical theme */}
-            <div className="bg-gradient-to-br from-[#124C3B] to-[#123C30] rounded-xl p-6 md:p-8 mb-6 shadow-lg border border-[#C49A3A]/20">
-              <div className="text-center">
-                <h2 className="font-serif text-xl md:text-2xl text-[#C49A3A] mb-1">Synthesis Repertory</h2>
-                <p className="text-sm text-stone-200">Professional Repertorization Engine</p>
-                <p className="text-xs text-[#C49A3A]/70 mt-1 uppercase tracking-[0.15em]">Updated by Dr. Pradip</p>
+            {/* Hero — premium clinical theme.
+                NOTE: "Synthesis Repertory" title is already shown in the
+                page <header> above (with gold underline + "Updated Version
+                by Dr. Pradip"). We do NOT duplicate the title here per
+                design spec. This hero is a compact clinical hero showing
+                only the tagline + accent. */}
+            <div className="bg-gradient-to-br from-[#124C3B] to-[#0B392D] rounded-xl p-5 md:p-7 mb-6 shadow-lg border border-[#C49A3A]/20">
+              <div className="flex items-center gap-4">
+                {/* Compact emblem */}
+                <div className="w-14 h-14 rounded-full bg-[#C49A3A]/15 border border-[#C49A3A]/40 flex items-center justify-center flex-shrink-0">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C49A3A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2C8 6 6 10 6 14c0 4 2 8 6 8s6-4 6-8c0-4-2-8-6-12z" fill="#C49A3A" fillOpacity="0.25"/>
+                    <path d="M12 6v14" stroke="#C49A3A" strokeWidth="1.2" opacity="0.6"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm md:text-base text-stone-100 font-medium leading-snug">
+                    Professional Repertorization Engine
+                  </p>
+                  <p className="text-xs text-[#C49A3A]/80 mt-1 uppercase tracking-[0.15em]">
+                    Updated Version by Dr. Pradip
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Stats Grid — 2x3 grid with SVG icons */}
+            {/* Stats Grid — 2x3 grid with SVG icons.
+                White cards, ivory-cream border, gold accent on hover. */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
               {[
                 { label: 'Rubrics', value: stats.rubrics.toLocaleString(), Icon: Icons.Rubrics },
@@ -630,18 +648,22 @@ export default function SynthesisPage() {
                 { label: 'Chapters', value: stats.chapters, Icon: Icons.Chapters },
                 { label: 'Cross Refs', value: stats.crossRefs.toLocaleString(), Icon: Icons.CrossRefs },
               ].map(s => (
-                <div key={s.label} className="bg-[#FFFDF8] rounded-lg shadow-sm border border-[#E5DCC8] p-4 text-center hover:shadow-md transition-shadow">
-                  <div className="flex justify-center mb-1"><s.Icon size={24} /></div>
-                  <div className="text-lg font-bold text-[#124C3B]">{s.value}</div>
-                  <div className="text-xs text-[#6B7280] uppercase tracking-wider">{s.label}</div>
+                <div
+                  key={s.label}
+                  className="bg-white rounded-2xl border border-[#DEDACF] p-4 text-center hover:border-[#C49A3A] hover:shadow-md transition-all"
+                  style={{ boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
+                >
+                  <div className="flex justify-center mb-1.5"><s.Icon size={24} /></div>
+                  <div className="text-xl font-bold text-[#124C3B] font-serif">{s.value}</div>
+                  <div className="text-[0.65rem] text-[#778078] uppercase tracking-[0.12em] mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
 
-            {/* New Repertorization button */}
+            {/* New Repertorization button — primary action */}
             <button
               onClick={handleNewCase}
-              className="w-full mb-4 px-6 py-3 bg-[#124C3B] text-white rounded-lg text-sm font-bold uppercase tracking-wider hover:bg-[#0B392D] transition-colors"
+              className="w-full mb-4 px-6 py-3.5 bg-[#124C3B] text-white rounded-xl text-sm font-bold uppercase tracking-[0.12em] hover:bg-[#0B392D] active:scale-[0.99] transition-all shadow-sm"
             >
               + Start New Repertorization
             </button>
@@ -661,26 +683,30 @@ export default function SynthesisPage() {
                 <button
                   key={item.label}
                   onClick={() => item.onClick ? item.onClick() : setView(item.view)}
-                  className={`bg-[#FFFDF8] rounded-lg shadow-sm border p-4 text-left transition-all ${
+                  className={`bg-white rounded-2xl border p-4 text-left transition-all ${
                     item.label === 'How It Works'
-                      ? 'border-[#C49A3A] hover:bg-[#FAF8F2] hover:border-[#C49A3A]'
-                      : 'border-[#E5DCC8] hover:shadow-md hover:border-[#C49A3A]'
+                      ? 'border-[#C49A3A]/50 hover:bg-[#FAF8F2] hover:border-[#C49A3A]'
+                      : 'border-[#DEDACF] hover:shadow-md hover:border-[#C49A3A]/60'
                   }`}
+                  style={{ boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
                 >
-                  <div className="mb-1"><item.Icon size={24} /></div>
+                  <div className="mb-1.5"><item.Icon size={24} /></div>
                   <div className="text-sm font-semibold text-[#124C3B]">{item.label}</div>
-                  <div className="text-xs text-[#6B7280]">{item.desc}</div>
+                  <div className="text-xs text-[#778078] mt-0.5">{item.desc}</div>
                 </button>
               ))}
             </div>
 
             {/* Workflow Steps Preview */}
-            <div className="mt-6 bg-white rounded-lg shadow-sm border border-stone-200 p-4">
+            <div
+              className="mt-6 bg-white rounded-2xl border p-4"
+              style={{ borderColor: SYNTH_COLORS.border, boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
+            >
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#124C3B] uppercase tracking-wider">Workflow Steps</h3>
+                <h3 className="text-sm font-bold text-[#124C3B] uppercase tracking-[0.12em]">Workflow Steps</h3>
                 <button
                   onClick={() => setShowStepGuide(true)}
-                  className="text-xs hover:underline"
+                  className="text-xs hover:underline font-semibold"
                   style={{ color: SYNTH_COLORS.primary }}
                 >
                   View Full Guide →
@@ -689,10 +715,17 @@ export default function SynthesisPage() {
               <div className="flex items-center gap-1 overflow-x-auto pb-2">
                 {['🏠 Dashboard', '🔍 Search', '📋 Select', '📄 Case Paper', '⚙️ Repertorize', '📊 Results', '💊 Details', '🔄 Compare', '💾 Save'].map((s, idx) => (
                   <div key={idx} className="flex items-center gap-1 flex-shrink-0">
-                    <div className="px-2.5 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-stone-600 whitespace-nowrap">
+                    <div
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap"
+                      style={{
+                        backgroundColor: '#FAF8F2',
+                        border: `1px solid ${SYNTH_COLORS.border}`,
+                        color: SYNTH_COLORS.text,
+                      }}
+                    >
                       {idx + 1}. {s}
                     </div>
-                    {idx < 8 && <span className="text-stone-300 text-xs">→</span>}
+                    {idx < 8 && <span className="text-[#C49A3A]/60 text-xs">→</span>}
                   </div>
                 ))}
               </div>
@@ -986,7 +1019,10 @@ export default function SynthesisPage() {
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>2</div>
               <span className="text-sm font-semibold text-[#124C3B]">Search Rubric</span>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-4 mb-4">
+            <div
+              className="bg-white rounded-xl border p-4 mb-4"
+              style={{ borderColor: SYNTH_COLORS.border, boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
+            >
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -994,16 +1030,47 @@ export default function SynthesisPage() {
                   value={searchQuery}
                   onChange={e => onSearchChange(e.target.value)}
                   autoFocus
-                  className="flex-1 px-4 py-2.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#124C3B]"
+                  className="flex-1 px-4 py-2.5 rounded-lg text-sm focus:outline-none transition-colors"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    border: `1px solid ${SYNTH_COLORS.border}`,
+                    color: SYNTH_COLORS.text,
+                  }}
                 />
-                <button onClick={() => performSearch(searchQuery)} className="px-6 py-2.5 bg-[#124C3B] text-white rounded-lg text-sm font-semibold hover:bg-[#0B392D]">Search</button>
+                <button
+                  onClick={() => performSearch(searchQuery)}
+                  className="px-6 py-2.5 bg-[#124C3B] text-white rounded-lg text-sm font-semibold hover:bg-[#0B392D] transition-colors"
+                >
+                  Search
+                </button>
               </div>
-              {searchQuery && <div className="mt-2 text-xs text-stone-500">{searching ? 'Searching...' : `${searchTotal} rubrics found`}</div>}
+              {searchQuery && (
+                <div className="mt-2 text-xs" style={{ color: SYNTH_COLORS.textSecondary }}>
+                  {searching ? 'Searching...' : `${searchTotal} rubrics found`}
+                </div>
+              )}
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-stone-200">
-              <div className="px-4 py-2.5 border-b border-stone-200 bg-stone-50">
-                <h2 className="text-sm font-semibold text-[#124C3B] uppercase tracking-wider">Search Results</h2>
+            <div
+              className="bg-white rounded-xl border overflow-hidden"
+              style={{ borderColor: SYNTH_COLORS.border, boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
+            >
+              <div
+                className="px-4 py-2.5 border-b flex items-center justify-between gap-2"
+                style={{ borderColor: SYNTH_COLORS.border, backgroundColor: '#FBFAF6' }}
+              >
+                <div>
+                  <h2
+                    className="text-sm font-bold uppercase tracking-wider"
+                    style={{ color: SYNTH_COLORS.primary }}
+                  >
+                    Search Results
+                  </h2>
+                  <div
+                    className="mt-1 h-[2px] w-10"
+                    style={{ backgroundColor: SYNTH_COLORS.gold }}
+                  />
+                </div>
               </div>
               <div className="p-3 max-h-[500px] overflow-y-auto">
                 {searchResults.length === 0 && !searching && searchQuery ? (
@@ -1011,34 +1078,41 @@ export default function SynthesisPage() {
                 ) : searchResults.length === 0 ? (
                   <EmptyState icon="🔍" title="Search Rubrics" message="Start typing to search 180,386 rubrics across all chapters." />
                 ) : (
-                  <div className="space-y-1">
-                    {searchResults.map(r => (
-                      <div
-                        key={r.id}
-                        className={`flex items-center gap-2 p-2.5 border rounded cursor-pointer transition-colors ${
-                          activeRubric && getRubricId(activeRubric) === r.id ? 'border-[#124C3B] bg-[#EAF4EF]' : 'border-stone-200 hover:bg-stone-50'
-                        }`}
-                        onClick={() => {
-                          setActiveRubric(r);
-                          loadRubricRemedies(r.id);
-                          loadCrossRefs(r.id);
-                        }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-[#124C3B] truncate">{r.name}</div>
-                          <div className="text-xs text-stone-500 truncate">{r.path}</div>
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); addRubricToCase(r); }}
-                          className={`px-2 py-1 text-xs rounded ${
-                            selectedRubrics.some(sr => sr.symptomId === r.id) ? 'bg-green-100 text-green-700' : ''
+                  <div className="space-y-1.5">
+                    {searchResults.map(r => {
+                      const alreadyAdded = selectedRubrics.some(sr => sr.symptomId === r.id);
+                      return (
+                        <div
+                          key={r.id}
+                          className={`flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer transition-colors ${
+                            activeRubric && getRubricId(activeRubric) === r.id
+                              ? 'border-[#124C3B] bg-[#EAF4EF]'
+                              : 'border-[#DEDACF] hover:bg-[#FAF8F2] hover:border-[#124C3B]/40'
                           }`}
-                          style={!selectedRubrics.some(sr => sr.symptomId === r.id) ? { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' } : undefined}
+                          onClick={() => {
+                            setActiveRubric(r);
+                            loadRubricRemedies(r.id);
+                            loadCrossRefs(r.id);
+                          }}
                         >
-                          {selectedRubrics.some(sr => sr.symptomId === r.id) ? '✓' : '+ Add'}
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-[#124C3B] truncate">{r.name}</div>
+                            <div className="text-xs text-[#778078] truncate">{r.path}</div>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addRubricToCase(r); }}
+                            className="px-2.5 py-1 text-xs rounded font-semibold transition-colors flex-shrink-0"
+                            style={
+                              alreadyAdded
+                                ? { backgroundColor: '#EAF4EF', color: SYNTH_COLORS.primary, border: `1px solid ${SYNTH_COLORS.primary}` }
+                                : { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }
+                            }
+                          >
+                            {alreadyAdded ? '✓ Added' : '+ Add'}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1088,11 +1162,27 @@ export default function SynthesisPage() {
 
         {/* ===== REPERTORIZATION PROGRESS VIEW (Step 4) ===== */}
         {view === 'case' && repertorizing && (
-          <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden max-w-lg mx-auto">
-            {/* Step header with blue badge */}
-            <div className="px-4 py-3 border-b border-stone-200 bg-stone-50 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}>4</div>
-              <h2 className="text-sm font-semibold text-[#124C3B] uppercase tracking-wider">Repertorization in Progress</h2>
+          <div
+            className="bg-white rounded-2xl border overflow-hidden max-w-lg mx-auto"
+            style={{ borderColor: SYNTH_COLORS.border, boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
+          >
+            {/* Step header with dark green badge */}
+            <div
+              className="px-4 py-3 border-b flex items-center gap-2"
+              style={{ borderColor: SYNTH_COLORS.border, backgroundColor: '#FBFAF6' }}
+            >
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }}
+              >
+                4
+              </div>
+              <h2
+                className="text-sm font-bold uppercase tracking-wider"
+                style={{ color: SYNTH_COLORS.primary }}
+              >
+                Repertorization in Progress
+              </h2>
             </div>
             <div className="p-6 md:p-8">
               {/* Progress checklist */}
@@ -1107,12 +1197,28 @@ export default function SynthesisPage() {
                   { label: 'Finalizing results', done: false },
                 ].map((step, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      step.done ? 'bg-green-500 text-white' : 'bg-stone-200 text-stone-400'
-                    }`}>
-                      {step.done ? '✓' : idx + 1}
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={
+                        step.done
+                          ? { backgroundColor: SYNTH_COLORS.primary, color: '#FFFFFF' }
+                          : { backgroundColor: '#F3F1EA', color: SYNTH_COLORS.textSecondary, border: `1px solid ${SYNTH_COLORS.border}` }
+                      }
+                    >
+                      {step.done ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        idx + 1
+                      )}
                     </div>
-                    <span className={`text-sm ${step.done ? 'text-stone-700' : 'text-stone-400'}`}>{step.label}</span>
+                    <span
+                      className="text-sm"
+                      style={{ color: step.done ? SYNTH_COLORS.text : SYNTH_COLORS.textSecondary }}
+                    >
+                      {step.label}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -1123,7 +1229,7 @@ export default function SynthesisPage() {
                   <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" strokeWidth="8" />
                     <circle
-                      cx="50" cy="50" r="45" fill="none" stroke="#124C3B" strokeWidth="8"
+                      cx="50" cy="50" r="45" fill="none" stroke={SYNTH_COLORS.primary} strokeWidth="8"
                       strokeDasharray="282.6" strokeDashoffset="70.65"
                       strokeLinecap="round"
                       className="transition-all duration-500"
@@ -1133,8 +1239,8 @@ export default function SynthesisPage() {
                     <span className="text-2xl font-bold text-[#124C3B]">75%</span>
                   </div>
                 </div>
-                <p className="text-sm text-[#6B7280] mt-3">Please wait...</p>
-                <p className="text-xs text-[#6B7280]">Calculating Verified Results...</p>
+                <p className="text-sm mt-3" style={{ color: SYNTH_COLORS.textSecondary }}>Please wait...</p>
+                <p className="text-xs" style={{ color: SYNTH_COLORS.textSecondary }}>Calculating Verified Results...</p>
               </div>
             </div>
           </div>
@@ -1289,93 +1395,106 @@ export default function SynthesisPage() {
                         const saveLoading = isCaseActionLoading(c.id, 'save');
                         const anyLoading = openLoading || shareLoading || deleteLoading || saveLoading;
                         return (
-                          <div key={c.id} className="p-3 border border-stone-200 rounded-lg hover:bg-stone-50 relative">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-semibold text-[#124C3B]">{c.patient.patientName || 'Unknown Patient'}</div>
-                                <div className="text-xs text-stone-500">
-                                  Case: {c.patient.caseNo} · {c.patient.age || '?'} yrs · {c.patient.sex || '?'} · {c.patient.date}
-                                </div>
-                                <div className="text-xs text-stone-400 mt-0.5">
-                                  {c.rubrics.length} rubrics · {c.results.length > 0 ? `${c.results.length} results` : 'Not repertorized'}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                {/* OPEN — primary action, always visible */}
-                                <button
-                                  onClick={() => handleOpenCase(c)}
-                                  disabled={anyLoading}
-                                  className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[#124C3B] text-white rounded-md hover:bg-[#0B392D] disabled:opacity-50 disabled:cursor-not-allowed min-h-[32px]"
-                                  title="Open case"
+                    <div
+                      key={c.id}
+                      className="p-3 rounded-xl border bg-white hover:bg-[#FAF8F2] relative transition-colors"
+                      style={{ borderColor: SYNTH_COLORS.border }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-[#124C3B]">{c.patient.patientName || 'Unknown Patient'}</div>
+                          <div className="text-xs text-[#778078]">
+                            Case: {c.patient.caseNo} · {c.patient.age || '?'} yrs · {c.patient.sex || '?'} · {c.patient.date}
+                          </div>
+                          <div className="text-xs text-[#9CA3AF] mt-0.5">
+                            {c.rubrics.length} rubrics · {c.results.length > 0 ? `${c.results.length} results` : 'Not repertorized'}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {/* OPEN — primary action, always visible */}
+                          <button
+                            onClick={() => handleOpenCase(c)}
+                            disabled={anyLoading}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[#124C3B] text-white rounded-md hover:bg-[#0B392D] disabled:opacity-50 disabled:cursor-not-allowed min-h-[32px] transition-colors"
+                            title="Open case"
+                          >
+                            {openLoading ? (
+                              <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                              <Icons.Eye size={14} className="text-white" />
+                            )}
+                            <span>Open</span>
+                          </button>
+                          {/* ⋮ MORE — opens Edit / Share / Delete dropdown */}
+                          <div className="relative">
+                            <button
+                              onClick={() => setMenuOpenCaseId(menuOpenCaseId === c.id ? null : c.id)}
+                              disabled={anyLoading}
+                              className="flex items-center justify-center w-8 h-8 text-[#778078] hover:bg-[#FAF8F2] rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              title="More actions"
+                              aria-label="More actions"
+                            >
+                              <Icons.MoreVertical size={16} className="text-[#778078]" />
+                            </button>
+                            {menuOpenCaseId === c.id && (
+                              <>
+                                {/* Click-away overlay */}
+                                <div
+                                  className="fixed inset-0 z-40"
+                                  onClick={() => setMenuOpenCaseId(null)}
+                                />
+                                {/* Dropdown menu */}
+                                <div
+                                  className="absolute right-0 top-full mt-1 w-44 bg-white border rounded-md shadow-lg z-50 overflow-hidden"
+                                  style={{ borderColor: SYNTH_COLORS.border }}
                                 >
-                                  {openLoading ? (
-                                    <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  ) : (
-                                    <Icons.Eye size={14} className="text-white" />
-                                  )}
-                                  <span>Open</span>
-                                </button>
-                                {/* ⋮ MORE — opens Edit / Share / Delete dropdown */}
-                                <div className="relative">
                                   <button
-                                    onClick={() => setMenuOpenCaseId(menuOpenCaseId === c.id ? null : c.id)}
-                                    disabled={anyLoading}
-                                    className="flex items-center justify-center w-8 h-8 text-stone-600 hover:bg-stone-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="More actions"
-                                    aria-label="More actions"
+                                    onClick={() => handleEditCase(c)}
+                                    className="flex items-center gap-2 w-full px-3 py-2.5 text-xs hover:bg-[#FAF8F2] text-left transition-colors"
+                                    style={{ color: SYNTH_COLORS.text }}
                                   >
-                                    <Icons.MoreVertical size={16} className="text-stone-600" />
+                                    <Icons.Pencil size={14} className="text-[#778078]" />
+                                    <span>Edit</span>
                                   </button>
-                                  {menuOpenCaseId === c.id && (
-                                    <>
-                                      {/* Click-away overlay */}
-                                      <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={() => setMenuOpenCaseId(null)}
-                                      />
-                                      {/* Dropdown menu */}
-                                      <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-stone-200 rounded-md shadow-lg z-50 overflow-hidden">
-                                        <button
-                                          onClick={() => handleEditCase(c)}
-                                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-stone-700 hover:bg-stone-50 text-left"
-                                        >
-                                          <Icons.Pencil size={14} className="text-stone-600" />
-                                          <span>Edit</span>
-                                        </button>
-                                        <button
-                                          onClick={() => handleShareCase(c)}
-                                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-stone-700 hover:bg-stone-50 text-left"
-                                        >
-                                          <Icons.Share size={14} className="text-stone-600" />
-                                          <span>Share</span>
-                                        </button>
-                                        <div className="border-t border-stone-100" />
-                                        <button
-                                          onClick={() => handleRequestDelete(c)}
-                                          className="flex items-center gap-2 w-full px-3 py-2.5 text-xs text-red-600 hover:bg-red-50 text-left"
-                                        >
-                                          <Icons.Trash size={14} className="text-red-600" />
-                                          <span>Delete</span>
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
+                                  <button
+                                    onClick={() => handleShareCase(c)}
+                                    className="flex items-center gap-2 w-full px-3 py-2.5 text-xs hover:bg-[#FAF8F2] text-left transition-colors"
+                                    style={{ color: SYNTH_COLORS.text }}
+                                  >
+                                    <Icons.Share size={14} className="text-[#778078]" />
+                                    <span>Share</span>
+                                  </button>
+                                  <div className="border-t" style={{ borderColor: SYNTH_COLORS.border }} />
+                                  <button
+                                    onClick={() => handleRequestDelete(c)}
+                                    className="flex items-center gap-2 w-full px-3 py-2.5 text-xs hover:bg-red-50 text-left transition-colors"
+                                    style={{ color: SYNTH_COLORS.delete }}
+                                  >
+                                    <Icons.Trash size={14} className="text-[#C83B3B]" />
+                                    <span>Delete</span>
+                                  </button>
                                 </div>
-                              </div>
-                            </div>
-                            {/* Inline loading indicator for share/save (so user sees feedback even before modal opens) */}
-                            {(shareLoading || saveLoading) && (
-                              <div className="absolute inset-0 bg-white/60 rounded-lg flex items-center justify-center z-10 pointer-events-none">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-stone-200 rounded-md shadow-sm">
-                                  <span className="inline-block w-3 h-3 border-2 border-[#124C3B]/30 border-t-[#124C3B] rounded-full animate-spin" />
-                                  <span className="text-xs text-stone-700 font-medium">
-                                    {shareLoading ? 'Preparing Case Report...' : 'Saving Changes...'}
-                                  </span>
-                                </div>
-                              </div>
+                              </>
                             )}
                           </div>
-                        );
+                        </div>
+                      </div>
+                      {/* Inline loading indicator for share/save (so user sees feedback even before modal opens) */}
+                      {(shareLoading || saveLoading) && (
+                        <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10 pointer-events-none">
+                          <div
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white border rounded-md shadow-sm"
+                            style={{ borderColor: SYNTH_COLORS.border }}
+                          >
+                            <span className="inline-block w-3 h-3 border-2 border-[#124C3B]/30 border-t-[#124C3B] rounded-full animate-spin" />
+                            <span className="text-xs text-[#243A32] font-medium">
+                              {shareLoading ? 'Preparing Case Report...' : 'Saving Changes...'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
                       })}
                     </div>
                   );
@@ -1387,25 +1506,42 @@ export default function SynthesisPage() {
 
         {/* ===== PROFILE VIEW ===== */}
         {view === 'profile' && (
-          <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-6">
+          <div
+            className="bg-white rounded-2xl border p-6"
+            style={{ borderColor: SYNTH_COLORS.border, boxShadow: '0 1px 3px rgba(15, 74, 56, 0.04)' }}
+          >
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="font-serif text-lg text-[#124C3B]">Report Profile / Clinic Profile</h2>
-                <p className="text-xs text-stone-500">User-specific branding for Synthesis reports only</p>
+                <p className="text-xs text-[#778078]">User-specific branding for Synthesis reports only</p>
               </div>
-              <button onClick={() => setView('dashboard')} className="text-xs hover:underline" style={{ color: SYNTH_COLORS.primary }}>← Back</button>
+              <button
+                onClick={() => setView('dashboard')}
+                className="text-xs hover:underline font-semibold"
+                style={{ color: SYNTH_COLORS.primary }}
+              >
+                ← Back
+              </button>
             </div>
 
             {/* Profile summary */}
-            <div className="p-4 border border-stone-200 rounded-lg bg-stone-50 mb-4">
+            <div
+              className="p-4 rounded-xl mb-4"
+              style={{
+                backgroundColor: '#FBFAF6',
+                border: `1px solid ${SYNTH_COLORS.border}`,
+              }}
+            >
               <div className="flex items-start gap-4">
                 {profile.logo && <img src={profile.logo} alt="" className="w-16 h-16 object-contain" />}
                 <div className="flex-1">
-                  {profile.doctorName ? <div className="text-sm font-semibold text-[#124C3B]">{profile.doctorName}</div> : <div className="text-sm text-stone-400">No doctor name set</div>}
-                  {profile.qualification && <div className="text-xs text-stone-500">{profile.qualification}</div>}
-                  {profile.clinicName && <div className="text-xs text-stone-600 mt-1">{profile.clinicName}</div>}
-                  {profile.clinicAddress && <div className="text-xs text-stone-500">{profile.clinicAddress}</div>}
-                  <div className="text-xs text-stone-400 mt-1">
+                  {profile.doctorName
+                    ? <div className="text-sm font-semibold text-[#124C3B]">{profile.doctorName}</div>
+                    : <div className="text-sm text-[#9CA3AF]">No doctor name set</div>}
+                  {profile.qualification && <div className="text-xs text-[#778078]">{profile.qualification}</div>}
+                  {profile.clinicName && <div className="text-xs text-[#243A32] mt-1">{profile.clinicName}</div>}
+                  {profile.clinicAddress && <div className="text-xs text-[#778078]">{profile.clinicAddress}</div>}
+                  <div className="text-xs text-[#9CA3AF] mt-1">
                     {profile.phone && <span className="mr-2">📞 {profile.phone}</span>}
                     {profile.email && <span className="mr-2">✉ {profile.email}</span>}
                   </div>
@@ -1415,7 +1551,7 @@ export default function SynthesisPage() {
 
             <button
               onClick={() => setShowProfileSettings(true)}
-              className="px-5 py-2 bg-[#124C3B] text-white rounded-lg text-sm font-semibold hover:bg-[#0B392D]"
+              className="px-5 py-2 bg-[#124C3B] text-white rounded-lg text-sm font-semibold hover:bg-[#0B392D] transition-colors"
             >
               Edit Profile
             </button>
@@ -1423,7 +1559,7 @@ export default function SynthesisPage() {
             {results.length > 0 && (
               <button
                 onClick={() => setShowReport(true)}
-                className="ml-2 px-5 py-2 text-white rounded-lg text-sm font-semibold"
+                className="ml-2 px-5 py-2 text-white rounded-lg text-sm font-semibold transition-colors"
                 style={{ backgroundColor: SYNTH_COLORS.primary }}
               >
                 Preview Report
@@ -1434,7 +1570,11 @@ export default function SynthesisPage() {
 
       </main>
 
-      {/* ===== BOTTOM NAVIGATION BAR (Synthesis-specific) ===== */}
+      {/* ===== BOTTOM NAVIGATION BAR (Synthesis-specific) =====
+          Per spec:
+          - Background: #124C3B (primary dark green)
+          - Inactive: soft neutral text
+          - Active: gold accent + small gold indicator above icon */}
       <div className="sticky bottom-0 z-20 bg-[#124C3B] border-t border-[#C49A3A]/30 lg:hidden">
         <div className="flex items-center justify-around py-2">
           {[
@@ -1447,10 +1587,16 @@ export default function SynthesisPage() {
             <button
               key={item.label}
               onClick={() => setView(item.view)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
-                item.active ? 'text-[#C49A3A]' : 'text-stone-400 hover:text-stone-200'
-              }`}
+              className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors"
+              style={{ color: item.active ? '#C49A3A' : '#9CA3AF' }}
             >
+              {/* Small gold top-indicator for active item */}
+              {item.active && (
+                <span
+                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-full"
+                  style={{ backgroundColor: '#C49A3A' }}
+                />
+              )}
               <span className="text-lg leading-none">{item.icon}</span>
               <span className="text-[0.65rem] font-medium">{item.label}</span>
             </button>

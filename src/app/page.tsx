@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -10,6 +11,16 @@ export default function Home() {
         {/* Hero section */}
         <section className="relative bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950 text-stone-100 py-20 px-4 border-b-2 border-amber-700/60">
           <div className="max-w-5xl mx-auto text-center">
+            <div className="relative w-28 h-28 md:w-36 md:h-36 mx-auto mb-6 rounded-full overflow-hidden ring-4 ring-amber-700/50 shadow-2xl">
+              <Image
+                src="/logo.png"
+                alt="Pradip's Homoe logo"
+                fill
+                priority
+                sizes="(max-width: 768px) 112px, 144px"
+                className="object-cover"
+              />
+            </div>
             <h1 className="font-serif italic text-4xl md:text-6xl text-amber-200 mb-4 tracking-wide">
               Pradip&apos;s Homoe
             </h1>

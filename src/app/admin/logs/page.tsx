@@ -13,7 +13,7 @@ export default function AdminLogsPage() {
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) { router.push('/login'); return; }
-      if (d.user.role !== 'admin') { router.push('/dashboard'); return; }
+      if (d.role !== 'admin') { router.push('/dashboard'); return; }
       setSession(d);
       loadLogs();
     });

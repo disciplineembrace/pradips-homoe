@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Home,
   BookOpen,
@@ -110,8 +111,15 @@ export function Sidebar() {
       {/* Logo / Brand header */}
       <div className="px-4 py-4 border-b border-[#C8A24A]/20">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-full bg-[#C8A24A] flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform">
-            <span className="text-[#173B2D] font-bold text-lg">⚕</span>
+          <div className="relative w-10 h-10 flex-shrink-0 rounded-full overflow-hidden ring-2 ring-[#C8A24A]/60 shadow-md group-hover:scale-105 transition-transform">
+            <Image
+              src="/logo.png"
+              alt="Pradip's Homoe logo"
+              fill
+              priority
+              sizes="40px"
+              className="object-cover"
+            />
           </div>
           <div className="min-w-0">
             <div className="font-serif italic text-lg text-[#C8A24A] leading-tight truncate">Pradip&apos;s Homoe</div>

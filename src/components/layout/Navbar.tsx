@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 /**
  * Slim top utility bar.
@@ -71,9 +72,21 @@ export function Navbar() {
             {session?.authenticated && session?.role === 'admin' && adminItems.map(it => navLink(it.href, it.label))}
           </nav>
 
-          {/* Mobile: small brand mark (no full logo — Sidebar drawer has it) */}
-          <div className="md:hidden font-serif italic text-base text-amber-200 tracking-wide">
-            Pradip&apos;s Homoe
+          {/* Mobile: small brand mark with real logo (Sidebar drawer has full version) */}
+          <div className="md:hidden flex items-center gap-2 pl-10">
+            <div className="relative w-7 h-7 rounded-full overflow-hidden ring-1 ring-[#C8A24A]/60 flex-shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Pradip's Homoe"
+                fill
+                priority
+                sizes="28px"
+                className="object-cover"
+              />
+            </div>
+            <span className="font-serif italic text-base text-amber-200 tracking-wide">
+              Pradip&apos;s Homoe
+            </span>
           </div>
 
           {/* Auth button */}
