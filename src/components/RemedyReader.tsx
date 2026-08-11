@@ -333,7 +333,7 @@ function renderRemedyText(text: string, keyPrefix: string): React.ReactNode {
     } else {
       // Check for Murphy-style "HEADING - content" pattern (dash separator)
       // Murphy uses: "PHARMACY - content", "CLINICAL - content", "Head - content", etc.
-      const dashMatch = trimmed.match(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\s*-\s+(.+)$/s);
+      const dashMatch = trimmed.match(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\s*-\s+(.+)$/);
       if (dashMatch) {
         const potentialHeading = dashMatch[1].trim();
         const restContent = dashMatch[2].trim();
@@ -365,7 +365,7 @@ function renderRemedyText(text: string, keyPrefix: string): React.ReactNode {
           }
         } else {
           // Check for sub-label pattern: "Label: text" or "Label :" at start
-          const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
+          const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/);
           if (labelMatch && !isHeading(trimmed)) {
             flushParagraph();
             elements.push(
@@ -380,7 +380,7 @@ function renderRemedyText(text: string, keyPrefix: string): React.ReactNode {
         }
       } else {
         // Check for sub-label pattern: "Label: text" or "Label :" at start
-        const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
+        const labelMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/);
         if (labelMatch && !isHeading(trimmed)) {
           flushParagraph();
           elements.push(
@@ -549,7 +549,7 @@ export function RemedyReader({
                     </h3>
                   )}
                   {section.paragraphs && section.paragraphs.map((para, pidx) => {
-                    const labelMatch = para.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/s);
+                    const labelMatch = para.match(/^([A-Z][a-z]+(?:\s+[a-z]+)*\s*:) (.*)$/);
                     if (labelMatch) {
                       return (
                         <div key={pidx} className="mb-3">
