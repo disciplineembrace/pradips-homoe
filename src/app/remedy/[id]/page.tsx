@@ -1,8 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
+import { HighlightToolbar } from '@/components/HighlightToolbar';
+import { HighlightLayer } from '@/components/HighlightLayer';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -41,7 +43,8 @@ export default function RemedyDetailPage() {
   );
   if (!remedy) return null;
 
-  // Render an inline span — preserves bold/italic/underline markers if present
+  // Render an inline span — preserves bold/italic/underline markers if present,
+  // and applies system highlights (yellow/green/pink) for keynote sentences.
   function renderInline(text: string): React.ReactNode {
     const spans = parseInlineMarkers(text);
     return spans.map((span: InlineSpan, idx: number) => {
@@ -54,6 +57,27 @@ export default function RemedyDetailPage() {
           return <u key={idx}>{span.text}</u>;
         case 'emphasis':
           return <span key={idx} className="font-semibold text-stone-900">{span.text}</span>;
+        case 'highlight-yellow':
+          // System highlight — yellow for keynote/characteristic sentences
+          return (
+            <mark key={idx} className="bg-yellow-100 text-stone-900 rounded px-0.5 border-l-2 border-yellow-400" title="Keynote / characteristic point">
+              {span.text}
+            </mark>
+          );
+        case 'highlight-green':
+          // System highlight — green for important clinical/characteristic
+          return (
+            <mark key={idx} className="bg-green-100 text-stone-900 rounded px-0.5 border-l-2 border-green-400" title="Important clinical point">
+              {span.text}
+            </mark>
+          );
+        case 'highlight-pink':
+          // System highlight — pink for striking/differentiating (modalities)
+          return (
+            <mark key={idx} className="bg-pink-100 text-stone-900 rounded px-0.5 border-l-2 border-pink-400" title="Striking / differentiating point">
+              {span.text}
+            </mark>
+          );
         default:
           return <span key={idx}>{span.text}</span>;
       }
@@ -120,6 +144,9 @@ export default function RemedyDetailPage() {
     ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
     : [];
 
+  const articleRef = useRef<HTMLElement>(null);
+  const [highlightVersion, setHighlightVersion] = useState(0);
+
   return (
     <div className="min-h-screen bg-stone-100">
       <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
@@ -129,7 +156,16 @@ export default function RemedyDetailPage() {
           <span className="text-xs text-stone-400">{remedy.author}</span>
         </div>
       </header>
-      <article className="max-w-4xl mx-auto px-4 py-6">
+
+      {/* User highlight toolbar — appears on text selection */}
+      <HighlightToolbar
+        remedyId={remedy.id}
+        articleRef={articleRef}
+        onHighlightChange={() => setHighlightVersion(v => v + 1)}
+      />
+
+      <article ref={articleRef} className="max-w-4xl mx-auto px-4 py-6">
+        <HighlightLayer key={highlightVersion} remedyId={remedy.id}>
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
           {/* REMEDY MAIN TITLE — RED + BOLD per spec */}
           <div className="border-b border-stone-200 pb-4 mb-6">
@@ -186,7 +222,16 @@ export default function RemedyDetailPage() {
             </section>
           )}
         </div>
+        </HighlightLayer>
       </article>
+
+      {/* Study hint — shows on first visit */}
+      <div className="max-w-4xl mx-auto px-4 pb-6 text-center">
+        <p className="text-xs text-stone-400">
+          Select any text to highlight (Yellow/Green/Pink), add notes, copy, or bookmark.
+          Your highlights are saved on this device.
+        </p>
+      </div>
     </div>
   );
 }

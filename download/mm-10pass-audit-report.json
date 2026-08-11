@@ -1,0 +1,666 @@
+{
+  "generated_at": "2026-08-12",
+  "total_remedies": 4104,
+  "authors": {
+    "Boericke": {
+      "production_count": 855,
+      "source_count": 684,
+      "source_file": "/home/z/my-project/data/boericke-source-remedies.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "PASS",
+          "missing_titles": 0,
+          "extra_titles": 171,
+          "detail": "0 source remedies missing from production, 171 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "NEEDS_REVIEW",
+          "truncated_in_prod": 2,
+          "longer_in_source": 128,
+          "detail": "2 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "remedies_with_subtitles": 673,
+          "detail": "673 production remedies have detectable subtitles"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_missing_content": 3,
+          "detail": "3 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 111,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 9,
+          "detail": "120 OCR artifacts flagged (page nums: 111, ligatures: 0, broken: 9)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 0,
+          "detail": "0/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_keynote": 854,
+          "total_remedies": 855,
+          "detail": "854/855 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "PASS",
+          "source_coverage_pct": 100.0,
+          "detail": "100.0% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Murphy": {
+      "production_count": 1384,
+      "source_count": 1308,
+      "source_file": "/home/z/my-project/data/murphy-source-remedies.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "PASS",
+          "missing_titles": 0,
+          "extra_titles": 76,
+          "detail": "0 source remedies missing from production, 76 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "NEEDS_REVIEW",
+          "truncated_in_prod": 61,
+          "longer_in_source": 76,
+          "detail": "61 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "remedies_with_subtitles": 1384,
+          "detail": "1384 production remedies have detectable subtitles"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_missing_content": 52,
+          "detail": "52 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 0,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 115,
+          "detail": "115 OCR artifacts flagged (page nums: 0, ligatures: 0, broken: 115)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 72,
+          "detail": "72/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 1384,
+          "total_remedies": 1384,
+          "detail": "1384/1384 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "PASS",
+          "source_coverage_pct": 100.0,
+          "detail": "100.0% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Sankaran": {
+      "production_count": 104,
+      "source_count": 97,
+      "source_file": "/home/z/my-project/data/sankaran-source-remedies.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "NEEDS_REVIEW",
+          "missing_titles": 2,
+          "extra_titles": 9,
+          "detail": "2 source remedies missing from production, 9 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "NEEDS_REVIEW",
+          "truncated_in_prod": 7,
+          "longer_in_source": 2,
+          "detail": "7 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "detail": "No subtitle pattern defined for this author"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_missing_content": 8,
+          "detail": "8 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 1,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 0,
+          "detail": "1 OCR artifacts flagged (page nums: 1, ligatures: 0, broken: 0)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 0,
+          "detail": "0/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 104,
+          "total_remedies": 104,
+          "detail": "104/104 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "PASS",
+          "source_coverage_pct": 97.9,
+          "detail": "97.9% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Allen": {
+      "production_count": 186,
+      "source_count": 289,
+      "source_file": "/home/z/my-project/data/allen-source-remedies.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "NEEDS_REVIEW",
+          "missing_titles": 102,
+          "extra_titles": 3,
+          "detail": "102 source remedies missing from production, 3 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "PASS",
+          "truncated_in_prod": 0,
+          "longer_in_source": 161,
+          "detail": "0 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "remedies_with_subtitles": 166,
+          "detail": "166 production remedies have detectable subtitles"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "PASS",
+          "remedies_with_missing_content": 0,
+          "detail": "0 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 1,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 2,
+          "detail": "3 OCR artifacts flagged (page nums: 1, ligatures: 0, broken: 2)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 1,
+          "detail": "1/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 186,
+          "total_remedies": 186,
+          "detail": "186/186 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "NEEDS_REVIEW",
+          "source_coverage_pct": 64.2,
+          "detail": "64.2% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Boeger": {
+      "production_count": 308,
+      "source_count": 470,
+      "source_file": "/home/z/my-project/data/boeger-source-remedies.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "NEEDS_REVIEW",
+          "missing_titles": 155,
+          "extra_titles": 174,
+          "detail": "155 source remedies missing from production, 174 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "NEEDS_REVIEW",
+          "truncated_in_prod": 4,
+          "longer_in_source": 5,
+          "detail": "4 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "remedies_with_subtitles": 0,
+          "detail": "0 production remedies have detectable subtitles"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_missing_content": 4,
+          "detail": "4 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 306,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 0,
+          "detail": "306 OCR artifacts flagged (page nums: 306, ligatures: 0, broken: 0)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 59,
+          "detail": "59/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 308,
+          "total_remedies": 308,
+          "detail": "308/308 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "NEEDS_REVIEW",
+          "source_coverage_pct": 46.4,
+          "detail": "46.4% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Dubey": {
+      "production_count": 197,
+      "source_count": 461,
+      "source_file": "/home/z/my-project/data/dubey-remedies.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "PASS",
+          "missing_titles": 0,
+          "extra_titles": 0,
+          "detail": "0 source remedies missing from production, 0 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "NEEDS_REVIEW",
+          "truncated_in_prod": 6,
+          "longer_in_source": 0,
+          "detail": "6 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "detail": "No subtitle pattern defined for this author"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_missing_content": 6,
+          "detail": "6 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 0,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 51,
+          "detail": "51 OCR artifacts flagged (page nums: 0, ligatures: 0, broken: 51)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 38,
+          "detail": "38/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 197,
+          "total_remedies": 197,
+          "detail": "197/197 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "PASS",
+          "source_coverage_pct": 100.0,
+          "detail": "100.0% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Kent": {
+      "production_count": 184,
+      "source_count": 177,
+      "source_file": "/home/z/my-project/data/kent-remedies-fresh.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "PASS",
+          "missing_titles": 0,
+          "extra_titles": 7,
+          "detail": "0 source remedies missing from production, 7 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "PASS",
+          "truncated_in_prod": 0,
+          "longer_in_source": 11,
+          "detail": "0 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "detail": "No subtitle pattern defined for this author"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "PASS",
+          "remedies_with_missing_content": 0,
+          "detail": "0 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 0,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 3,
+          "detail": "3 OCR artifacts flagged (page nums: 0, ligatures: 0, broken: 3)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "PASS",
+          "duplicate_count": 0,
+          "detail": "0 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 3,
+          "detail": "3/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 184,
+          "total_remedies": 184,
+          "detail": "184/184 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "PASS",
+          "source_coverage_pct": 100.0,
+          "detail": "100.0% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    },
+    "Phatak": {
+      "production_count": 569,
+      "source_count": 543,
+      "source_file": "/home/z/my-project/data/phatak-remedies-fresh.json",
+      "passes": [
+        {
+          "pass": 1,
+          "name": "Title & Boundaries",
+          "status": "NEEDS_REVIEW",
+          "missing_titles": 73,
+          "extra_titles": 79,
+          "detail": "73 source remedies missing from production, 79 extra in production"
+        },
+        {
+          "pass": 2,
+          "name": "Complete Text Sequence",
+          "status": "PASS",
+          "truncated_in_prod": 0,
+          "longer_in_source": 12,
+          "detail": "0 remedies appear truncated in production (source >1.5x longer)"
+        },
+        {
+          "pass": 3,
+          "name": "Headings/Subheadings",
+          "status": "PASS",
+          "remedies_with_subtitles": 566,
+          "detail": "566 production remedies have detectable subtitles"
+        },
+        {
+          "pass": 4,
+          "name": "Missing Paragraphs/Sentences",
+          "status": "NEEDS_REVIEW",
+          "remedies_with_missing_content": 1,
+          "detail": "1 remedies may have missing paragraphs"
+        },
+        {
+          "pass": 5,
+          "name": "OCR Errors",
+          "status": "NEEDS_REVIEW",
+          "embedded_page_numbers": 0,
+          "unicode_ligature_errors": 0,
+          "broken_word_mid_caps": 77,
+          "detail": "77 OCR artifacts flagged (page nums: 0, ligatures: 0, broken: 77)"
+        },
+        {
+          "pass": 6,
+          "name": "Duplicates",
+          "status": "NEEDS_REVIEW",
+          "duplicate_count": 20,
+          "detail": "20 duplicate name+author pairs found"
+        },
+        {
+          "pass": 7,
+          "name": "CAPITAL/Italic/Emphasis",
+          "status": "PASS",
+          "sample_with_many_caps": 77,
+          "detail": "77/100 sampled remedies have 5+ ALL-CAPS words (potential source emphasis)"
+        },
+        {
+          "pass": 8,
+          "name": "Keynote/Characteristic Expressions",
+          "status": "PASS",
+          "remedies_with_keynote": 569,
+          "total_remedies": 569,
+          "detail": "569/569 remedies have keynote text"
+        },
+        {
+          "pass": 9,
+          "name": "UI Rendering",
+          "status": "MANUAL",
+          "detail": "Requires manual visual verification. Remedy titles render RED+BOLD. Subtitles render RED+BOLD per mm-formatter. System highlights (yellow/green/pink) applied via parseInlineMarkers heuristics."
+        },
+        {
+          "pass": 10,
+          "name": "Final Source Comparison",
+          "status": "PASS",
+          "source_coverage_pct": 86.6,
+          "detail": "86.6% of source remedies found in production"
+        }
+      ],
+      "overall_status": "NEEDS_REVIEW"
+    }
+  },
+  "summary": {
+    "total_authors": 8,
+    "verified": 0,
+    "needs_review": 8,
+    "partially_verified": 0,
+    "total_remedies": 4104
+  }
+}

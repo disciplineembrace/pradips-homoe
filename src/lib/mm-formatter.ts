@@ -175,37 +175,130 @@ function detectBoegerSubtitle(line: string): string | null {
 // *italic*, _underline_), preserve them as inline spans. The current
 // DB has plain text, so this is mostly a no-op — but the code is here
 // for future-proofing if/when source metadata is restored.
+//
+// SYSTEM HIGHLIGHT HEURISTICS:
+// Per spec, three soft highlight categories are applied to source-confirmed
+// important points:
+//   - yellow: keynote / highly characteristic
+//   - green: important clinical/characteristic explanatory point
+//   - pink: striking, peculiar, differentiating
+//
+// Detection uses conservative heuristics to avoid over-highlighting:
+//   - Sentences containing "characteristic", "keynote", "peculiar",
+//     "striking", "remarkable" → yellow
+//   - Sentences with parenthetical remedy comparisons like "(Acon.)",
+//     "(Bell., Stram.)" → green (clinical comparison)
+//   - Sentences with "worse" or "better" followed by specific conditions →
+//     pink (modalities — differentiating)
+//
+// These are SOFT heuristics. The spec says: "Highlight only source-confirmed
+// important points." Without source formatting metadata, we use these
+// patterns as proxies. A human reviewer can adjust.
 // ============================================================
 export type InlineSpan =
   | { kind: 'text'; text: string }
   | { kind: 'bold'; text: string }
   | { kind: 'italic'; text: string }
   | { kind: 'underline'; text: string }
-  | { kind: 'emphasis'; text: string };
+  | { kind: 'emphasis'; text: string }
+  | { kind: 'highlight-yellow'; text: string }
+  | { kind: 'highlight-green'; text: string }
+  | { kind: 'highlight-pink'; text: string };
+
+// System highlight heuristics — applied per SENTENCE, not per word.
+// Returns the highlight kind for a sentence, or null if no highlight.
+function detectSystemHighlight(sentence: string): 'highlight-yellow' | 'highlight-green' | 'highlight-pink' | null {
+  const lower = sentence.toLowerCase().trim();
+
+  // Skip very short sentences
+  if (sentence.trim().length < 20) return null;
+  // Skip if sentence is too long (don't highlight entire paragraphs)
+  if (sentence.trim().length > 300) return null;
+
+  // YELLOW: keynote / characteristic / peculiar / striking / remarkable
+  if (/\b(keynote|characteristic|peculiar|striking|remarkable|cardinal|grand|typical|essential|most important|chief)\b/i.test(sentence)) {
+    return 'highlight-yellow';
+  }
+
+  // PINK: modalities (worse/better from) — differentiating
+  if (/\b(worse from|better from|aggravated by|ameliorated by|worse\b|better\b)\b/i.test(sentence) &&
+      /\b(from|by|when|after|before|on|in|at)\b/i.test(sentence)) {
+    return 'highlight-pink';
+  }
+
+  // GREEN: clinical comparison — parenthetical remedy abbreviations like
+  // (Acon.), (Bell., Stram.), (Calc., Phos.)
+  if (/\([A-Z][a-z]{2,4}\.?[,;]?\s*[A-Z]?[a-z]*\.?\s*\)/.test(sentence)) {
+    return 'highlight-green';
+  }
+
+  return null;
+}
+
+// Split text into sentences (simplified — splits on . ! ? followed by space)
+function splitIntoSentences(text: string): string[] {
+  // Preserve the delimiters by using a capture group
+  return text.split(/(?<=[.!?])\s+/);
+}
 
 export function parseInlineMarkers(text: string): InlineSpan[] {
-  // Pattern matches **bold**, *italic*, _underline_ — non-greedy, no nesting
-  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|_([^_]+)_)/g;
+  // First, check for markdown-style markers (**bold**, *italic*, _underline_)
+  const markdownPattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|_([^_]+)_)/g;
   const spans: InlineSpan[] = [];
   let lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = pattern.exec(text)) !== null) {
-    if (m.index > lastIndex) {
-      spans.push({ kind: 'text', text: text.slice(lastIndex, m.index) });
+
+  // If markdown markers exist, process them
+  if (markdownPattern.test(text)) {
+    markdownPattern.lastIndex = 0;
+    while ((m = markdownPattern.exec(text)) !== null) {
+      if (m.index > lastIndex) {
+        spans.push({ kind: 'text', text: text.slice(lastIndex, m.index) });
+      }
+      if (m[2]) {
+        spans.push({ kind: 'bold', text: m[2] });
+      } else if (m[3]) {
+        spans.push({ kind: 'italic', text: m[3] });
+      } else if (m[4]) {
+        spans.push({ kind: 'underline', text: m[4] });
+      }
+      lastIndex = m.index + m[0].length;
     }
-    if (m[2]) {
-      spans.push({ kind: 'bold', text: m[2] });
-    } else if (m[3]) {
-      spans.push({ kind: 'italic', text: m[3] });
-    } else if (m[4]) {
-      spans.push({ kind: 'underline', text: m[4] });
+    if (lastIndex < text.length) {
+      spans.push({ kind: 'text', text: text.slice(lastIndex) });
     }
-    lastIndex = m.index + m[0].length;
+    return spans.length === 0 ? [{ kind: 'text', text }] : spans;
   }
-  if (lastIndex < text.length) {
-    spans.push({ kind: 'text', text: text.slice(lastIndex) });
+
+  // No markdown markers — apply system highlight heuristics per sentence
+  const sentences = splitIntoSentences(text);
+  if (sentences.length <= 1) {
+    // Single sentence — check if it warrants a highlight
+    const hl = detectSystemHighlight(text);
+    if (hl) {
+      return [{ kind: hl, text }];
+    }
+    return [{ kind: 'text', text }];
   }
-  return spans.length === 0 ? [{ kind: 'text', text }] : spans;
+
+  // Multiple sentences — walk through and highlight qualifying ones
+  for (const sentence of sentences) {
+    const hl = detectSystemHighlight(sentence);
+    if (hl) {
+      spans.push({ kind: hl, text: sentence });
+    } else {
+      spans.push({ kind: 'text', text: sentence });
+    }
+    // Re-add the space that was consumed by the split
+    spans.push({ kind: 'text', text: ' ' });
+  }
+
+  // Remove trailing space span
+  if (spans.length > 0 && spans[spans.length - 1].kind === 'text' && spans[spans.length - 1].text === ' ') {
+    spans.pop();
+  }
+
+  return spans;
 }
 
 // ============================================================
