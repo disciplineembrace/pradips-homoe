@@ -3,6 +3,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+/**
+ * Slim top utility bar.
+ *
+ * The primary navigation (logo + all 15 sections + login) is rendered globally
+ * by <Sidebar /> in layout.tsx. This Navbar is now a slim secondary bar that:
+ *   • leaves room for the Sidebar's mobile hamburger (top-left, pl-14 on mobile)
+ *   • shows the public/protected/admin quick-links inline on desktop
+ *   • shows the login / logout state button on the right
+ *
+ * It intentionally does NOT render its own logo to avoid duplication with the
+ * Sidebar header.
+ */
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,21 +60,21 @@ export function Navbar() {
   }
 
   return (
-    <header className="bg-emerald-950 text-stone-100 shadow-lg sticky top-0 z-50 border-b-2 border-amber-700/60">
-      <div className="max-w-7xl mx-auto px-4">
+    <header className="bg-emerald-950 text-stone-100 shadow-lg sticky top-0 z-40 border-b-2 border-amber-700/60">
+      {/* pl-14 on mobile leaves room for the Sidebar's hamburger button (top-left) */}
+      <div className="max-w-7xl mx-auto px-4 pl-14 lg:pl-4">
         <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-serif italic text-xl text-amber-200 tracking-wide">Pradip&apos;s Homoe</span>
-            <span className="text-xs text-stone-400 hidden sm:inline">Personal Digital Library</span>
-          </Link>
-
-          {/* Desktop nav */}
+          {/* Desktop quick-links (logo lives in the global Sidebar) */}
           <nav className="hidden md:flex items-center gap-1">
             {publicItems.map(it => navLink(it.href, it.label))}
             {session?.authenticated && protectedItems.map(it => navLink(it.href, it.label))}
             {session?.authenticated && session?.role === 'admin' && adminItems.map(it => navLink(it.href, it.label))}
           </nav>
+
+          {/* Mobile: small brand mark (no full logo — Sidebar drawer has it) */}
+          <div className="md:hidden font-serif italic text-base text-amber-200 tracking-wide">
+            Pradip&apos;s Homoe
+          </div>
 
           {/* Auth button */}
           <div className="hidden md:flex items-center gap-2">
