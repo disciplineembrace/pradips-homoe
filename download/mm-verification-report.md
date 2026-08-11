@@ -9,13 +9,13 @@
 |---|---|
 | Total Authors In Db | 9 |
 | Total Authors In Ui | 9 |
-| Total Remedies | 3471 |
+| Total Remedies | 3734 |
 | Total Duplicates | 20 |
 | Duplicates With Identical Content | 0 |
 | Duplicates With Different Content | 20 |
 | Total Empty Full | 0 |
 | Total Empty Keynote | 1 |
-| Total Short Full | 2 |
+| Total Short Full | 6 |
 | Total Embedded Page Numbers | 509 |
 | Total Unicode Ligature Errors | 180 |
 | Total Orphan Author Tabs | 0 |
@@ -78,17 +78,17 @@
 | Embedded Page Numbers | 90 |
 | Unicode Ligature Errors | 0 |
 
-### Kent (70 remedies)
+### Kent (184 remedies)
 
 | Metric | Value |
 |---|---|
-| Database Remedy Count | 70 |
+| Database Remedy Count | 184 |
 | Empty Full | 0 |
 | Empty Keynote | 0 |
 | Short Full Under 100 | 0 |
-| Avg Full Length | 2035 |
-| Min Full Length | 209 |
-| Max Full Length | 7848 |
+| Avg Full Length | 14275 |
+| Min Full Length | 372 |
+| Max Full Length | 84024 |
 | Embedded Page Numbers | 0 |
 | Unicode Ligature Errors | 0 |
 
@@ -120,16 +120,16 @@
 | Embedded Page Numbers | 0 |
 | Unicode Ligature Errors | 0 |
 
-### Phatak (420 remedies)
+### Phatak (569 remedies)
 
 | Metric | Value |
 |---|---|
-| Database Remedy Count | 420 |
+| Database Remedy Count | 569 |
 | Empty Full | 0 |
 | Empty Keynote | 0 |
-| Short Full Under 100 | 0 |
-| Avg Full Length | 2686 |
-| Min Full Length | 122 |
+| Short Full Under 100 | 4 |
+| Avg Full Length | 2206 |
+| Min Full Length | 54 |
 | Max Full Length | 13470 |
 | Embedded Page Numbers | 0 |
 | Unicode Ligature Errors | 0 |

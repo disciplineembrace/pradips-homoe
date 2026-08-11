@@ -1,0 +1,33 @@
+{
+  "backup_path": "/home/z/my-project/data/remedies.json.bak-20260811-082531",
+  "initial_count": 3471,
+  "final_count": 3734,
+  "net_added": 263,
+  "kent_stats": {
+    "added": 114,
+    "replaced_source_longer": 50,
+    "kept_prod_longer": 2,
+    "kept_prod_similar": 11,
+    "skipped_bad_name": 0,
+    "skipped_short_content": 0
+  },
+  "phatak_stats": {
+    "added": 149,
+    "replaced_source_longer": 3,
+    "kept_prod_longer": 179,
+    "kept_prod_similar": 141,
+    "skipped_bad_name": 71,
+    "skipped_short_content": 0
+  },
+  "author_distribution_after": {
+    "Boericke": 688,
+    "Phatak": 569,
+    "Kent": 184,
+    "Murphy": 1383,
+    "Allen": 186,
+    "Sankaran": 99,
+    "Farrington": 137,
+    "Boeger": 308,
+    "Mathur": 180
+  }
+}

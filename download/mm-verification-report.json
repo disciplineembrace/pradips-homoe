@@ -4,13 +4,13 @@
   "summary": {
     "total_authors_in_db": 9,
     "total_authors_in_ui": 9,
-    "total_remedies": 3471,
+    "total_remedies": 3734,
     "total_duplicates": 20,
     "duplicates_with_identical_content": 0,
     "duplicates_with_different_content": 20,
     "total_empty_full": 0,
     "total_empty_keynote": 1,
-    "total_short_full": 2,
+    "total_short_full": 6,
     "total_embedded_page_numbers": 509,
     "total_unicode_ligature_errors": 180,
     "total_orphan_author_tabs": 0
@@ -61,13 +61,13 @@
       "unicode_ligature_errors": 0
     },
     "Kent": {
-      "database_remedy_count": 70,
+      "database_remedy_count": 184,
       "empty_full": 0,
       "empty_keynote": 0,
       "short_full_under_100": 0,
-      "avg_full_length": 2035,
-      "min_full_length": 209,
-      "max_full_length": 7848,
+      "avg_full_length": 14275,
+      "min_full_length": 372,
+      "max_full_length": 84024,
       "embedded_page_numbers": 0,
       "unicode_ligature_errors": 0
     },
@@ -94,12 +94,12 @@
       "unicode_ligature_errors": 0
     },
     "Phatak": {
-      "database_remedy_count": 420,
+      "database_remedy_count": 569,
       "empty_full": 0,
       "empty_keynote": 0,
-      "short_full_under_100": 0,
-      "avg_full_length": 2686,
-      "min_full_length": 122,
+      "short_full_under_100": 4,
+      "avg_full_length": 2206,
+      "min_full_length": 54,
       "max_full_length": 13470,
       "embedded_page_numbers": 0,
       "unicode_ligature_errors": 0

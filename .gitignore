@@ -4,3 +4,4 @@ tool-results/
 
 .next/
 worklog.md
+*.bak-*
