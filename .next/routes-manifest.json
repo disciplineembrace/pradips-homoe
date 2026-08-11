@@ -368,52 +368,22 @@
       "namedRegex": "^/api/rubrics(?:/)?$"
     },
     {
-      "page": "/api/rubrics/rubrics",
-      "regex": "^/api/rubrics/rubrics(?:/)?$",
+      "page": "/api/rubrics/chapters",
+      "regex": "^/api/rubrics/chapters(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics(?:/)?$"
+      "namedRegex": "^/api/rubrics/chapters(?:/)?$"
     },
     {
-      "page": "/api/rubrics/rubrics/chapters",
-      "regex": "^/api/rubrics/rubrics/chapters(?:/)?$",
+      "page": "/api/rubrics/children",
+      "regex": "^/api/rubrics/children(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/chapters(?:/)?$"
+      "namedRegex": "^/api/rubrics/children(?:/)?$"
     },
     {
-      "page": "/api/rubrics/rubrics/children",
-      "regex": "^/api/rubrics/rubrics/children(?:/)?$",
+      "page": "/api/rubrics/tree",
+      "regex": "^/api/rubrics/tree(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/children(?:/)?$"
-    },
-    {
-      "page": "/api/rubrics/rubrics/rubrics",
-      "regex": "^/api/rubrics/rubrics/rubrics(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/rubrics(?:/)?$"
-    },
-    {
-      "page": "/api/rubrics/rubrics/rubrics/chapters",
-      "regex": "^/api/rubrics/rubrics/rubrics/chapters(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/rubrics/chapters(?:/)?$"
-    },
-    {
-      "page": "/api/rubrics/rubrics/rubrics/children",
-      "regex": "^/api/rubrics/rubrics/rubrics/children(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/rubrics/children(?:/)?$"
-    },
-    {
-      "page": "/api/rubrics/rubrics/rubrics/tree",
-      "regex": "^/api/rubrics/rubrics/rubrics/tree(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/rubrics/tree(?:/)?$"
-    },
-    {
-      "page": "/api/rubrics/rubrics/tree",
-      "regex": "^/api/rubrics/rubrics/tree(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/api/rubrics/rubrics/tree(?:/)?$"
+      "namedRegex": "^/api/rubrics/tree(?:/)?$"
     },
     {
       "page": "/api/search",
