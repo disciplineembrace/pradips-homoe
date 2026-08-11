@@ -144,7 +144,7 @@ export default function RemedyDetailPage() {
     ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
     : [];
 
-  const articleRef = useRef<HTMLElement>(null);
+  const articleRef = useRef<HTMLElement>(null) as React.RefObject<HTMLElement>;
   const [highlightVersion, setHighlightVersion] = useState(0);
 
   return (

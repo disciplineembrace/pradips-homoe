@@ -181,13 +181,14 @@ export function HighlightLayer({ remedyId, children }: Props) {
       return node.map((child, i) => processNode(child, `${keyPrefix}-${i}`, globalOffset));
     }
     if (node && typeof node === 'object' && 'props' in node) {
-      const el = node as React.ReactElement;
-      const newChildren = el.props.children
-        ? processNode(el.props.children, `${keyPrefix}-c`, globalOffset)
-        : el.props.children;
+      const el = node as React.ReactElement<any>;
+      const props = el.props || {};
+      const newChildren = props.children
+        ? processNode(props.children, `${keyPrefix}-c`, globalOffset)
+        : props.children;
       return {
         ...el,
-        props: { ...el.props, children: newChildren },
+        props: { ...props, children: newChildren },
       };
     }
     return node;

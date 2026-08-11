@@ -217,13 +217,14 @@ export async function getRemedies(): Promise<RemedyRecord[]> {
     _allRemediesFull = Array.from(_remediesById.values());
     return _allRemediesFull;
   }
-  _allRemediesFull = await readJson(path.join(DATA_DIR, 'remedies.json'));
+  const loaded: RemedyRecord[] = await readJson(path.join(DATA_DIR, 'remedies.json'));
+  _allRemediesFull = loaded;
   // Also populate _remediesById for future calls
   _remediesById = new Map();
-  for (const r of _allRemediesFull) {
+  for (const r of loaded) {
     _remediesById.set(r.id, r);
   }
-  return _allRemediesFull!;
+  return _allRemediesFull;
 }
 
 // ============================================================
