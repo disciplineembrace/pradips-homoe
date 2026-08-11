@@ -5,29 +5,18 @@ import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
-type Remedy = {
-  id: string; name: string; common?: string; author: string;
-  chapter?: string; keynote?: string; letter?: string;
-};
-
 type Session = {
   authenticated: boolean;
-  pinVerified: boolean;
-  user?: { name: string; role: string; status: string };
+  name?: string;
+  role?: string;
+  userId?: string;
 };
 
 export default function DashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
-  const [remedies, setRemedies] = useState<Remedy[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [q, setQ] = useState('');
-  const [author, setAuthor] = useState('');
-  const [letter, setLetter] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<'materia' | 'therapeutics' | 'predictive'>('materia');
-  
+  const [stats, setStats] = useState<any>(null);
+
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) {
@@ -37,212 +26,156 @@ export default function DashboardPage() {
       setSession(d);
     });
   }, [router]);
-  
+
   useEffect(() => {
-    if (session && view === 'materia') loadRemedies();
-  }, [session, view, page, q, author, letter]);
-  
-  async function loadRemedies() {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (author) params.set('author', author);
-    if (letter) params.set('letter', letter);
-    params.set('page', String(page));
-    params.set('pageSize', '50');
-    const r = await fetch(`/api/remedies?${params}`);
-    if (r.status === 401) { router.push('/login'); return; }
-    const d = await r.json();
-    setRemedies(d.items || []);
-    setTotal(d.total || 0);
-    setLoading(false);
-  }
-  
+    if (session) {
+      // Load library stats
+      fetch('/api/remedies?pageSize=1').then(r => r.json()).then(d => {
+        setStats((prev: any) => ({ ...prev, remedies: d.total }));
+      }).catch(() => {});
+      fetch('/api/rubrics?pageSize=1').then(r => r.json()).then(d => {
+        setStats((prev: any) => ({ ...prev, rubrics: d.total }));
+      }).catch(() => {});
+      fetch('/api/therapeutics?pageSize=1').then(r => r.json()).then(d => {
+        setStats((prev: any) => ({ ...prev, therapeutics: d.total }));
+      }).catch(() => {});
+    }
+  }, [session]);
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
   }
-  
+
   if (!session) return (
-    <div className="min-h-screen flex flex-col bg-stone-100">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center text-stone-500">Loading...</div>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin mb-4"></div>
+          <p className="text-sm text-[#7C8F6E]">Loading dashboard...</p>
+        </div>
+      </div>
       <Footer />
     </div>
   );
 
-  const pageSize = 50;
-  const totalPages = Math.ceil(total / pageSize);
-  const authors = ['Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur'];
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  // Cabinet-style navigation cards
+  const cabinetSections = [
+    { href: '/materia-medica', icon: '📚', title: 'Materia Medica', desc: '4,104 remedies from 10 authors', color: 'border-emerald-700', accent: 'text-emerald-900' },
+    { href: '/repertory', icon: '🗂️', title: 'Repertory', desc: 'Kent, Phatak, Murphy, Boericke', color: 'border-amber-700', accent: 'text-amber-800' },
+    { href: '/therapeutics', icon: '💊', title: 'Therapeutics', desc: 'Disease-wise formulas', color: 'border-blue-700', accent: 'text-blue-800' },
+    { href: '/quick-clinical-search', icon: '🔍', title: 'Quick Clinical Search', desc: 'Search across all remedies', color: 'border-purple-700', accent: 'text-purple-800' },
+    { href: '/organon', icon: '📜', title: 'Organon', desc: 'Hahnemann\'s principles', color: 'border-stone-700', accent: 'text-stone-800' },
+    { href: '/segal', icon: '🧠', title: 'Segal Homeopathy', desc: 'Dr. Segal\'s approach', color: 'border-rose-700', accent: 'text-rose-800' },
+    { href: '/predictive', icon: '🔬', title: 'Predictive Homeopathy', desc: 'Dr. Prafull Vijayakar', color: 'border-teal-700', accent: 'text-teal-800' },
+    { href: '/synthesis', icon: '🧩', title: 'Synthesis Repertory', desc: 'Updated version by Dr. Pradip', color: 'border-indigo-700', accent: 'text-indigo-800' },
+    { href: '/analysis', icon: '📊', title: 'Analysis Tools', desc: 'Repertorization & analysis', color: 'border-cyan-700', accent: 'text-cyan-800' },
+    { href: '/question-bank', icon: '🎓', title: 'Exam Hub', desc: 'Question bank & practice', color: 'border-orange-700', accent: 'text-orange-800' },
+    { href: '/books', icon: '📖', title: 'Books', desc: 'Reference library', color: 'border-lime-700', accent: 'text-lime-800' },
+    { href: '/activity', icon: '⏱️', title: 'My Activity', desc: 'History & bookmarks', color: 'border-pink-700', accent: 'text-pink-800' },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-100">
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
-        {/* View tabs */}
-        <div className="flex gap-1 mb-4 border-b border-stone-300">
-          {(['materia', 'therapeutics', 'predictive'] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => { setView(v); setPage(1); setQ(''); setLetter(''); setAuthor(''); }}
-              className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${view === v ? 'border-emerald-700 text-emerald-900' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
+
+        {/* WELCOME BACK HEADER */}
+        <div className="bg-gradient-to-br from-[#173B2D] to-[#0F2D22] rounded-2xl p-6 md:p-8 mb-6 shadow-lg border border-[#C8A24A]/30">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A24A] mb-1">Welcome Back</p>
+              <h1 className="font-serif text-2xl md:text-3xl text-[#F5EFE0] mb-1">
+                {session.name || 'User'} 👋
+              </h1>
+              <p className="text-sm text-stone-300">
+                {session.role === 'admin' ? 'Administrator Access' :
+                 session.role === 'staff' ? 'Staff Access' : 'Member Access'} · Pradip&apos;s Homoe Personal Digital Library
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {session.role === 'admin' && (
+                <Link href="/admin" className="text-xs bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] px-4 py-2 rounded-lg font-semibold transition-colors">
+                  Admin Panel
+                </Link>
+              )}
+              <button onClick={logout} className="text-xs bg-red-900 hover:bg-red-800 text-red-100 px-4 py-2 rounded-lg font-semibold transition-colors">
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* LIBRARY STATS — cabinet drawer style */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">{stats?.remedies?.toLocaleString() || '—'}</div>
+            <div className="text-xs uppercase tracking-wider text-[#7C8F6E] mt-1">Remedies</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">{stats?.rubrics?.toLocaleString() || '—'}</div>
+            <div className="text-xs uppercase tracking-wider text-[#7C8F6E] mt-1">Rubrics</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">{stats?.therapeutics?.toLocaleString() || '—'}</div>
+            <div className="text-xs uppercase tracking-wider text-[#7C8F6E] mt-1">Therapeutics</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">10</div>
+            <div className="text-xs uppercase tracking-wider text-[#7C8F6E] mt-1">Authors</div>
+          </div>
+        </div>
+
+        {/* CABINET NAVIGATION */}
+        <div className="mb-4">
+          <h2 className="font-serif text-xl text-[#173B2D] mb-1">Library Cabinet</h2>
+          <div className="w-16 h-0.5 bg-[#C8A24A] mb-3"></div>
+          <p className="text-xs text-[#7C8F6E]">Select a section to explore</p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
+          {cabinetSections.map(s => (
+            <Link
+              key={s.href}
+              href={s.href}
+              className={`bg-white rounded-xl shadow-sm border-l-4 ${s.color} p-4 hover:shadow-md transition-all group`}
             >
-              {v === 'materia' ? 'Materia Medica' : v === 'therapeutics' ? 'Therapeutics' : 'Predictive'}
-            </button>
+              <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{s.icon}</div>
+              <h3 className={`font-serif text-base ${s.accent} leading-tight mb-1`}>{s.title}</h3>
+              <p className="text-xs text-[#7C8F6E] leading-snug">{s.desc}</p>
+            </Link>
           ))}
         </div>
 
-        {view === 'materia' && (
-          <>
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow p-4 mb-4 flex flex-wrap gap-3 items-center">
-              <input
-                type="text"
-                placeholder="Search remedies..."
-                value={q}
-                onChange={e => { setQ(e.target.value); setPage(1); }}
-                className="flex-1 min-w-[200px] px-3 py-2 border rounded text-sm"
-              />
-              <select value={author} onChange={e => { setAuthor(e.target.value); setPage(1); }} className="px-3 py-2 border rounded text-sm">
-                <option value="">All authors</option>
-                {authors.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-            {/* A-Z */}
-            <div className="flex flex-wrap gap-1 mb-4">
-              {letters.map(L => (
-                <button
-                  key={L}
-                  onClick={() => { setLetter(letter === L ? '' : L); setPage(1); }}
-                  className={`w-8 h-8 text-xs font-mono rounded ${letter === L ? 'bg-emerald-900 text-white' : 'bg-white border hover:bg-stone-50'}`}
-                >{L}</button>
-              ))}
-            </div>
-            {/* Count */}
-            <div className="text-sm text-stone-600 mb-3">{total} remedies {q && `matching "${q}"`}</div>
-            {/* Grid */}
-            {loading ? (
-              <div className="text-center py-12 text-stone-500">Loading...</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {remedies.map(r => (
-                  <Link
-                    key={r.id}
-                    href={`/remedy/${r.id}`}
-                    className="block bg-white rounded-lg shadow hover:shadow-md p-4 transition-shadow border-l-4 border-emerald-700"
-                  >
-                    <div className="flex items-baseline justify-between mb-1">
-                      <h3 className="font-serif text-lg text-emerald-900">{r.name}</h3>
-                      <span className="text-xs text-stone-500">{r.author}</span>
-                    </div>
-                    {r.common && <div className="text-xs text-stone-500 italic mb-2">{r.common}</div>}
-                    {r.chapter && <div className="text-xs text-amber-700 mb-2">{r.chapter}</div>}
-                    {r.keynote && <p className="text-sm text-stone-600 line-clamp-2">{r.keynote}</p>}
-                  </Link>
-                ))}
-              </div>
-            )}
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm bg-white border rounded disabled:opacity-50">← Prev</button>
-                <span className="text-sm text-stone-600">Page {page} of {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm bg-white border rounded disabled:opacity-50">Next →</button>
-              </div>
-            )}
-          </>
-        )}
-        {view === 'therapeutics' && <TherapeuticsPanel />}
-        {view === 'predictive' && <PredictivePanel />}
+        {/* QUICK ACTIONS */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-5 mb-6">
+          <h2 className="font-serif text-lg text-[#173B2D] mb-3">Quick Actions</h2>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/materia-medica" className="text-sm bg-[#173B2D] hover:bg-[#0F2D22] text-[#F5EFE0] px-4 py-2 rounded-lg font-semibold transition-colors">
+              📚 Browse Materia Medica
+            </Link>
+            <Link href="/quick-clinical-search" className="text-sm bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] px-4 py-2 rounded-lg font-semibold transition-colors">
+              🔍 Quick Search
+            </Link>
+            <Link href="/synthesis" className="text-sm bg-white border-2 border-[#173B2D] hover:bg-[#F5EFE0] text-[#173B2D] px-4 py-2 rounded-lg font-semibold transition-colors">
+              🧩 Synthesis Repertorize
+            </Link>
+            <Link href="/activity" className="text-sm bg-white border-2 border-[#7C8F6E] hover:bg-[#F5EFE0] text-[#7C8F6E] px-4 py-2 rounded-lg font-semibold transition-colors">
+              ⏱️ My Activity
+            </Link>
+          </div>
+        </div>
+
+        {/* ABOUT FOOTER NOTE */}
+        <div className="bg-[#173B2D] rounded-xl p-4 text-center">
+          <p className="text-xs text-stone-300">
+            🔒 All access is logged · Unauthorized access prohibited · Pradip&apos;s Homoe © 2026
+          </p>
+        </div>
+
       </main>
       <Footer />
-    </div>
-  );
-}
-
-function TherapeuticsPanel() {
-  const [items, setItems] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [q, setQ] = useState('');
-  const [letter, setLetter] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (letter) params.set('letter', letter);
-    fetch(`/api/therapeutics?${params}`).then(r => r.json()).then(d => {
-      setItems(d.items || []);
-      setTotal(d.total || 0);
-      setLoading(false);
-    });
-  }, [q, letter]);
-  
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  
-  return (
-    <>
-      <div className="bg-white rounded-lg shadow p-4 mb-4 flex flex-wrap gap-3 items-center">
-        <input
-          type="text"
-          placeholder="Search diseases & formulas..."
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          className="flex-1 min-w-[200px] px-3 py-2 border rounded text-sm"
-        />
-      </div>
-      <div className="flex flex-wrap gap-1 mb-4">
-        {letters.map(L => (
-          <button
-            key={L}
-            onClick={() => setLetter(letter === L ? '' : L)}
-            className={`w-8 h-8 text-xs font-mono rounded ${letter === L ? 'bg-emerald-900 text-white' : 'bg-white border hover:bg-stone-50'}`}
-          >{L}</button>
-        ))}
-      </div>
-      <div className="text-sm text-stone-600 mb-3">{total} diseases</div>
-      {loading ? <div className="text-center py-12">Loading...</div> : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {items.map((d: any) => (
-            <div key={d.id} className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-serif text-lg text-emerald-900">{d.name}</h3>
-              {d.note && <div className="text-xs italic text-stone-500 mb-2">({d.note})</div>}
-              <div className="text-xs text-amber-700 mb-2">{d.subCount} formulas</div>
-              {d.subcategories?.map((s: any, i: number) => (
-                <div key={i} className="text-sm mb-1">
-                  <span className="font-semibold text-stone-700">{s.name}:</span>{' '}
-                  {s.remedies?.slice(0, 8).map((r: any, j: number) => (
-                    <span key={j} className="text-emerald-700">{r.name}{r.potency ? `(${r.potency})` : ''}{j < s.remedies.length - 1 && j < 7 ? ', ' : ''}</span>
-                  ))}
-                  {s.remedies?.length > 8 && <span className="text-stone-400 text-xs"> +{s.remedies.length - 8}</span>}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-function PredictivePanel() {
-  const [data, setData] = useState<any>(null);
-  useEffect(() => {
-    fetch('/api/predictive').then(r => r.json()).then(setData);
-  }, []);
-  if (!data) return <div className="text-center py-12">Loading...</div>;
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {(data.books || []).map((b: any) => (
-        <div key={b.id} className="bg-white rounded-lg shadow p-4">
-          <div className="text-3xl mb-2">📖</div>
-          <h3 className="font-serif text-lg text-emerald-900">{b.title}</h3>
-          <div className="text-xs text-stone-500 mb-2">by {b.author}</div>
-          <div className="text-xs text-amber-700">{b.chapters?.length || 0} chapters</div>
-        </div>
-      ))}
     </div>
   );
 }
