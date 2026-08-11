@@ -21,6 +21,7 @@
  *   - NEVER exposes book/author/chapter metadata to the client
  */
 import { getBookById } from './sources';
+import { splitSentences } from './safe-split';
 import { cached } from '@/database/neon/repositories/base';
 import type { ClientQuestion } from './generator';
 
@@ -102,8 +103,7 @@ function parseRemedyEntry(name: string, rawContent: string, chapterIndex: number
     if (content.length < 20) continue; // skip empty/too-short sections
 
     // Extract key sentences (60-250 chars, must be complete sentences)
-    const keySentences = content
-      .split(/(?<=[.;])\s+(?=[A-Z])/)
+    const keySentences = splitSentences(content)
       .map(s => s.trim())
       .filter(s => s.length >= 60 && s.length <= 250)
       .filter(s => /\b(is|are|was|were|has|have|can|may|should|must|the|a|an)\b/i.test(s))
@@ -120,8 +120,7 @@ function parseRemedyEntry(name: string, rawContent: string, chapterIndex: number
 
   // If no sections found, treat entire content as one section
   if (sections.length === 0 && cleaned.length > 100) {
-    const keySentences = cleaned
-      .split(/(?<=[.;])\s+(?=[A-Z])/)
+    const keySentences = splitSentences(cleaned)
       .map(s => s.trim())
       .filter(s => s.length >= 60 && s.length <= 250)
       .slice(0, 5);
@@ -131,8 +130,7 @@ function parseRemedyEntry(name: string, rawContent: string, chapterIndex: number
 
   // Extract key phrases (sentences with characteristic indicators)
   const allText = sections.map(s => s.content).join(' ');
-  const keyPhrases = allText
-    .split(/(?<=[.;])\s+(?=[A-Z])/)
+  const keyPhrases = splitSentences(allText)
     .map(s => s.trim())
     .filter(s => s.length >= 40 && s.length <= 200)
     .filter(s => /\b(characteristic|marked|peculiar|important|keynote|strongly|typically|especially|chief|grand|main)\b/i.test(s))

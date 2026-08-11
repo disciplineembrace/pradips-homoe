@@ -19,6 +19,7 @@
 import { getRemedies, getRubrics, getTherapeutics } from '@/lib/data';
 import { getAllBooks, getBook } from '@/lib/books-data';
 import { cached } from '@/database/neon/repositories/base';
+import { splitSentences, splitSections } from './safe-split';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -171,8 +172,12 @@ export async function getSourceMetadata() {
 export function extractRemedyTopics(remedy: RemedySource): string[] {
   const text = (remedy.keynote || '') + '\n' + (remedy.full || '');
   if (!text.trim()) return [];
-  // Split on common section markers and sentences
-  const sections = text.split(/\n\n+|--+|(?<=[.;])\s+(?=[A-Z])/);
+  // Split on common section markers and sentences (ES2017-safe)
+  const sectionParts = splitSections(text);
+  const sections: string[] = [];
+  for (const part of sectionParts) {
+    sections.push(...splitSentences(part));
+  }
   return sections
     .map(s => s.trim())
     .filter(s => s.length > 30 && s.length < 300) // meaningful but not too long

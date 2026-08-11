@@ -18,6 +18,7 @@
  *   - All questions are original (paraphrased from source, not copy-paste)
  */
 import { getBookById } from './sources';
+import { splitSentences } from './safe-split';
 import { cached } from '@/database/neon/repositories/base';
 import type { ClientQuestion } from './generator';
 
@@ -231,8 +232,7 @@ function parseDreamRubrics(content: string, chapterIndex: number): PatilDreamRub
  */
 function parseKeynotes(content: string): string[] {
   const cleaned = cleanOcrText(content);
-  const sentences = cleaned
-    .split(/(?<=[.;])\s+(?=[A-Z])/)
+  const sentences = splitSentences(cleaned)
     .map(s => s.trim())
     .filter(s => s.length > 60 && s.length < 250)
     .filter(s => /\b(is|are|was|were|has|have|can|may|should|must)\b/i.test(s))

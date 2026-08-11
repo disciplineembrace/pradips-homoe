@@ -32,6 +32,7 @@ import {
   type RemedySource, type RubricSource, type BookSource,
   extractRemedyTopics, parseRubricTitle,
 } from './sources';
+import { splitSentences } from './safe-split';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -676,8 +677,7 @@ async function genBookChapterQuestion(book: BookSource, difficulty: Difficulty, 
   if (!chapter?.content || chapter.content.length < 100) return null;
 
   // Extract a meaningful sentence from the chapter
-  const sentences = chapter.content
-    .split(/(?<=[.;])\s+(?=[A-Z])/)
+  const sentences = splitSentences(chapter.content)
     .filter(s => s.length > 60 && s.length < 250);
   if (sentences.length < 3) return null;
   const sentence = pick(sentences, 1)[0];
@@ -752,8 +752,7 @@ function cleanOcrText(text: string): string {
 function extractCleanSentences(text: string, minLen = 60, maxLen = 250): string[] {
   const cleaned = cleanOcrText(text);
   if (!cleaned) return [];
-  return cleaned
-    .split(/(?<=[.;])\s+(?=[A-Z])/)
+  return splitSentences(cleaned)
     .map(s => s.trim())
     .filter(s => s.length >= minLen && s.length <= maxLen)
     .filter(s => !/^(page|chapter|section|unit)\s+\d/i.test(s)) // skip page/chapter markers
