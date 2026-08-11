@@ -4,7 +4,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
 import { HighlightToolbar } from '@/components/HighlightToolbar';
-import { HighlightLayer } from '@/components/HighlightLayer';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -144,7 +143,7 @@ export default function RemedyDetailPage() {
     ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
     : [];
 
-  const articleRef = useRef<HTMLElement>(null) as React.RefObject<HTMLElement>;
+  const articleRef = useRef<HTMLElement>(null);
   const [highlightVersion, setHighlightVersion] = useState(0);
 
   return (
@@ -165,7 +164,6 @@ export default function RemedyDetailPage() {
       />
 
       <article ref={articleRef} className="max-w-4xl mx-auto px-4 py-6">
-        <HighlightLayer key={highlightVersion} remedyId={remedy.id}>
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
           {/* REMEDY MAIN TITLE — RED + BOLD per spec */}
           <div className="border-b border-stone-200 pb-4 mb-6">
@@ -222,7 +220,6 @@ export default function RemedyDetailPage() {
             </section>
           )}
         </div>
-        </HighlightLayer>
       </article>
 
       {/* Study hint — shows on first visit */}

@@ -18,7 +18,7 @@ import {
 
 interface Props {
   remedyId: string;
-  articleRef: React.RefObject<HTMLElement>;
+  articleRef: React.RefObject<HTMLElement | null>;
   onHighlightChange?: () => void;
 }
 
