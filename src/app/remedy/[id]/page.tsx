@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -16,7 +17,7 @@ export default function RemedyDetailPage() {
   const [remedy, setRemedy] = useState<Remedy | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
       if (!d.authenticated) router.push('/login');
@@ -30,7 +31,7 @@ export default function RemedyDetailPage() {
       setLoading(false);
     });
   }, [router, params.id]);
-  
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
@@ -40,55 +41,84 @@ export default function RemedyDetailPage() {
   );
   if (!remedy) return null;
 
-  // Parse Boericke-style section headings (e.g., "Mind.--", "Head.--")
-  // and render them as bold red subtitles within the full text.
-  function renderFullText(text: string) {
-    if (!text) return null;
+  // Render an inline span — preserves bold/italic/underline markers if present
+  function renderInline(text: string): React.ReactNode {
+    const spans = parseInlineMarkers(text);
+    return spans.map((span: InlineSpan, idx: number) => {
+      switch (span.kind) {
+        case 'bold':
+          return <strong key={idx} className="font-bold text-stone-900">{span.text}</strong>;
+        case 'italic':
+          return <em key={idx} className="italic">{span.text}</em>;
+        case 'underline':
+          return <u key={idx}>{span.text}</u>;
+        case 'emphasis':
+          return <span key={idx} className="font-semibold text-stone-900">{span.text}</span>;
+        default:
+          return <span key={idx}>{span.text}</span>;
+      }
+    });
+  }
 
-    // Split text by section heading pattern: "Word.--"
-    const parts = text.split(/(\n(?:[A-Z][a-z]+)\.--)/);
-    
-    // If no headings found, render as plain text
-    if (parts.length <= 1) {
-      return <p className="text-stone-700 whitespace-pre-line leading-relaxed">{text}</p>;
-    }
-
-    const elements: React.ReactNode[] = [];
-    let currentText = '';
-
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      const headingMatch = part.match(/^\n([A-Z][a-z]+)\.--$/);
-      
-      if (headingMatch) {
-        if (currentText.trim()) {
-          elements.push(
-            <p key={`text-${i}`} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
-              {currentText.trim()}
+  // Render the structured Materia Medica blocks.
+  // - remedy_title  → RED + BOLD, large
+  // - subtitle      → RED + BOLD, medium
+  // - paragraph     → readable body text, inline markers preserved
+  // - page_number   → small grey "[p. N]" marker (NOT deleted — flagged)
+  // - raw           → plain text fallback
+  function renderBlocks(blocks: MMBlock[]): React.ReactNode {
+    return blocks.map((block, idx) => {
+      switch (block.type) {
+        case 'remedy_title':
+          // Main remedy title — RED + BOLD per spec
+          // Skip if name is already shown in the header card below
+          return null;
+        case 'subtitle':
+          return (
+            <h4
+              key={idx}
+              className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide"
+            >
+              {block.text}
+            </h4>
+          );
+        case 'paragraph':
+          return (
+            <p
+              key={idx}
+              className="text-stone-700 whitespace-pre-line leading-relaxed mb-2 text-[0.95rem]"
+            >
+              {renderInline(block.text)}
             </p>
           );
-          currentText = '';
-        }
-        elements.push(
-          <h4 key={`heading-${i}`} className="font-bold text-red-700 text-base mt-4 mb-1">
-            {headingMatch[1]}
-          </h4>
-        );
-      } else {
-        currentText += part;
+        case 'page_number':
+          // OCR artifact — flagged but NOT deleted. Render subtly so reader
+          // can mentally skip it. Source review will decide on removal.
+          return (
+            <span
+              key={idx}
+              className="mm-page-number inline-block text-[0.6rem] text-stone-400 mx-1 align-middle select-none"
+              title="OCR page-number artifact — flagged for source review"
+            >
+              [p. {block.text}]
+            </span>
+          );
+        case 'raw':
+          return (
+            <p key={idx} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
+              {block.text}
+            </p>
+          );
+        default:
+          return null;
       }
-    }
-
-    if (currentText.trim()) {
-      elements.push(
-        <p key="text-final" className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
-          {currentText.trim()}
-        </p>
-      );
-    }
-
-    return <div>{elements}</div>;
+    });
   }
+
+  // Format the remedy full text using the author-aware formatter
+  const blocks = remedy.full
+    ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
+    : [];
 
   return (
     <div className="min-h-screen bg-stone-100">
@@ -101,8 +131,11 @@ export default function RemedyDetailPage() {
       </header>
       <article className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
+          {/* REMEDY MAIN TITLE — RED + BOLD per spec */}
           <div className="border-b border-stone-200 pb-4 mb-6">
-            <h1 className="font-serif text-3xl text-emerald-900">{remedy.name}</h1>
+            <h1 className="mm-remedy-title font-serif text-3xl font-bold text-red-700 leading-tight">
+              {remedy.name}
+            </h1>
             {remedy.common && <p className="text-sm italic text-stone-500 mt-1">{remedy.common}</p>}
             <div className="flex flex-wrap gap-2 mt-3 text-xs">
               {remedy.author && <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded">{remedy.author}</span>}
@@ -110,42 +143,42 @@ export default function RemedyDetailPage() {
               {remedy.organ && <span className="bg-stone-200 text-stone-700 px-2 py-1 rounded">{remedy.organ}</span>}
             </div>
           </div>
-          
+
           {remedy.keynote && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Keynote</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
             </section>
           )}
-          
+
           {remedy.constitution && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Constitution</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
             </section>
           )}
-          
+
           {remedy.full && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Full Description</h2>
-              {renderFullText(remedy.full)}
+              {renderBlocks(blocks)}
             </section>
           )}
-          
+
           {remedy.modalities && remedy.modalities.trim() && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Modalities</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
             </section>
           )}
-          
+
           {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Relationships</h2>
               <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
             </section>
           )}
-          
+
           {remedy.dose && (
             <section className="mb-6">
               <h2 className="font-serif text-xl text-emerald-800 mb-2">Dose</h2>
