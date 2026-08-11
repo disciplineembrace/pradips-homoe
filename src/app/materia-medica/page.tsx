@@ -110,7 +110,7 @@ export default function MateriaMedicaPage() {
         {/* Page header */}
         <header className="mb-6">
           <h1 className="font-serif text-3xl text-[#173B2D]">Materia Medica</h1>
-          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Browse 3,734 remedies from 9 authors</p>
+          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Browse 3,907 remedies from 9 authors</p>
           <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
         </header>
 

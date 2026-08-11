@@ -1,0 +1,29 @@
+{
+  "backup_path": "/home/z/my-project/data/remedies.json.bak-20260811-143459",
+  "initial_count": 3734,
+  "final_count": 3907,
+  "net_added": 173,
+  "per_source": {
+    "Boericke": {
+      "source_count": 684,
+      "added": 167,
+      "skipped_bad_name": 0,
+      "skipped_already_exists": 517,
+      "skipped_short_content": 0
+    },
+    "Murphy": {
+      "source_count": 1308,
+      "added": 1,
+      "skipped_bad_name": 0,
+      "skipped_already_exists": 1307,
+      "skipped_short_content": 0
+    },
+    "Sankaran": {
+      "source_count": 97,
+      "added": 5,
+      "skipped_bad_name": 2,
+      "skipped_already_exists": 90,
+      "skipped_short_content": 0
+    }
+  }
+}
