@@ -17,13 +17,7 @@ type Remedy = {
 };
 
 // Authors currently configured in the database.
-// NOTE: 'Dubey' was previously listed here but the database contains 0 Dubey
-// records. The tab was showing empty results — removed until source data is
-// provided. Adding it back requires actually importing Dubey source content
-// (we never fabricate medical content per the Materia Medica data integrity
-// policy). To re-enable: import Dubey remedies into /data/remedies.json with
-// author='Dubey', then add 'Dubey' back to this list.
-const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur'];
+const AUTHORS = ['All', 'Boericke', 'Phatak', 'Murphy', 'Kent', 'Allen', 'Sankaran', 'Farrington', 'Boeger', 'Mathur', 'Dubey'];
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const PAGE_SIZE = 30;
 
@@ -110,7 +104,7 @@ export default function MateriaMedicaPage() {
         {/* Page header */}
         <header className="mb-6">
           <h1 className="font-serif text-3xl text-[#173B2D]">Materia Medica</h1>
-          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Browse 3,907 remedies from 9 authors</p>
+          <p className="text-xs uppercase tracking-widest text-[#7C8F6E] mt-1">Browse 4,104 remedies from 10 authors</p>
           <div className="w-16 h-0.5 bg-[#C8A24A] mt-3"></div>
         </header>
 
