@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useReaderFeatures } from '@/hooks/use-reader-features';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -181,6 +182,89 @@ export default function RemedyDetailPage() {
     ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
     : [];
 
+  // Reader features: favourite, bookmark, notes
+  const reader = useReaderFeatures();
+  const [isFav, setIsFav] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [notesList, setNotesList] = useState<any[]>([]);
+  const [copyStatus, setCopyStatus] = useState('');
+
+  useEffect(() => {
+    if (reader && remedy) {
+      setIsFav(reader.isFavorite(remedy.id));
+      setIsBookmarked(reader.isBookmarked(remedy.id));
+      setNotesList(reader.getNotes(remedy.id));
+    }
+  }, [reader, remedy?.id]);
+
+  const handleFavourite = () => {
+    if (!reader || !remedy) return;
+    reader.toggleFavorite({
+      id: remedy.id, type: 'remedy', title: remedy.name,
+      href: `/remedy/${remedy.id}`, author: remedy.author,
+    });
+    setIsFav(!isFav);
+  };
+
+  const handleBookmark = () => {
+    if (!reader || !remedy) return;
+    reader.toggleBookmark({
+      id: remedy.id, type: 'remedy', title: remedy.name,
+      href: `/remedy/${remedy.id}`, author: remedy.author,
+    });
+    setIsBookmarked(!isBookmarked);
+  };
+
+  const handleSaveNote = () => {
+    if (!reader || !remedy || !noteText.trim()) {
+      setShowNoteInput(false);
+      return;
+    }
+    reader.addNote({
+      itemId: remedy.id, type: 'remedy', text: noteText.trim(),
+    });
+    setNoteText('');
+    setShowNoteInput(false);
+    setNotesList(reader.getNotes(remedy.id));
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    if (!reader) return;
+    reader.removeNote(noteId);
+    setNotesList(reader.getNotes(remedy.id));
+  };
+
+  const handleCopy = async () => {
+    if (!remedy) return;
+    const textToCopy = `${remedy.name}\n${remedy.common || ''}\n\n${remedy.full || remedy.keynote || ''}`;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopyStatus('✓ Copied!');
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        setCopyStatus('✓ Copied!');
+      } catch {
+        setCopyStatus('Copy failed');
+      }
+      document.body.removeChild(textarea);
+    }
+    setTimeout(() => setCopyStatus(''), 2000);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <ErrorBoundary>
     <div className="min-h-screen bg-stone-100">
@@ -206,6 +290,112 @@ export default function RemedyDetailPage() {
               {remedy.organ && <span className="bg-stone-200 text-stone-700 px-2 py-1 rounded">{remedy.organ}</span>}
             </div>
           </div>
+
+          {/* ACTION BAR — Favourite, Bookmark, Note, Copy, Print */}
+          <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-stone-50 rounded-lg border border-stone-200">
+            <button
+              onClick={handleFavourite}
+              title={isFav ? 'Remove from favourites' : 'Add to favourites'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                isFav ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-white text-stone-600 border border-stone-300 hover:bg-stone-100'
+              }`}
+            >
+              <span>{isFav ? '★' : '☆'}</span>
+              <span>{isFav ? 'Favourited' : 'Favourite'}</span>
+            </button>
+            <button
+              onClick={handleBookmark}
+              title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                isBookmarked ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-white text-stone-600 border border-stone-300 hover:bg-stone-100'
+              }`}
+            >
+              <span>🔖</span>
+              <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+            </button>
+            <button
+              onClick={() => setShowNoteInput(!showNoteInput)}
+              title="Add note"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition-colors"
+            >
+              <span>📝</span>
+              <span>Note</span>
+              {notesList.length > 0 && (
+                <span className="bg-amber-600 text-white text-xs px-1.5 rounded-full">{notesList.length}</span>
+              )}
+            </button>
+            <button
+              onClick={handleCopy}
+              title="Copy remedy text"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition-colors"
+            >
+              <span>📋</span>
+              <span>{copyStatus || 'Copy'}</span>
+            </button>
+            <button
+              onClick={handlePrint}
+              title="Print remedy"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition-colors"
+            >
+              <span>🖨️</span>
+              <span>Print</span>
+            </button>
+          </div>
+
+          {/* NOTE INPUT — collapsible */}
+          {showNoteInput && (
+            <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <h3 className="text-sm font-semibold text-amber-900 mb-2">Add a note for this remedy</h3>
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Type your note here..."
+                className="w-full p-2 border border-amber-300 rounded text-sm focus:outline-none focus:border-amber-600"
+                rows={3}
+                autoFocus
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={handleSaveNote}
+                  className="px-4 py-1.5 bg-amber-700 hover:bg-amber-600 text-white text-sm font-semibold rounded transition-colors"
+                >
+                  Save Note
+                </button>
+                <button
+                  onClick={() => { setShowNoteInput(false); setNoteText(''); }}
+                  className="px-4 py-1.5 bg-white text-stone-600 text-sm font-semibold rounded border border-stone-300 hover:bg-stone-100 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SAVED NOTES LIST */}
+          {notesList.length > 0 && (
+            <div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
+              <h3 className="text-sm font-semibold text-stone-700 mb-2">My Notes ({notesList.length})</h3>
+              <div className="space-y-2">
+                {notesList.map((note: any) => (
+                  <div key={note.id} className="p-2 bg-white rounded border border-stone-200 flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-stone-700 whitespace-pre-wrap">{note.text}</p>
+                      <p className="text-xs text-stone-400 mt-1">
+                        {new Date(note.updatedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex-shrink-0"
+                      title="Delete note"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {remedy.keynote && (
             <section className="mb-6">
