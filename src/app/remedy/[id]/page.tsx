@@ -16,10 +16,26 @@ type Remedy = {
 export default function RemedyDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURN — Rules of Hooks.
+  // If hooks are called after a conditional return, React crashes with
+  // "Rendered more hooks than during the previous render."
+
+  // --- Data state ---
   const [remedy, setRemedy] = useState<Remedy | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // --- Reader features (must be before any early return) ---
+  const reader = useReaderFeatures();
+  const [isFav, setIsFav] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [notesList, setNotesList] = useState<any[]>([]);
+  const [copyStatus, setCopyStatus] = useState('');
+
+  // --- Data fetch effect ---
   useEffect(() => {
     if (!params?.id) {
       setError('Invalid remedy ID');
@@ -72,135 +88,18 @@ export default function RemedyDetailPage() {
     return () => { cancelled = true; };
   }, [router, params?.id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
-  if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
-      <p>{error}</p>
-      <Link href="/dashboard" className="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded">← Back to Dashboard</Link>
-    </div>
-  );
-  if (!remedy) return null;
-
-  // Render an inline span — preserves bold/italic/underline markers if present,
-  // and applies system highlights (yellow/green/pink) for keynote sentences.
-  function renderInline(text: string): React.ReactNode {
-    const spans = parseInlineMarkers(text);
-    return spans.map((span: InlineSpan, idx: number) => {
-      switch (span.kind) {
-        case 'bold':
-          return <strong key={idx} className="font-bold text-stone-900">{span.text}</strong>;
-        case 'italic':
-          return <em key={idx} className="italic">{span.text}</em>;
-        case 'underline':
-          return <u key={idx}>{span.text}</u>;
-        case 'emphasis':
-          return <span key={idx} className="font-semibold text-stone-900">{span.text}</span>;
-        case 'highlight-yellow':
-          // System highlight — yellow for keynote/characteristic sentences
-          return (
-            <mark key={idx} className="bg-yellow-100 text-stone-900 rounded px-0.5 border-l-2 border-yellow-400" title="Keynote / characteristic point">
-              {span.text}
-            </mark>
-          );
-        case 'highlight-green':
-          // System highlight — green for important clinical/characteristic
-          return (
-            <mark key={idx} className="bg-green-100 text-stone-900 rounded px-0.5 border-l-2 border-green-400" title="Important clinical point">
-              {span.text}
-            </mark>
-          );
-        case 'highlight-pink':
-          // System highlight — pink for striking/differentiating (modalities)
-          return (
-            <mark key={idx} className="bg-pink-100 text-stone-900 rounded px-0.5 border-l-2 border-pink-400" title="Striking / differentiating point">
-              {span.text}
-            </mark>
-          );
-        default:
-          return <span key={idx}>{span.text}</span>;
-      }
-    });
-  }
-
-  // Render the structured Materia Medica blocks.
-  // - remedy_title  → RED + BOLD, large
-  // - subtitle      → RED + BOLD, medium
-  // - paragraph     → readable body text, inline markers preserved
-  // - page_number   → small grey "[p. N]" marker (NOT deleted — flagged)
-  // - raw           → plain text fallback
-  function renderBlocks(blocks: MMBlock[]): React.ReactNode {
-    return blocks.map((block, idx) => {
-      switch (block.type) {
-        case 'remedy_title':
-          // Main remedy title — RED + BOLD per spec
-          // Skip if name is already shown in the header card below
-          return null;
-        case 'subtitle':
-          return (
-            <h4
-              key={idx}
-              className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide"
-            >
-              {block.text}
-            </h4>
-          );
-        case 'paragraph':
-          return (
-            <p
-              key={idx}
-              className="text-stone-700 whitespace-pre-line leading-relaxed mb-2 text-[0.95rem]"
-            >
-              {renderInline(block.text)}
-            </p>
-          );
-        case 'page_number':
-          // OCR artifact — flagged but NOT deleted. Render subtly so reader
-          // can mentally skip it. Source review will decide on removal.
-          return (
-            <span
-              key={idx}
-              className="mm-page-number inline-block text-[0.6rem] text-stone-400 mx-1 align-middle select-none"
-              title="OCR page-number artifact — flagged for source review"
-            >
-              [p. {block.text}]
-            </span>
-          );
-        case 'raw':
-          return (
-            <p key={idx} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
-              {block.text}
-            </p>
-          );
-        default:
-          return null;
-      }
-    });
-  }
-
-  // Format the remedy full text using the author-aware formatter
-  const blocks = remedy.full
-    ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
-    : [];
-
-  // Reader features: favourite, bookmark, notes
-  const reader = useReaderFeatures();
-  const [isFav, setIsFav] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [showNoteInput, setShowNoteInput] = useState(false);
-  const [noteText, setNoteText] = useState('');
-  const [notesList, setNotesList] = useState<any[]>([]);
-  const [copyStatus, setCopyStatus] = useState('');
-
+  // --- Reader features sync effect ---
   useEffect(() => {
-    if (reader && remedy) {
+    if (remedy) {
       setIsFav(reader.isFavorite(remedy.id));
       setIsBookmarked(reader.isBookmarked(remedy.id));
       setNotesList(reader.getNotes(remedy.id));
     }
   }, [reader, remedy?.id]);
 
+  // --- Action handlers ---
   const handleFavourite = () => {
-    if (!reader || !remedy) return;
+    if (!remedy) return;
     reader.toggleFavorite({
       id: remedy.id, type: 'remedy', title: remedy.name,
       href: `/remedy/${remedy.id}`, author: remedy.author,
@@ -209,7 +108,7 @@ export default function RemedyDetailPage() {
   };
 
   const handleBookmark = () => {
-    if (!reader || !remedy) return;
+    if (!remedy) return;
     reader.toggleBookmark({
       id: remedy.id, type: 'remedy', title: remedy.name,
       href: `/remedy/${remedy.id}`, author: remedy.author,
@@ -218,7 +117,7 @@ export default function RemedyDetailPage() {
   };
 
   const handleSaveNote = () => {
-    if (!reader || !remedy || !noteText.trim()) {
+    if (!remedy || !noteText.trim()) {
       setShowNoteInput(false);
       return;
     }
@@ -231,7 +130,6 @@ export default function RemedyDetailPage() {
   };
 
   const handleDeleteNote = (noteId: string) => {
-    if (!reader) return;
     reader.removeNote(noteId);
     setNotesList(reader.getNotes(remedy.id));
   };
@@ -243,7 +141,6 @@ export default function RemedyDetailPage() {
       await navigator.clipboard.writeText(textToCopy);
       setCopyStatus('✓ Copied!');
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = textToCopy;
       textarea.style.position = 'fixed';
@@ -265,6 +162,97 @@ export default function RemedyDetailPage() {
     window.print();
   };
 
+  // --- Render helpers (defined as closures, not hooks) ---
+  function renderInline(text: string): React.ReactNode {
+    if (typeof text !== 'string') return String(text || '');
+    const spans = parseInlineMarkers(text);
+    return spans.map((span: InlineSpan, idx: number) => {
+      switch (span.kind) {
+        case 'bold':
+          return <strong key={idx} className="font-bold text-stone-900">{span.text}</strong>;
+        case 'italic':
+          return <em key={idx} className="italic">{span.text}</em>;
+        case 'underline':
+          return <u key={idx}>{span.text}</u>;
+        case 'emphasis':
+          return <span key={idx} className="font-semibold text-stone-900">{span.text}</span>;
+        case 'highlight-yellow':
+          return (
+            <mark key={idx} className="bg-yellow-100 text-stone-900 rounded px-0.5 border-l-2 border-yellow-400" title="Keynote / characteristic point">
+              {span.text}
+            </mark>
+          );
+        case 'highlight-green':
+          return (
+            <mark key={idx} className="bg-green-100 text-stone-900 rounded px-0.5 border-l-2 border-green-400" title="Important clinical point">
+              {span.text}
+            </mark>
+          );
+        case 'highlight-pink':
+          return (
+            <mark key={idx} className="bg-pink-100 text-stone-900 rounded px-0.5 border-l-2 border-pink-400" title="Striking / differentiating point">
+              {span.text}
+            </mark>
+          );
+        default:
+          return <span key={idx}>{span.text}</span>;
+      }
+    });
+  }
+
+  function renderBlocks(blocks: MMBlock[]): React.ReactNode {
+    if (!Array.isArray(blocks)) return null;
+    return blocks.map((block, idx) => {
+      if (!block || !block.text) return null;
+      switch (block.type) {
+        case 'remedy_title':
+          return null;
+        case 'subtitle':
+          return (
+            <h4 key={idx} className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+              {block.text}
+            </h4>
+          );
+        case 'paragraph':
+          return (
+            <p key={idx} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2 text-[0.95rem]">
+              {renderInline(block.text)}
+            </p>
+          );
+        case 'page_number':
+          return (
+            <span key={idx} className="mm-page-number inline-block text-[0.6rem] text-stone-400 mx-1 align-middle select-none" title="OCR page-number artifact">
+              [p. {block.text}]
+            </span>
+          );
+        case 'raw':
+          return (
+            <p key={idx} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
+              {block.text}
+            </p>
+          );
+        default:
+          return null;
+      }
+    });
+  }
+
+  // --- Format remedy text (safe — returns [] if remedy is null) ---
+  const blocks = remedy?.full
+    ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
+    : [];
+
+  // --- Early returns (AFTER all hooks) ---
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
+  if (error) return (
+    <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
+      <p>{error}</p>
+      <Link href="/dashboard" className="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded">← Back to Dashboard</Link>
+    </div>
+  );
+  if (!remedy) return null;
+
+  // --- Main render ---
   return (
     <ErrorBoundary>
     <div className="min-h-screen bg-stone-100">
