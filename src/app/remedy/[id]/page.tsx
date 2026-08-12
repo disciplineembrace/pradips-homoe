@@ -1,9 +1,8 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
-import { HighlightToolbar } from '@/components/HighlightToolbar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 type Remedy = {
@@ -21,18 +20,56 @@ export default function RemedyDetailPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!params?.id) {
+      setError('Invalid remedy ID');
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated) router.push('/login');
+      if (cancelled) return;
+      if (!d.authenticated) { router.push('/login'); return; }
+    }).catch(() => {
+      // Session check failed — continue anyway, the remedy fetch will handle auth
     });
+
     fetch(`/api/remedies/${params.id}`).then(r => {
+      if (cancelled) return null;
       if (r.status === 401) { router.push('/login'); return null; }
       return r.json();
     }).then(d => {
-      if (d?.error) setError(d.error);
-      else setRemedy(d);
+      if (cancelled) return;
+      if (!d) { setLoading(false); return; }
+      if (d.error) { setError(d.error); setLoading(false); return; }
+      // Defensive: ensure all fields have safe defaults
+      const safeRemedy: Remedy = {
+        id: d.id || params.id,
+        name: d.name || 'Unknown Remedy',
+        common: d.common || '',
+        author: d.author || 'Unknown',
+        chapter: d.chapter || '',
+        organ: d.organ || '',
+        modalities: d.modalities || '',
+        constitution: d.constitution || '',
+        relationships: d.relationships || '',
+        dose: d.dose || '',
+        keynote: d.keynote || '',
+        full: d.full || '',
+        letter: d.letter || '',
+      };
+      setRemedy(safeRemedy);
+      setLoading(false);
+    }).catch((err) => {
+      if (cancelled) return;
+      console.error('Failed to load remedy:', err);
+      setError('Failed to load remedy. Please try again.');
       setLoading(false);
     });
-  }, [router, params.id]);
+
+    return () => { cancelled = true; };
+  }, [router, params?.id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
   if (error) return (
@@ -144,9 +181,6 @@ export default function RemedyDetailPage() {
     ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
     : [];
 
-  const articleRef = useRef<HTMLElement>(null);
-  const [highlightVersion, setHighlightVersion] = useState(0);
-
   return (
     <ErrorBoundary>
     <div className="min-h-screen bg-stone-100">
@@ -158,14 +192,7 @@ export default function RemedyDetailPage() {
         </div>
       </header>
 
-      {/* User highlight toolbar — appears on text selection */}
-      <HighlightToolbar
-        remedyId={remedy.id}
-        articleRef={articleRef}
-        onHighlightChange={() => setHighlightVersion(v => v + 1)}
-      />
-
-      <article ref={articleRef} className="max-w-4xl mx-auto px-4 py-6">
+      <article className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
           {/* REMEDY MAIN TITLE — RED + BOLD per spec */}
           <div className="border-b border-stone-200 pb-4 mb-6">
@@ -223,14 +250,6 @@ export default function RemedyDetailPage() {
           )}
         </div>
       </article>
-
-      {/* Study hint — shows on first visit */}
-      <div className="max-w-4xl mx-auto px-4 pb-6 text-center">
-        <p className="text-xs text-stone-400">
-          Select any text to highlight (Yellow/Green/Pink), add notes, copy, or bookmark.
-          Your highlights are saved on this device.
-        </p>
-      </div>
     </div>
     </ErrorBoundary>
   );
