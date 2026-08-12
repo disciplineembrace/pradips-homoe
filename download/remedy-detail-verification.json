@@ -1,0 +1,58 @@
+{
+  "total_checked": 4104,
+  "passed": 4104,
+  "failed": 0,
+  "per_author": {
+    "Boericke": {
+      "pass": 855,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Phatak": {
+      "pass": 569,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Kent": {
+      "pass": 184,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Murphy": {
+      "pass": 1384,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Allen": {
+      "pass": 186,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Sankaran": {
+      "pass": 104,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Farrington": {
+      "pass": 137,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Boeger": {
+      "pass": 308,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Mathur": {
+      "pass": 180,
+      "fail": 0,
+      "status": "PASS"
+    },
+    "Dubey": {
+      "pass": 197,
+      "fail": 0,
+      "status": "PASS"
+    }
+  },
+  "failures": []
+}
