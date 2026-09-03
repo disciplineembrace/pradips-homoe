@@ -1,0 +1,50 @@
+[
+  {
+    "book": "Synthesis Repertory",
+    "author": "Frederik Schroyens",
+    "source_key": "Synthesis",
+    "source_file": "Synthesis Repertory.pdf",
+    "pdf_pages": 355,
+    "has_embedded_text": false,
+    "ocr_required": true,
+    "grading_system": "needs_verification",
+    "grading_verified_from": "pending",
+    "source_complete": true
+  },
+  {
+    "book": "Medical Repertory",
+    "author": "Robin Murphy",
+    "source_key": "Murphy",
+    "source_file": "Medical_Repertory_A_Modern_Alphabetical&_Praciical_Repertory_by_compressed.pdf",
+    "pdf_pages": 2443,
+    "has_embedded_text": false,
+    "ocr_required": true,
+    "grading_system": "needs_verification",
+    "grading_verified_from": "pending",
+    "source_complete": true
+  },
+  {
+    "book": "Phatak Repertory",
+    "author": "S.R. Phatak",
+    "source_key": "Phatak",
+    "source_file": "Phatak repertory.pdf",
+    "pdf_pages": 498,
+    "has_embedded_text": true,
+    "ocr_required": false,
+    "grading_system": "needs_verification",
+    "grading_verified_from": "pending",
+    "source_complete": true
+  },
+  {
+    "book": "Phatak Biochemic Repertory",
+    "author": "S.R. Phatak",
+    "source_key": "Phatak-Biochemic",
+    "source_file": "Phatak bio-chemic repertory.pdf",
+    "pdf_pages": 394,
+    "has_embedded_text": false,
+    "ocr_required": true,
+    "grading_system": "needs_verification",
+    "grading_verified_from": "pending",
+    "source_complete": true
+  }
+]
