@@ -1,7 +1,14 @@
-/** GET /api/single-rubrics — paginated single-remedy rubrics with complete hierarchy */
+/** GET /api/single-rubrics — paginated single-remedy rubrics
+ *
+ * Instead of loading a huge pre-computed index, this loads the existing
+ * rubrics.json (which is already cached in memory) and filters for
+ * single-remedy rubrics on-the-fly. This is fast because:
+ * 1. rubrics.json is only 15MB (vs 62MB for pre-computed)
+ * 2. The filter is simple: len(set(remedies)) == 1
+ * 3. Results are cached in-process after first request
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { getRubrics } from '@/lib/data';
 import { requireAuth } from '@/lib/require-auth';
 
 export const runtime = 'nodejs';
@@ -9,37 +16,71 @@ export const revalidate = 300;
 
 type SingleRubric = {
   id: string;
-  rubricId: string;
   repertory: string;
   author: string;
   chapter: string;
   mainRubric: string;
   subRubrics: string[];
   singleRemedy: string;
-  remedyCount: number;
-  uniqueRemedyCount: number;
-  grade?: number;
   fullPath: string;
-  fullPathParts: string[];
-  rubricPath: string;
-  rubricTitle: string;
+  grade?: number;
 };
 
-let _cache: SingleRubric[] | null = null;
+let _singleRubricsCache: SingleRubric[] | null = null;
 
-async function loadSingleRubrics(): Promise<SingleRubric[]> {
-  if (_cache) return _cache;
-  const dataDir = path.join(process.cwd(), 'data');
-  const filePath = path.join(dataDir, 'single-rubrics-single-remedy.json');
-  try {
-    const buf = await fs.readFile(filePath);
-    _cache = JSON.parse(buf.toString('utf-8'));
-  } catch {
-    const altPath = '/home/z/my-project/data/single-rubrics-single-remedy.json';
-    const buf = await fs.readFile(altPath);
-    _cache = JSON.parse(buf.toString('utf-8'));
+async function getSingleRubrics(): Promise<SingleRubric[]> {
+  if (_singleRubricsCache) return _singleRubricsCache;
+
+  const allRubrics = await getRubrics();
+  const results: SingleRubric[] = [];
+
+  for (const r of allRubrics) {
+    const remedies = r.remedies;
+    if (!Array.isArray(remedies)) continue;
+    const uniqueRemedies = [...new Set(remedies)];
+    if (uniqueRemedies.length !== 1) continue;
+
+    const author = r.author || 'Unknown';
+    const path = r.path || '';
+    const title = r.title || '';
+    const rubricId = r.id || '';
+
+    const chapter = path;
+
+    // Parse title for hierarchy using — separator
+    let mainRubric = title;
+    let subRubrics: string[] = [];
+    if (title.includes('—')) {
+      const parts = title.split('—').map((p: string) => p.trim());
+      mainRubric = parts[0];
+      subRubrics = parts.slice(1);
+    }
+
+    const fullPathParts = [chapter, mainRubric, ...subRubrics];
+    const fullPath = fullPathParts.join(' → ');
+
+    const repertoryName: Record<string, string> = {
+      'Kent': 'Kent Repertory',
+      'Phatak': 'Phatak Repertory',
+      'Murphy': 'Murphy Repertory',
+      'Boericke': 'William Boericke Repertory',
+    };
+    const repertory = repertoryName[author] || author;
+
+    results.push({
+      id: `sr_${rubricId}`,
+      repertory,
+      author,
+      chapter,
+      mainRubric,
+      subRubrics,
+      singleRemedy: uniqueRemedies[0],
+      fullPath,
+    });
   }
-  return _cache!;
+
+  _singleRubricsCache = results;
+  return results;
 }
 
 export async function GET(req: NextRequest) {
@@ -56,25 +97,17 @@ export async function GET(req: NextRequest) {
   const pageSize = Math.min(100, Math.max(10, parseInt(url.searchParams.get('pageSize') || '25', 10)));
   const view = url.searchParams.get('view') || 'rubric';
 
-  let items = await loadSingleRubrics();
+  let items = await getSingleRubrics();
 
   if (author) items = items.filter(r => r.author === author);
   if (chapter) items = items.filter(r => r.chapter === chapter);
   if (remedy) items = items.filter(r => r.singleRemedy === remedy);
 
-  // Search across complete hierarchy: repertory, chapter, mainRubric, subRubrics, remedy, fullPath
   if (q) {
     items = items.filter(r => {
       const searchText = [
-        r.repertory || '',
-        r.author || '',
-        r.chapter || '',
-        r.mainRubric || '',
-        ...(r.subRubrics || []),
-        r.singleRemedy || '',
-        r.fullPath || '',
-        r.rubricPath || '',
-        r.rubricTitle || '',
+        r.repertory, r.author, r.chapter, r.mainRubric,
+        ...r.subRubrics, r.singleRemedy, r.fullPath
       ].join(' ').toLowerCase();
       return searchText.includes(q);
     });
@@ -82,22 +115,22 @@ export async function GET(req: NextRequest) {
 
   switch (sort) {
     case 'rubric-az':
-      items.sort((a, b) => (a.fullPath || '').localeCompare(b.fullPath || ''));
+      items.sort((a, b) => a.fullPath.localeCompare(b.fullPath));
       break;
     case 'rubric-za':
-      items.sort((a, b) => (b.fullPath || '').localeCompare(a.fullPath || ''));
+      items.sort((a, b) => b.fullPath.localeCompare(a.fullPath));
       break;
     case 'remedy-az':
-      items.sort((a, b) => (a.singleRemedy || '').localeCompare(b.singleRemedy || ''));
+      items.sort((a, b) => a.singleRemedy.localeCompare(b.singleRemedy));
       break;
     case 'remedy-za':
-      items.sort((a, b) => (b.singleRemedy || '').localeCompare(a.singleRemedy || ''));
+      items.sort((a, b) => b.singleRemedy.localeCompare(a.singleRemedy));
       break;
     case 'chapter-az':
-      items.sort((a, b) => (a.chapter || '').localeCompare(b.chapter || ''));
+      items.sort((a, b) => a.chapter.localeCompare(b.chapter));
       break;
     case 'repertory-az':
-      items.sort((a, b) => (a.repertory || '').localeCompare(b.repertory || ''));
+      items.sort((a, b) => a.repertory.localeCompare(b.repertory));
       break;
   }
 
@@ -139,7 +172,7 @@ export async function GET(req: NextRequest) {
   const start = (page - 1) * pageSize;
   const pagedItems = items.slice(start, start + pageSize);
 
-  const allItems = await loadSingleRubrics();
+  const allItems = await getSingleRubrics();
   const authors = [...new Set(allItems.map(r => r.author))].sort();
   const chapters = [...new Set(allItems.map(r => r.chapter))].sort();
   const remedies = [...new Set(allItems.map(r => r.singleRemedy))].sort();
