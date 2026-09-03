@@ -1,0 +1,273 @@
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { useReaderFeatures } from '@/hooks/use-reader-features';
+
+type SingleRubric = {
+  id: string; rubricPath: string; rubricTitle: string;
+  chapter: string; author: string; remedy: string;
+};
+
+type RemedyGroup = { remedy: string; count: number; rubrics: SingleRubric[] };
+type AuthorGroup = { author: string; count: number; rubrics: SingleRubric[] };
+
+export default function SingleRubricsPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<any>(null);
+  const [items, setItems] = useState<SingleRubric[] | RemedyGroup[] | AuthorGroup[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalRubrics, setTotalRubrics] = useState(0);
+  const [filters, setFilters] = useState<{ authors: string[]; chapters: string[]; remedies: string[] }>({ authors: [], chapters: [], remedies: [] });
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(25);
+  const [q, setQ] = useState('');
+  const [author, setAuthor] = useState('');
+  const [chapter, setChapter] = useState('');
+  const [remedy, setRemedy] = useState('');
+  const [sort, setSort] = useState('rubric-az');
+  const [view, setView] = useState<'rubric' | 'remedy' | 'repertory'>('rubric');
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [stats, setStats] = useState({ totalRubrics: 0, repertories: 0 });
+
+  const reader = useReaderFeatures();
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetch('/api/auth/session').then(r => r.json()).then(d => {
+      if (!d.authenticated) { router.push('/login'); return; }
+      setSession(d);
+    });
+  }, [router]);
+
+  useEffect(() => {
+    if (reader && reader.favorites) {
+      const ids = new Set(reader.favorites.filter((f: any) => f.type === 'single-rubric').map((f: any) => f.id));
+      setSavedIds(ids);
+    }
+  }, [reader]);
+
+  const loadData = useCallback(() => {
+    if (!session) return;
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (author) params.set('author', author);
+    if (chapter) params.set('chapter', chapter);
+    if (remedy) params.set('remedy', remedy);
+    params.set('sort', sort);
+    params.set('page', String(page));
+    params.set('pageSize', String(pageSize));
+    params.set('view', view);
+    fetch(`/api/single-rubrics?${params}`)
+      .then(r => r.json())
+      .then(d => {
+        setItems(d.items || []);
+        setTotal(d.total || 0);
+        setTotalRubrics(d.totalRubrics || d.total || 0);
+        if (d.filters) setFilters(d.filters);
+        setStats({ totalRubrics: d.totalRubrics || d.total || 0, repertories: d.filters?.authors?.length || filters.authors.length });
+        setLoading(false);
+      })
+      .catch(() => { setLoading(false); });
+  }, [session, q, author, chapter, remedy, sort, page, pageSize, view]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { setPage(1); }, [q, author, chapter, remedy, sort, view]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const toggleSave = (id: string, title: string, author: string) => {
+    const isSaved = savedIds.has(id);
+    reader.toggleFavorite({
+      id, type: 'single-rubric', title, href: `/single-rubrics-single-remedy`, author,
+    });
+    const next = new Set(savedIds);
+    if (isSaved) next.delete(id); else next.add(id);
+    setSavedIds(next);
+  };
+
+  if (!session) return (
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="inline-block w-10 h-10 border-4 border-[#E8DCC3] border-t-[#173B2D] rounded-full animate-spin"></div>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
+        {/* PAGE HEADER */}
+        <header className="mb-6 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl">🎯</span>
+              <h1 className="font-serif text-2xl md:text-3xl text-[#173B2D]">Single Rubrics Single Remedy</h1>
+            </div>
+            <p className="text-xs text-[#7C8F6E]">Rubrics containing only one remedy across repertory sources</p>
+            <div className="w-16 h-0.5 bg-[#C8A24A] mt-2"></div>
+          </div>
+        </header>
+
+        {/* STATISTICS BAR */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">{totalRubrics.toLocaleString()}</div>
+            <div className="text-[0.65rem] uppercase tracking-wider text-[#7C8F6E] mt-1">Total Rubrics</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">{savedIds.size}</div>
+            <div className="text-[0.65rem] uppercase tracking-wider text-[#7C8F6E] mt-1">Saved</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-[#E8DCC3] p-4 text-center">
+            <div className="text-2xl font-serif font-bold text-[#173B2D]">{filters.authors.length}</div>
+            <div className="text-[0.65rem] uppercase tracking-wider text-[#7C8F6E] mt-1">Repertories</div>
+          </div>
+        </div>
+
+        {/* SEARCH BAR */}
+        <div className="bg-white rounded-lg shadow-sm border border-[#E8DCC3] p-4 mb-4">
+          <input
+            type="text"
+            placeholder="Search rubric, remedy, chapter, or keyword..."
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            className="w-full px-4 py-2.5 border border-[#E8DCC3] rounded-lg text-sm focus:outline-none focus:border-[#173B2D] text-[#173B2D]"
+          />
+        </div>
+
+        {/* FILTER BAR */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <select value={author} onChange={e => setAuthor(e.target.value)} className="px-3 py-1.5 text-xs border border-[#E8DCC3] rounded-md bg-white text-[#173B2D]">
+            <option value="">All Repertories</option>
+            {filters.authors.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <select value={remedy} onChange={e => setRemedy(e.target.value)} className="px-3 py-1.5 text-xs border border-[#E8DCC3] rounded-md bg-white text-[#173B2D] max-w-[200px]">
+            <option value="">All Remedies</option>
+            {filters.remedies.slice(0, 500).map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <select value={chapter} onChange={e => setChapter(e.target.value)} className="px-3 py-1.5 text-xs border border-[#E8DCC3] rounded-md bg-white text-[#173B2D] max-w-[150px]">
+            <option value="">All Chapters</option>
+            {filters.chapters.slice(0, 200).map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={sort} onChange={e => setSort(e.target.value)} className="px-3 py-1.5 text-xs border border-[#E8DCC3] rounded-md bg-white text-[#173B2D]">
+            <option value="rubric-az">Rubric A-Z</option>
+            <option value="rubric-za">Rubric Z-A</option>
+            <option value="remedy-az">Remedy A-Z</option>
+            <option value="remedy-za">Remedy Z-A</option>
+            <option value="chapter-az">Chapter A-Z</option>
+            <option value="repertory-az">Repertory A-Z</option>
+          </select>
+          <button
+            onClick={() => setSavedOnly(!savedOnly)}
+            className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-colors ${savedOnly ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-white text-stone-600 border border-[#E8DCC3]'}`}
+          >
+            ★ Saved Only
+          </button>
+        </div>
+
+        {/* VIEW TABS */}
+        <div className="flex gap-1 mb-4 border-b border-[#E8DCC3]">
+          {(['rubric', 'remedy', 'repertory'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${view === v ? 'border-[#173B2D] text-[#173B2D]' : 'border-transparent text-[#7C8F6E] hover:text-[#173B2D]'}`}
+            >
+              {v === 'rubric' ? 'By Rubric' : v === 'remedy' ? 'By Remedy' : 'By Repertory'}
+            </button>
+          ))}
+        </div>
+
+        {/* RESULTS */}
+        {loading ? (
+          <div className="text-center py-12 text-[#7C8F6E]">Loading...</div>
+        ) : !items || items.length === 0 ? (
+          <div className="text-center py-12 text-[#7C8F6E]">No qualifying rubrics found. Try different filters.</div>
+        ) : view === 'rubric' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {(items as SingleRubric[]).map(r => {
+              const isSaved = savedIds.has(r.id);
+              if (savedOnly && !isSaved) return null;
+              return (
+                <div key={r.id} className="bg-white rounded-lg shadow-sm border border-[#E8DCC3] p-4 hover:shadow-md transition-shadow">
+                  <div className="text-xs text-[#7C8F6E] mb-1">{r.rubricPath}</div>
+                  <div className="font-serif text-base text-[#173B2D] mb-2 font-bold">{r.remedy}</div>
+                  <div className="flex flex-wrap gap-1.5 text-xs mb-3">
+                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">{r.author}</span>
+                    <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{r.chapter}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toggleSave(r.id, r.rubricPath, r.author)}
+                      className={`text-xs px-3 py-1.5 rounded font-semibold transition-colors ${isSaved ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-[#173B2D] text-[#F5EFE0] hover:bg-[#0F2D22]'}`}
+                    >
+                      {isSaved ? '★ Saved' : '☆ Save'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : view === 'remedy' ? (
+          <div className="space-y-3">
+            {(items as RemedyGroup[]).map(g => (
+              <div key={g.remedy} className="bg-white rounded-lg shadow-sm border border-[#E8DCC3] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-serif text-lg text-[#173B2D] font-bold">{g.remedy}</h3>
+                  <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">{g.count} rubrics</span>
+                </div>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {g.rubrics.slice(0, 10).map(r => (
+                    <div key={r.id} className="text-xs text-stone-600 flex items-center gap-2">
+                      <span className="text-[#7C8F6E]">{r.author}</span>
+                      <span>{r.rubricPath}</span>
+                    </div>
+                  ))}
+                  {g.rubrics.length > 10 && <div className="text-xs text-[#7C8F6E] mt-1">... and {g.rubrics.length - 10} more</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {(items as AuthorGroup[]).map(g => (
+              <div key={g.author} className="bg-white rounded-lg shadow-sm border border-[#E8DCC3] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-serif text-lg text-[#173B2D] font-bold">{g.author}</h3>
+                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">{g.count} rubrics</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {g.rubrics.slice(0, 9).map(r => (
+                    <div key={r.id} className="text-xs border border-[#E8DCC3] rounded p-2">
+                      <div className="text-[#7C8F6E]">{r.rubricPath}</div>
+                      <div className="font-semibold text-[#173B2D]">{r.remedy}</div>
+                    </div>
+                  ))}
+                </div>
+                {g.rubrics.length > 9 && <div className="text-xs text-[#7C8F6E] mt-2">... and {g.rubrics.length - 9} more</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]">← Prev</button>
+            <span className="text-sm text-[#7C8F6E]">Page {page} of {totalPages} ({total.toLocaleString()} items)</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 text-sm bg-white border border-[#E8DCC3] rounded disabled:opacity-40 hover:bg-[#F5EFE0] text-[#173B2D]">Next →</button>
+          </div>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}
