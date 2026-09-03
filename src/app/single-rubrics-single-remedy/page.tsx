@@ -7,8 +7,18 @@ import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
 
 type SingleRubric = {
-  id: string; rubricPath: string; rubricTitle: string;
-  chapter: string; author: string; remedy: string;
+  id: string;
+  repertory: string;
+  author: string;
+  chapter: string;
+  mainRubric: string;
+  subRubrics: string[];
+  singleRemedy: string;
+  grade?: number;
+  fullPath: string;
+  fullPathParts: string[];
+  rubricPath: string;
+  rubricTitle: string;
 };
 
 type RemedyGroup = { remedy: string; count: number; rubrics: SingleRubric[] };
@@ -31,7 +41,6 @@ export default function SingleRubricsPage() {
   const [sort, setSort] = useState('rubric-az');
   const [view, setView] = useState<'rubric' | 'remedy' | 'repertory'>('rubric');
   const [savedOnly, setSavedOnly] = useState(false);
-  const [stats, setStats] = useState({ totalRubrics: 0, repertories: 0 });
 
   const reader = useReaderFeatures();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -69,7 +78,6 @@ export default function SingleRubricsPage() {
         setTotal(d.total || 0);
         setTotalRubrics(d.totalRubrics || d.total || 0);
         if (d.filters) setFilters(d.filters);
-        setStats({ totalRubrics: d.totalRubrics || d.total || 0, repertories: d.filters?.authors?.length || filters.authors.length });
         setLoading(false);
       })
       .catch(() => { setLoading(false); });
@@ -99,6 +107,78 @@ export default function SingleRubricsPage() {
       <Footer />
     </div>
   );
+
+  // Render a single rubric card with complete hierarchy
+  function RubricCard({ r, savedIds, toggleSave }: { r: SingleRubric; savedIds: Set<string>; toggleSave: (id: string, title: string, author: string) => void }) {
+    const isSaved = savedIds.has(r.id);
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-[#E8DCC3] p-4 hover:shadow-md transition-shadow">
+        {/* Repertory */}
+        <div className="mb-2">
+          <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] font-semibold">Repertory</div>
+          <div className="text-sm text-[#173B2D] font-medium">{r.repertory}</div>
+        </div>
+
+        {/* Chapter */}
+        <div className="mb-2">
+          <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] font-semibold">Chapter</div>
+          <div className="text-sm text-[#173B2D]">{r.chapter}</div>
+        </div>
+
+        {/* Main Rubric */}
+        <div className="mb-2">
+          <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] font-semibold">Rubric</div>
+          <div className="text-sm text-[#173B2D] font-medium">{r.mainRubric}</div>
+        </div>
+
+        {/* Sub Rubrics — show each level */}
+        {r.subRubrics && r.subRubrics.length > 0 && (
+          <div className="mb-2">
+            {r.subRubrics.map((sub, idx) => (
+              <div key={idx} className="mb-1">
+                <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] font-semibold">
+                  {idx === 0 ? 'Sub Rubric' : `Sub Rubric ${idx + 1}`}
+                </div>
+                <div className="text-sm text-[#173B2D]">{sub}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Single Remedy */}
+        <div className="mb-3 p-2 bg-amber-50 rounded border border-amber-200">
+          <div className="text-[0.6rem] uppercase tracking-wider text-amber-700 font-semibold">Single Remedy</div>
+          <div className="text-base font-bold text-[#173B2D] font-serif">{r.singleRemedy}</div>
+        </div>
+
+        {/* Full Rubric Path */}
+        <div className="mb-3">
+          <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] font-semibold">Full Rubric Path</div>
+          <div className="text-xs text-stone-600 leading-relaxed break-words">
+            {r.fullPath}
+          </div>
+        </div>
+
+        {/* Grade if available */}
+        {r.grade != null && (
+          <div className="mb-3">
+            <div className="text-[0.6rem] uppercase tracking-wider text-[#7C8F6E] font-semibold">Grade</div>
+            <div className="text-sm text-[#173B2D]">{r.grade}</div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => toggleSave(r.id, r.fullPath, r.author)}
+            className={`text-xs px-3 py-1.5 rounded font-semibold transition-colors ${isSaved ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-[#173B2D] text-[#F5EFE0] hover:bg-[#0F2D22]'}`}
+          >
+            {isSaved ? '★ Saved' : '☆ Save'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
@@ -193,28 +273,9 @@ export default function SingleRubricsPage() {
           <div className="text-center py-12 text-[#7C8F6E]">No qualifying rubrics found. Try different filters.</div>
         ) : view === 'rubric' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(items as SingleRubric[]).map(r => {
-              const isSaved = savedIds.has(r.id);
-              if (savedOnly && !isSaved) return null;
-              return (
-                <div key={r.id} className="bg-white rounded-lg shadow-sm border border-[#E8DCC3] p-4 hover:shadow-md transition-shadow">
-                  <div className="text-xs text-[#7C8F6E] mb-1">{r.rubricPath}</div>
-                  <div className="font-serif text-base text-[#173B2D] mb-2 font-bold">{r.remedy}</div>
-                  <div className="flex flex-wrap gap-1.5 text-xs mb-3">
-                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">{r.author}</span>
-                    <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{r.chapter}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => toggleSave(r.id, r.rubricPath, r.author)}
-                      className={`text-xs px-3 py-1.5 rounded font-semibold transition-colors ${isSaved ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-[#173B2D] text-[#F5EFE0] hover:bg-[#0F2D22]'}`}
-                    >
-                      {isSaved ? '★ Saved' : '☆ Save'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {(items as SingleRubric[]).filter(r => !savedOnly || savedIds.has(r.id)).map(r => (
+              <RubricCard key={r.id} r={r} savedIds={savedIds} toggleSave={toggleSave} />
+            ))}
           </div>
         ) : view === 'remedy' ? (
           <div className="space-y-3">
@@ -224,15 +285,12 @@ export default function SingleRubricsPage() {
                   <h3 className="font-serif text-lg text-[#173B2D] font-bold">{g.remedy}</h3>
                   <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">{g.count} rubrics</span>
                 </div>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {g.rubrics.slice(0, 10).map(r => (
-                    <div key={r.id} className="text-xs text-stone-600 flex items-center gap-2">
-                      <span className="text-[#7C8F6E]">{r.author}</span>
-                      <span>{r.rubricPath}</span>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {g.rubrics.slice(0, 6).map(r => (
+                    <RubricCard key={r.id} r={r} savedIds={savedIds} toggleSave={toggleSave} />
                   ))}
-                  {g.rubrics.length > 10 && <div className="text-xs text-[#7C8F6E] mt-1">... and {g.rubrics.length - 10} more</div>}
                 </div>
+                {g.rubrics.length > 6 && <div className="text-xs text-[#7C8F6E] mt-2 text-center">... and {g.rubrics.length - 6} more</div>}
               </div>
             ))}
           </div>
@@ -245,14 +303,11 @@ export default function SingleRubricsPage() {
                   <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">{g.count} rubrics</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {g.rubrics.slice(0, 9).map(r => (
-                    <div key={r.id} className="text-xs border border-[#E8DCC3] rounded p-2">
-                      <div className="text-[#7C8F6E]">{r.rubricPath}</div>
-                      <div className="font-semibold text-[#173B2D]">{r.remedy}</div>
-                    </div>
+                  {g.rubrics.slice(0, 6).map(r => (
+                    <RubricCard key={r.id} r={r} savedIds={savedIds} toggleSave={toggleSave} />
                   ))}
                 </div>
-                {g.rubrics.length > 9 && <div className="text-xs text-[#7C8F6E] mt-2">... and {g.rubrics.length - 9} more</div>}
+                {g.rubrics.length > 6 && <div className="text-xs text-[#7C8F6E] mt-2 text-center">... and {g.rubrics.length - 6} more</div>}
               </div>
             ))}
           </div>

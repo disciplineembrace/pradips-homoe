@@ -1,4 +1,4 @@
-/** GET /api/single-rubrics — paginated single-remedy rubrics list */
+/** GET /api/single-rubrics — paginated single-remedy rubrics with complete hierarchy */
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
@@ -10,13 +10,19 @@ export const revalidate = 300;
 type SingleRubric = {
   id: string;
   rubricId: string;
-  rubricPath: string;
-  rubricTitle: string;
-  chapter: string;
+  repertory: string;
   author: string;
-  remedy: string;
+  chapter: string;
+  mainRubric: string;
+  subRubrics: string[];
+  singleRemedy: string;
   remedyCount: number;
   uniqueRemedyCount: number;
+  grade?: number;
+  fullPath: string;
+  fullPathParts: string[];
+  rubricPath: string;
+  rubricTitle: string;
 };
 
 let _cache: SingleRubric[] | null = null;
@@ -54,31 +60,44 @@ export async function GET(req: NextRequest) {
 
   if (author) items = items.filter(r => r.author === author);
   if (chapter) items = items.filter(r => r.chapter === chapter);
-  if (remedy) items = items.filter(r => r.remedy === remedy);
+  if (remedy) items = items.filter(r => r.singleRemedy === remedy);
+
+  // Search across complete hierarchy: repertory, chapter, mainRubric, subRubrics, remedy, fullPath
   if (q) {
-    items = items.filter(r =>
-      (r.rubricPath + ' ' + r.rubricTitle + ' ' + r.remedy + ' ' + r.chapter + ' ' + r.author).toLowerCase().includes(q)
-    );
+    items = items.filter(r => {
+      const searchText = [
+        r.repertory || '',
+        r.author || '',
+        r.chapter || '',
+        r.mainRubric || '',
+        ...(r.subRubrics || []),
+        r.singleRemedy || '',
+        r.fullPath || '',
+        r.rubricPath || '',
+        r.rubricTitle || '',
+      ].join(' ').toLowerCase();
+      return searchText.includes(q);
+    });
   }
 
   switch (sort) {
     case 'rubric-az':
-      items.sort((a, b) => a.rubricPath.localeCompare(b.rubricPath));
+      items.sort((a, b) => (a.fullPath || '').localeCompare(b.fullPath || ''));
       break;
     case 'rubric-za':
-      items.sort((a, b) => b.rubricPath.localeCompare(a.rubricPath));
+      items.sort((a, b) => (b.fullPath || '').localeCompare(a.fullPath || ''));
       break;
     case 'remedy-az':
-      items.sort((a, b) => a.remedy.localeCompare(b.remedy));
+      items.sort((a, b) => (a.singleRemedy || '').localeCompare(b.singleRemedy || ''));
       break;
     case 'remedy-za':
-      items.sort((a, b) => b.remedy.localeCompare(a.remedy));
+      items.sort((a, b) => (b.singleRemedy || '').localeCompare(a.singleRemedy || ''));
       break;
     case 'chapter-az':
-      items.sort((a, b) => a.chapter.localeCompare(b.chapter));
+      items.sort((a, b) => (a.chapter || '').localeCompare(b.chapter || ''));
       break;
     case 'repertory-az':
-      items.sort((a, b) => a.author.localeCompare(b.author));
+      items.sort((a, b) => (a.repertory || '').localeCompare(b.repertory || ''));
       break;
   }
 
@@ -87,8 +106,8 @@ export async function GET(req: NextRequest) {
   if (view === 'remedy') {
     const byRemedy: Record<string, SingleRubric[]> = {};
     for (const r of items) {
-      if (!byRemedy[r.remedy]) byRemedy[r.remedy] = [];
-      byRemedy[r.remedy].push(r);
+      if (!byRemedy[r.singleRemedy]) byRemedy[r.singleRemedy] = [];
+      byRemedy[r.singleRemedy].push(r);
     }
     const remedyEntries = Object.entries(byRemedy)
       .map(([remedy, rubrics]) => ({ remedy, count: rubrics.length, rubrics }))
@@ -105,11 +124,11 @@ export async function GET(req: NextRequest) {
   if (view === 'repertory') {
     const byAuthor: Record<string, SingleRubric[]> = {};
     for (const r of items) {
-      if (!byAuthor[r.author]) byAuthor[r.author] = [];
-      byAuthor[r.author].push(r);
+      if (!byAuthor[r.repertory]) byAuthor[r.repertory] = [];
+      byAuthor[r.repertory].push(r);
     }
     const authorEntries = Object.entries(byAuthor)
-      .map(([author, rubrics]) => ({ author, count: rubrics.length, rubrics: rubrics.slice(0, 50) }))
+      .map(([author, rubrics]) => ({ author, count: rubrics.length, rubrics: rubrics.slice(0, 12) }))
       .sort((a, b) => b.count - a.count);
     return NextResponse.json({
       total: authorEntries.length, totalRubrics: total,
@@ -123,7 +142,7 @@ export async function GET(req: NextRequest) {
   const allItems = await loadSingleRubrics();
   const authors = [...new Set(allItems.map(r => r.author))].sort();
   const chapters = [...new Set(allItems.map(r => r.chapter))].sort();
-  const remedies = [...new Set(allItems.map(r => r.remedy))].sort();
+  const remedies = [...new Set(allItems.map(r => r.singleRemedy))].sort();
 
   return NextResponse.json({
     total, page, pageSize, items: pagedItems,
