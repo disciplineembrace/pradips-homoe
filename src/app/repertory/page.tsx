@@ -46,15 +46,19 @@ const AUTHORS = ['Kent', 'Phatak', 'Murphy', 'Boericke'];
 const PAGE_SIZE = 20;
 
 // ============================================================
-// GRADE METADATA — colors per the original repertory grading scale.
-// Grade 4 = Red, Grade 3 = Green, Grade 2 = Blue, Grade 1 = Black.
-// These match the source grading stored in the database.
+// GRADE METADATA — now uses centralized config from repertory-grades.ts
+// Grade 4 = Red (HIGH), Grade 3 = Green (LOW), Grade 2 = Blue (LOWER),
+// Grade 1 = Black (NORMAL/UNGRADED).
+// Source-specific grade mapping is in repertory-grades.ts.
 // ============================================================
+import { GRADE_DISPLAY_MAP, getGradeDisplay, groupRemediesByGrade } from '@/lib/repertory-grades';
+
+// Backward-compat: map numeric grade to display config via centralized system
 const GRADE_META: Record<number, { color: string; bg: string; border: string; label: string; weight: string }> = {
-  4: { color: '#FFFFFF', bg: '#DC2626', border: '#B91C1C', label: 'G4', weight: 'font-bold' },
-  3: { color: '#FFFFFF', bg: '#166534', border: '#14532D', label: 'G3', weight: 'font-semibold' },
-  2: { color: '#FFFFFF', bg: '#1E40AF', border: '#1E3A8A', label: 'G2', weight: 'font-medium' },
-  1: { color: '#FFFFFF', bg: '#374151', border: '#1F2937', label: 'G1', weight: 'font-normal' },
+  4: { color: GRADE_DISPLAY_MAP.HIGH.color, bg: GRADE_DISPLAY_MAP.HIGH.bg, border: GRADE_DISPLAY_MAP.HIGH.border, label: GRADE_DISPLAY_MAP.HIGH.label, weight: GRADE_DISPLAY_MAP.HIGH.weight },
+  3: { color: GRADE_DISPLAY_MAP.LOW.color, bg: GRADE_DISPLAY_MAP.LOW.bg, border: GRADE_DISPLAY_MAP.LOW.border, label: GRADE_DISPLAY_MAP.LOW.label, weight: GRADE_DISPLAY_MAP.LOW.weight },
+  2: { color: GRADE_DISPLAY_MAP.LOWER.color, bg: GRADE_DISPLAY_MAP.LOWER.bg, border: GRADE_DISPLAY_MAP.LOWER.border, label: GRADE_DISPLAY_MAP.LOWER.label, weight: GRADE_DISPLAY_MAP.LOWER.weight },
+  1: { color: GRADE_DISPLAY_MAP.NORMAL.color, bg: GRADE_DISPLAY_MAP.NORMAL.bg, border: GRADE_DISPLAY_MAP.NORMAL.border, label: GRADE_DISPLAY_MAP.NORMAL.label, weight: GRADE_DISPLAY_MAP.NORMAL.weight },
 };
 
 function GradeBadge({ abbrev, grade }: { abbrev: string; grade: number }) {

@@ -1,0 +1,22 @@
+{
+  "Kent": {
+    "count": 30767,
+    "file": "kent.json"
+  },
+  "Murphy": {
+    "count": 1912,
+    "file": "murphy.json"
+  },
+  "Phatak": {
+    "count": 3869,
+    "file": "phatak.json"
+  },
+  "Synthesis": {
+    "count": 67488,
+    "file": "synthesis.json"
+  },
+  "Boericke": {
+    "count": 39,
+    "file": "boericke.json"
+  }
+}
