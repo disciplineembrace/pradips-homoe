@@ -1,0 +1,62 @@
+name: pradips_homeo
+description: "Pradip's Homeo - Complete Homeopathic Reference App with Materia Medica, Repertory, Clinical, Analysis Tools, Offline-First Sync Architecture."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # HTTP & API
+  http: ^1.2.2
+  dio: ^5.7.0
+
+  # State management
+  provider: ^6.1.2
+
+  # Local storage (offline-first)
+  shared_preferences: ^2.3.2
+  flutter_secure_storage: ^9.2.2
+  drift: ^2.20.2
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # UI & animations
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.0
+
+  # Navigation
+  go_router: ^14.2.7
+
+  # Utilities
+  intl: ^0.19.0
+  url_launcher: ^6.3.1
+  connectivity_plus: ^6.0.5
+  flutter_dotenv: ^5.2.1
+
+  # Markdown rendering for content
+  flutter_markdown: ^0.7.3+2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  drift_dev: ^2.20.2
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - .env

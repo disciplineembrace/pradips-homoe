@@ -1,0 +1,24 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    avoid_print: true
+    use_key_in_widget_constructors: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  errors:
+    invalid_annotation_target: ignore
+    # Treat lint warnings as warnings, not errors (don't fail the build)
+    # Only actual compile errors should fail.
+    deprecated_member_use: ignore
+    unused_field: warning
+    unused_local_variable: warning
+    prefer_const_constructors: warning
+    prefer_const_literals_to_create_immutables: warning
+    prefer_final_fields: warning
+    prefer_final_locals: warning
+    require_trailing_commas: warning
+    sort_child_properties_last: warning
