@@ -1,4 +1,15 @@
-/** GET /api/rubrics — paginated list with byGrade */
+/** GET /api/rubrics — paginated list (requires auth+PIN)
+ *
+ * Returns rubrics with:
+ * - remedies: string[] (original source data, preserved)
+ * - byGrade: Record<number, string[]> (computed for display)
+ * - remedyCount: total unique remedies
+ *
+ * Grade handling:
+ * - Synthesis remedies have [abbrev, grade] pairs → real grades
+ * - Kent/Phatak/Murphy/Boericke have plain strings → grade 1 (NORMAL/BLACK)
+ *   until source grades are verified from PDFs
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { getRubrics } from '@/lib/data';
 import { requireAuth } from '@/lib/require-auth';
@@ -10,6 +21,7 @@ export const revalidate = 60;
 export async function GET(req: NextRequest) {
   const { errorResponse } = await requireAuth();
   if (errorResponse) return errorResponse;
+
   const url = new URL(req.url);
   const q = (url.searchParams.get('q') || '').trim().toLowerCase();
   const author = url.searchParams.get('author') || '';
@@ -20,15 +32,29 @@ export async function GET(req: NextRequest) {
   let rubrics = await getRubrics();
   if (author) rubrics = rubrics.filter(r => r.author === author);
   if (chapter) rubrics = rubrics.filter(r => r.path === chapter);
-  if (q) rubrics = rubrics.filter(r => (r.title + ' ' + (r.path || '') + ' ' + ((r.remedies || []).join(' '))).toLowerCase().includes(q));
+  if (q) {
+    rubrics = rubrics.filter(r =>
+      (r.title + ' ' + (r.path || '') + ' ' + ((r.remedies || []).join(' '))).toLowerCase().includes(q)
+    );
+  }
 
   const total = rubrics.length;
   const start = (page - 1) * pageSize;
-  const items = rubrics.slice(start, start + pageSize).map(r => {
-    const { byGrade, totalRemedies } = groupRemediesByGrade(r.remedies || [], r.author || '');
-    return { ...r, byGrade, remedyCount: totalRemedies };
+  const pageItems = rubrics.slice(start, start + pageSize);
+
+  // Add byGrade + remedyCount for display
+  const items = pageItems.map(r => {
+    const remedies = r.remedies || [];
+    const { byGrade, totalRemedies } = groupRemediesByGrade(remedies, r.author || '');
+    return {
+      ...r,
+      byGrade,
+      remedyCount: totalRemedies,
+    };
   });
 
-  return NextResponse.json({ total, page, pageSize, items },
-    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
+  return NextResponse.json(
+    { total, page, pageSize, items },
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } }
+  );
 }
