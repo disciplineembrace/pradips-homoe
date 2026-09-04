@@ -9,15 +9,17 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         {/* Hero section — with homeopathic background image + dark green overlay */}
-        <section
-          className="relative text-stone-100 py-20 px-4 border-b-2 border-amber-700/60 overflow-hidden"
-          style={{
-            backgroundImage: "url('/hero-bg.jpg')",
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center center",
-          }}
-        >
+        <section className="relative text-stone-100 py-20 px-4 border-b-2 border-amber-700/60 overflow-hidden">
+          {/* Background image layer */}
+          <Image
+            src="/hero-bg.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+            style={{ objectPosition: "center center" }}
+          />
           {/* Dark green overlay layer — pointer-events: none so buttons remain clickable */}
           <div
             className="absolute inset-0 pointer-events-none"
