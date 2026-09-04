@@ -7,3 +7,30 @@ worklog.md
 *.bak-*
 data/sources/
 data/remedies.json.bak-*
+
+# Large data files — Vercel build was failing due to 436MB data directory
+# These are loaded at runtime from the filesystem, not needed for build
+data/remedies.json
+data/remedies-by-id.json
+data/remedies-index.json
+data/rubrics.json
+data/boericke-repertory.json
+data/phatak-biochem-repertory.json
+data/synthesis_rubrics.json
+data/synthesis/
+data/kent-repertory-graded.json
+data/kent-remedies-fresh.json
+data/phatak-remedies-fresh.json
+data/boericke-source-remedies.json
+data/murphy-source-remedies.json
+data/sankaran-source-remedies.json
+data/allen-source-remedies.json
+data/boeger-source-remedies.json
+data/dubey-remedies.json
+data/single-rubrics*
+data/therapeutics.json
+data/predictive_chapters.json
+data/books/
+data/remedies_backup_*
+data/mm-*.json
+data/source_manifest.json
