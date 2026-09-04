@@ -8,9 +8,23 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-stone-50">
       <Navbar />
       <main className="flex-1">
-        {/* Hero section */}
-        <section className="relative bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950 text-stone-100 py-20 px-4 border-b-2 border-amber-700/60">
-          <div className="max-w-5xl mx-auto text-center">
+        {/* Hero section — with homeopathic background image + dark green overlay */}
+        <section
+          className="relative text-stone-100 py-20 px-4 border-b-2 border-amber-700/60 overflow-hidden"
+          style={{
+            backgroundImage: "url('/hero-bg.png')",
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center center",
+          }}
+        >
+          {/* Dark green overlay layer — pointer-events: none so buttons remain clickable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ backgroundColor: "rgba(5, 45, 30, 0.62)" }}
+          />
+          {/* Content layer — relative to sit above overlay */}
+          <div className="relative max-w-5xl mx-auto text-center">
             <div className="relative w-28 h-28 md:w-36 md:h-36 mx-auto mb-6 rounded-full overflow-hidden ring-4 ring-amber-700/50 shadow-2xl">
               <Image
                 src="/logo.png"
