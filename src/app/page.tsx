@@ -12,7 +12,7 @@ export default function Home() {
         <section
           className="relative text-stone-100 py-20 px-4 border-b-2 border-amber-700/60 overflow-hidden"
           style={{
-            backgroundImage: "url('/hero-bg.png')",
+            backgroundImage: "url('/hero-bg.jpg')",
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center center",
