@@ -2,6 +2,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
+import heroBg from '@/assets/hero-bg.jpg';
 
 export default function Home() {
   return (
@@ -10,9 +11,9 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero section — with homeopathic background image + dark green overlay */}
         <section className="relative text-stone-100 py-20 px-4 border-b-2 border-amber-700/60 overflow-hidden">
-          {/* Background image layer */}
+          {/* Background image layer — imported directly so Vercel bundles it */}
           <Image
-            src="/hero-bg.jpg"
+            src={heroBg}
             alt=""
             fill
             priority
