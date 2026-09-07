@@ -13,9 +13,3 @@ data/remedies_backup_*
 data/remedies-by-id.json
 data/remedies-index.json
 
-# Large synthesis tree — only needed for Synthesis repertory module
-# Can be regenerated from source PDF if needed
-data/synthesis/tree.json
-data/synthesis/cross_references.json
-data/synthesis/remedies_chunk_*.json
-
