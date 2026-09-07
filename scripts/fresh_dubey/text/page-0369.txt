@@ -1,0 +1,7 @@
+360 Text Book of MATERIA MEDIC,
+
+Relations :
+It is inimical to: Carbo veg,
+Follows well: Arsenic, Phosphorus and Sulphur.
+Antidoted by: Acon., Nux vorn.
+Followed well by; Sulph., Belt., Ars., Calc. carb., Lyco., Nit. ac., Rhus tox., Sepia.
