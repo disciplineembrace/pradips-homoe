@@ -57,6 +57,8 @@ export default function RepertoryPage() {
   const [searchResults, setSearchResults] = useState<KentEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalRubrics, setTotalRubrics] = useState(0);
+  const [crossRefHistory, setCrossRefHistory] = useState<KentEntry[]>([]);
+  const [crossRefStatus, setCrossRefStatus] = useState<'resolved' | 'ambiguous' | 'unresolved' | null>(null);
   const reader = useReaderFeatures();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
@@ -140,6 +142,100 @@ export default function RepertoryPage() {
       return next;
     });
   };
+
+  // Handle cross-reference click — resolve target and navigate
+  const handleCrossRefClick = useCallback((targetText: string) => {
+    if (!allKent.length) return;
+
+    // Prevent infinite loops — check if we're going in circles
+    const target = targetText.trim().toLowerCase();
+
+    // Strategy 1: Exact match (case-insensitive)
+    const exactMatches = allKent.filter(e =>
+      e.entryType !== 'cross_reference' &&
+      e.rubricText?.toLowerCase().trim() === target
+    );
+
+    if (exactMatches.length === 1) {
+      // Save current rubric to history for back navigation
+      if (selectedRubric) {
+        setCrossRefHistory(prev => [...prev, selectedRubric]);
+      }
+      // Switch to target's chapter if different
+      if (exactMatches[0].chapter !== selectedChapter) {
+        setSelectedChapter(exactMatches[0].chapter);
+        setExpandedNodes(new Set());
+      }
+      setSelectedRubric(exactMatches[0]);
+      setCrossRefStatus('resolved');
+      return;
+    }
+
+    // Strategy 2: Remove ", also X" suffix
+    if (target.includes(', also ')) {
+      const base = target.split(', also ')[0].trim();
+      const baseMatches = allKent.filter(e =>
+        e.entryType !== 'cross_reference' &&
+        e.rubricText?.toLowerCase().trim() === base
+      );
+      if (baseMatches.length === 1) {
+        if (selectedRubric) setCrossRefHistory(prev => [...prev, selectedRubric]);
+        if (baseMatches[0].chapter !== selectedChapter) {
+          setSelectedChapter(baseMatches[0].chapter);
+          setExpandedNodes(new Set());
+        }
+        setSelectedRubric(baseMatches[0]);
+        setCrossRefStatus('resolved');
+        return;
+      }
+    }
+
+    // Strategy 3: First comma-separated part
+    const firstPart = target.split(',')[0].trim();
+    const firstPartMatches = allKent.filter(e =>
+      e.entryType !== 'cross_reference' &&
+      e.rubricText?.toLowerCase().trim() === firstPart
+    );
+    if (firstPartMatches.length === 1) {
+      if (selectedRubric) setCrossRefHistory(prev => [...prev, selectedRubric]);
+      if (firstPartMatches[0].chapter !== selectedChapter) {
+        setSelectedChapter(firstPartMatches[0].chapter);
+        setExpandedNodes(new Set());
+      }
+      setSelectedRubric(firstPartMatches[0]);
+      setCrossRefStatus('resolved');
+      return;
+    }
+
+    // Strategy 4: Search for rubrics containing the target text
+    const partialMatches = allKent.filter(e =>
+      e.entryType !== 'cross_reference' &&
+      e.rubricText?.toLowerCase().includes(target)
+    );
+
+    if (partialMatches.length === 1) {
+      if (selectedRubric) setCrossRefHistory(prev => [...prev, selectedRubric]);
+      if (partialMatches[0].chapter !== selectedChapter) {
+        setSelectedChapter(partialMatches[0].chapter);
+        setExpandedNodes(new Set());
+      }
+      setSelectedRubric(partialMatches[0]);
+      setCrossRefStatus('resolved');
+      return;
+    }
+
+    if (partialMatches.length > 1) {
+      // Ambiguous — fall back to search
+      setCrossRefStatus('ambiguous');
+      setSearchQuery(targetText);
+      setSearchResults(partialMatches.slice(0, 50));
+      setSelectedRubric(null);
+      return;
+    }
+
+    // Unresolved
+    setCrossRefStatus('unresolved');
+  }, [allKent, selectedRubric, selectedChapter]);
 
   const toggleSave = (id: string, title: string) => {
     reader.toggleFavorite({ id, type: 'rubric', title, href: `/repertory`, author: 'Kent' });
@@ -311,11 +407,40 @@ export default function RepertoryPage() {
                 </div>
               </div>
 
-              {/* Cross-reference */}
+              {/* Cross-reference — CLICKABLE */}
               {selectedRubric.crossReference && (
                 <div className="px-4 py-3 border-b border-[#DEDACF]">
                   <div className="text-xs font-semibold text-[#7C8F6E] uppercase tracking-wider mb-1">Cross Reference</div>
-                  <div className="text-sm text-[#124C3B]">See → {selectedRubric.crossReference}</div>
+                  <button
+                    onClick={() => handleCrossRefClick(selectedRubric.crossReference!)}
+                    className="inline-flex items-center gap-1.5 text-sm text-[#124C3B] hover:text-[#0B392D] underline decoration-[#C49A3A]/50 hover:decoration-[#C49A3A] transition-colors cursor-pointer"
+                  >
+                    <span className="text-[#7C8F6E]">See →</span>
+                    <span className="font-medium">{selectedRubric.crossReference}</span>
+                  </button>
+                  {crossRefStatus === 'unresolved' && selectedRubric.crossReference && (
+                    <div className="text-xs text-amber-600 mt-1">⚠ Target not found in Kent database — may need manual resolution</div>
+                  )}
+                  {crossRefStatus === 'ambiguous' && (
+                    <div className="text-xs text-amber-600 mt-1">⚠ Multiple possible targets — clicking will search</div>
+                  )}
+                </div>
+              )}
+
+              {/* Back navigation if navigated from cross-reference */}
+              {crossRefHistory.length > 0 && (
+                <div className="px-4 py-2 border-b border-[#DEDACF] bg-[#FBFAF6]">
+                  <button
+                    onClick={() => {
+                      const prev = crossRefHistory[crossRefHistory.length - 1];
+                      setCrossRefHistory(crossRefHistory.slice(0, -1));
+                      setSelectedRubric(prev);
+                      setCrossRefStatus('resolved');
+                    }}
+                    className="text-xs text-[#124C3B] hover:text-[#0B392D] font-medium"
+                  >
+                    ← Back to {prev?.rubricText || 'previous rubric'}
+                  </button>
                 </div>
               )}
 
