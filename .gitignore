@@ -13,3 +13,6 @@ data/remedies_backup_*
 data/remedies-by-id.json
 data/remedies-index.json
 
+download/*.apk
+download/*.aab
+.vercel/
