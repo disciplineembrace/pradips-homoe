@@ -11,6 +11,7 @@ type Remedy = {
   chapter?: string; organ?: string; modalities?: string;
   constitution?: string; relationships?: string; dose?: string;
   keynote?: string; full?: string; letter?: string;
+  intro?: string; sections?: { title: string; content: string }[];
 };
 
 export default function RemedyDetailPage() {
@@ -75,6 +76,8 @@ export default function RemedyDetailPage() {
         keynote: d.keynote || '',
         full: d.full || '',
         letter: d.letter || '',
+        intro: d.intro || '',
+        sections: Array.isArray(d.sections) ? d.sections : [],
       };
       setRemedy(safeRemedy);
       setLoading(false);
@@ -131,12 +134,12 @@ export default function RemedyDetailPage() {
 
   const handleDeleteNote = (noteId: string) => {
     reader.removeNote(noteId);
-    setNotesList(reader.getNotes(remedy.id));
+    if (remedy) setNotesList(reader.getNotes(remedy.id));
   };
 
   const handleCopy = async () => {
     if (!remedy) return;
-    const textToCopy = `${remedy.name}\n${remedy.common || ''}\n\n${remedy.full || remedy.keynote || ''}`;
+    const textToCopy = `${remedy.name}\n${remedy.common || ''}\n\n${remedy.intro || ''}\n\n${(remedy.sections || []).map(s => `${s.title}: ${s.content}`).join('\n\n')}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
       setCopyStatus('✓ Copied!');
@@ -247,7 +250,19 @@ export default function RemedyDetailPage() {
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
       <p>{error}</p>
-      <Link href="/dashboard" className="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded">← Back to Dashboard</Link>
+      <button
+        type="button"
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back();
+          } else {
+            router.push('/materia-medica');
+          }
+        }}
+        className="flex items-center gap-1.5 min-h-[44px] px-4 py-2 rounded-md bg-amber-700 hover:bg-amber-600 text-white font-semibold text-sm"
+      >
+        ← Back
+      </button>
     </div>
   );
   if (!remedy) return null;
@@ -256,11 +271,33 @@ export default function RemedyDetailPage() {
   return (
     <ErrorBoundary>
     <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded">← Back</Link>
-          <h1 className="font-serif italic text-amber-200 tracking-wide">Pradip&apos;s Homoe</h1>
-          <span className="text-xs text-stone-400">{remedy.author}</span>
+      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-20 shadow border-b-2 border-amber-700/60">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          {/* BACK BUTTON — fixed visibility, mobile touch target ≥44px, proper navigation
+              - Uses router.back() for history-aware nav (preserves search/scroll state)
+              - Falls back to /materia-medica if no history (safe fallback)
+              - min-h-[44px] ensures mobile touch target compliance
+              - bg-emerald-800 + border for visibility on dark-green header
+              - icon + text both inside the same button (single click area) */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push('/materia-medica');
+              }
+            }}
+            aria-label="Go back"
+            className="flex items-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 rounded-md bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-900 border border-emerald-600 text-amber-100 font-semibold text-sm transition-colors touch-manipulation select-none"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>Back</span>
+          </button>
+          <h1 className="font-serif italic text-amber-200 tracking-wide text-sm sm:text-base truncate flex-1 text-center">Pradip&apos;s Homoe</h1>
+          <span className="text-xs text-stone-400 flex-shrink-0">{remedy.author}</span>
         </div>
       </header>
 
@@ -385,45 +422,118 @@ export default function RemedyDetailPage() {
             </div>
           )}
 
-          {remedy.keynote && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Keynote</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
-            </section>
+          {/* ===================================================
+              SOURCE-STRUCTURED CONTENT (v2 — no artificial duplication)
+
+              Renders:
+                1. Intro paragraph(s) — from source, NOT a "Keynote" wrapper
+                2. Source sections[] — each with title in RED+BOLD + content
+                3. Modalities / Relationships / Dose — ONLY if separately
+                   populated (these come from the parser when the source has
+                   them as standalone sections)
+
+              DOES NOT render:
+                - An artificial "Keynote" section that duplicates intro
+                - An artificial "Full Description" wrapper heading
+                - The `keynote` field if it duplicates `intro` or `full`
+          =================================================== */}
+
+          {/* INTRO — source introduction paragraph(s), no wrapper heading */}
+          {remedy.intro && remedy.intro.trim() && (
+            <div className="mb-6">
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed mb-2 text-[0.95rem]">
+                {renderInline(remedy.intro)}
+              </p>
+            </div>
           )}
 
-          {remedy.constitution && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Constitution</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
-            </section>
+          {/* SOURCE SECTIONS — each title RED+BOLD, content normal */}
+          {remedy.sections && remedy.sections.length > 0 && (
+            <div className="mb-6 space-y-3">
+              {remedy.sections.map((sec, idx) => (
+                <div key={idx}>
+                  <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                    {sec.title}
+                  </h4>
+                  <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                    {renderInline(sec.content)}
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
 
-          {remedy.full && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Full Description</h2>
+          {/* FALLBACK — if no structured sections, render `full` via block formatter.
+              This handles older authors whose parser hasn't been upgraded to v2 yet. */}
+          {(!remedy.sections || remedy.sections.length === 0) && remedy.full && (
+            <div className="mb-6">
               {renderBlocks(blocks)}
+            </div>
+          )}
+
+          {/* LEGACY KEYNOTE — ONLY render if it does NOT duplicate intro or full.
+              This guards against the old parser's `keynote = first_para[:500]` bug. */}
+          {remedy.keynote && remedy.keynote.trim() &&
+           remedy.keynote.trim() !== (remedy.intro || '').trim() &&
+           !(remedy.full && remedy.keynote.trim() === remedy.full.trim().slice(0, remedy.keynote.trim().length)) && (
+            <section className="mb-6">
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Keynote
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.keynote)}
+              </p>
             </section>
           )}
 
-          {remedy.modalities && remedy.modalities.trim() && (
+          {/* CONSTITUTION — only if populated (rare author-specific field) */}
+          {remedy.constitution && remedy.constitution.trim() && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Modalities</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Constitution
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.constitution)}
+              </p>
             </section>
           )}
 
-          {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' && (
+          {/* MODALITIES — only if separately populated (not already in sections[]) */}
+          {remedy.modalities && remedy.modalities.trim() &&
+           !(remedy.sections || []).some(s => s.title === 'Modalities') && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Relationships</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Modalities
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.modalities)}
+              </p>
             </section>
           )}
 
-          {remedy.dose && (
+          {/* RELATIONSHIPS — only if separately populated */}
+          {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' &&
+           !(remedy.sections || []).some(s => s.title === 'Relationship' || s.title === 'Relationships') && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Dose</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.dose}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Relationships
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.relationships)}
+              </p>
+            </section>
+          )}
+
+          {/* DOSE — only if separately populated (not already in sections[]) */}
+          {remedy.dose && remedy.dose.trim() &&
+           !(remedy.sections || []).some(s => s.title === 'Dose') && (
+            <section className="mb-6">
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Dose
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.dose)}
+              </p>
             </section>
           )}
         </div>

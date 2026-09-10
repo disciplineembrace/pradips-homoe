@@ -63,12 +63,25 @@ export interface RemediesListItem {
   keynote?: string; // truncated to 200 chars
 }
 
+export interface RemedySection {
+  title: string;
+  content: string;
+}
+
 export interface RemedyRecord extends RemediesListItem {
   modalities?: string;
   constitution?: string;
   relationships?: string;
   dose?: string;
   full?: string;
+  /** Source-preserved introduction paragraph(s) — populated by v2 parser */
+  intro?: string;
+  /** Source-preserved structured sections (Head, Stomach, etc.) — v2 parser */
+  sections?: RemedySection[];
+  /** Source book ID (for traceability) */
+  source_book?: string;
+  /** Source page numbers (for traceability) */
+  source_pages?: number[];
 }
 
 // ============================================================
