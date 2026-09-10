@@ -15,6 +15,9 @@ data/remedies-index.json
 
 # Local backups (preserved on disk for recovery, not in git)
 data/remedies.json.backup-*
+data/*_backup_*.json
+data/*_pre_*.json
+data/kent_backup_*.json
 
 # APK files — served via GitHub Releases, not bundled in Vercel deploy
 download/*.apk
