@@ -16,3 +16,6 @@ data/remedies-index.json
 download/*.apk
 download/*.aab
 .vercel/
+data/*_backup_*.json
+data/*_pre_*.json
+data/kent_backup_*.json
