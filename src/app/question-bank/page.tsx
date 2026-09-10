@@ -16,7 +16,7 @@ import { Footer } from '@/components/layout/Footer';
  *   - Daily limit reached → upgrade CTA
  *   - Question + option shuffling
  */
-type Phase = 'setup' | 'quiz' | 'results' | 'limit_reached';
+type Phase = 'setup' | 'quiz' | 'results' | 'limit_reached' | 'ai_generator';
 
 interface QuestionOption { id: string; text: string; isCorrect: boolean; }
 interface ClientQuestion {
@@ -360,6 +360,16 @@ export default function QuestionBankPage() {
               className="w-full bg-[#173B2D] hover:bg-[#2a5443] text-[#F5EFE0] font-semibold py-3 rounded uppercase tracking-wider text-sm disabled:opacity-50">
               {loading ? '⏳ Generating...' : `🚀 Start Quiz (${count} questions)`}
             </button>
+
+            {/* AI Source-Based Generator — admin/staff only */}
+            {session?.role === 'admin' || session?.role === 'staff' ? (
+              <button
+                onClick={() => setPhase('ai_generator')}
+                className="w-full mt-2 bg-[#C8A24A] hover:bg-[#d4b560] text-[#173B2D] font-semibold py-3 rounded uppercase tracking-wider text-sm"
+              >
+                🤖 AI Source-Based Generator
+              </button>
+            ) : null}
           </div>
 
           <div className="mt-4 text-center">
@@ -369,6 +379,13 @@ export default function QuestionBankPage() {
         <Footer />
       </div>
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE: AI GENERATOR (admin/staff only)
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (phase === 'ai_generator') {
+    return <AIGeneratorPanel session={session} onBack={() => setPhase('setup')} />;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -619,6 +636,201 @@ export default function QuestionBankPage() {
             🏠 Dashboard
           </Link>
         </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// ============================================================
+// AI Source-Based Question Generator Panel
+// Admin/staff can paste source text and generate exam-quality MCQs
+// ============================================================
+function AIGeneratorPanel({ session, onBack }: { session: any; onBack: () => void }) {
+  const [sourceText, setSourceText] = useState('');
+  const [sourceName, setSourceName] = useState('');
+  const [count, setCount] = useState(10);
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'expert' | 'mixed'>('mixed');
+  const [questionTypes, setQuestionTypes] = useState('any');
+  const [examStyle, setExamStyle] = useState('AIAPGET');
+  const [generating, setGenerating] = useState(false);
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [error, setError] = useState('');
+
+  async function handleGenerate() {
+    if (!sourceText || sourceText.length < 50) {
+      setError('Source text must be at least 50 characters');
+      return;
+    }
+    setGenerating(true);
+    setError('');
+    setGeneratedQuestions([]);
+    setStats(null);
+
+    try {
+      const res = await fetch('/api/question-bank/ai-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceText, sourceName: sourceName || 'Untitled Source',
+          count, difficulty, questionTypes, examStyle,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.message || data.error);
+      } else {
+        setGeneratedQuestions(data.questions || []);
+        setStats(data.stats || null);
+      }
+    } catch (err: any) {
+      setError(`Network error: ${err.message}`);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function loadFromRemedy() {
+    // Quick-load sample from existing remedies
+    fetch('/api/remedies?pageSize=1')
+      .then(r => r.json())
+      .then(d => {
+        if (d.items?.[0]) {
+          const r = d.items[0];
+          setSourceName(`${r.name} (${r.author})`);
+          setSourceText(`Remedy: ${r.name}\nAuthor: ${r.author}\nKeynote: ${r.keynote || ''}\n\nThis is a homeopathic remedy from ${r.author}'s Materia Medica. The remedy ${r.name} has characteristic symptoms that can be tested in competitive examinations.`);
+        }
+      })
+      .catch(() => {});
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F5EFE0]">
+      <Navbar />
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-6 w-full">
+        <header className="mb-6">
+          <div className="flex items-center gap-3 mb-1">
+            <button onClick={onBack} className="text-sm bg-white border border-[#E8DCC3] rounded px-3 py-1 text-[#173B2D] hover:bg-[#F5EFE0]">← Back</button>
+            <h1 className="font-serif text-2xl text-[#173B2D]">🤖 AI Source-Based Generator</h1>
+          </div>
+          <p className="text-xs text-[#7C8F6E]">Paste source text → generate exam-quality MCQs grounded in the source</p>
+          <div className="w-16 h-0.5 bg-[#C8A24A] mt-2"></div>
+        </header>
+
+        {/* Source Input */}
+        <div className="bg-white rounded-lg shadow p-5 mb-4 border border-[#E8DCC3]">
+          <label className="block text-xs font-semibold text-[#173B2D] uppercase tracking-wider mb-2">Source Material</label>
+          <input
+            type="text"
+            placeholder="Source name (e.g., 'Boericke MM - Sulphur')"
+            value={sourceName}
+            onChange={e => setSourceName(e.target.value)}
+            className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm mb-3 text-[#173B2D]"
+          />
+          <textarea
+            placeholder="Paste source text here (textbook chapter, remedy content, notes, etc.)..."
+            value={sourceText}
+            onChange={e => setSourceText(e.target.value)}
+            rows={8}
+            className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm font-mono text-[#173B2D] resize-y"
+          />
+          <button onClick={loadFromRemedy} className="mt-2 text-xs text-[#7C8F6E] hover:text-[#173B2D] underline">
+            ↳ Load sample from existing remedy
+          </button>
+        </div>
+
+        {/* Generation Config */}
+        <div className="bg-white rounded-lg shadow p-5 mb-4 border border-[#E8DCC3]">
+          <label className="block text-xs font-semibold text-[#173B2D] uppercase tracking-wider mb-3">Generation Settings</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label className="text-xs text-[#7C8F6E] block mb-1">Count</label>
+              <input type="number" min={1} max={50} value={count} onChange={e => setCount(Math.min(50, Math.max(1, parseInt(e.target.value) || 10)))} className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]" />
+            </div>
+            <div>
+              <label className="text-xs text-[#7C8F6E] block mb-1">Difficulty</label>
+              <select value={difficulty} onChange={e => setDifficulty(e.target.value as any)} className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]">
+                <option value="mixed">Mixed (1-5)</option>
+                <option value="easy">Easy (1-2)</option>
+                <option value="medium">Medium (2-3)</option>
+                <option value="hard">Hard (3-4)</option>
+                <option value="expert">Expert (4-5)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-[#7C8F6E] block mb-1">Question Types</label>
+              <select value={questionTypes} onChange={e => setQuestionTypes(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]">
+                <option value="any">Any Type</option>
+                <option value="single">Direct/Factual</option>
+                <option value="except">EXCEPT/NOT</option>
+                <option value="assertion_reason">Assertion-Reason</option>
+                <option value="statement_based">Statement-based</option>
+                <option value="clinical_based">Clinical vignette</option>
+                <option value="concept_based">Concept-based</option>
+                <option value="true_false">True/False</option>
+                <option value="match">Match List</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-[#7C8F6E] block mb-1">Exam Style</label>
+              <input type="text" value={examStyle} onChange={e => setExamStyle(e.target.value)} placeholder="AIAPGET" className="w-full px-3 py-2 border border-[#E8DCC3] rounded text-sm text-[#173B2D]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Generate Button */}
+        <button
+          onClick={handleGenerate}
+          disabled={generating || !sourceText}
+          className="w-full bg-[#173B2D] hover:bg-[#2a5443] text-[#F5EFE0] font-semibold py-3 rounded uppercase tracking-wider text-sm disabled:opacity-50 mb-4"
+        >
+          {generating ? '⏳ Generating questions...' : `🤖 Generate ${count} Questions`}
+        </button>
+
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {/* Stats */}
+        {stats && (
+          <div className="bg-white rounded-lg shadow p-4 mb-4 border border-[#E8DCC3]">
+            <div className="grid grid-cols-4 gap-3 text-center">
+              <div><div className="text-xl font-bold text-[#173B2D]">{stats.requested}</div><div className="text-xs text-[#7C8F6E]">Requested</div></div>
+              <div><div className="text-xl font-bold text-emerald-700">{stats.generated}</div><div className="text-xs text-[#7C8F6E]">Generated</div></div>
+              <div><div className="text-xl font-bold text-red-700">{stats.rejected}</div><div className="text-xs text-[#7C8F6E]">Rejected</div></div>
+              <div><div className="text-xl font-bold text-amber-700">{stats.avgSourceSupport}%</div><div className="text-xs text-[#7C8F6E]">Avg Support</div></div>
+            </div>
+          </div>
+        )}
+
+        {/* Generated Questions Preview */}
+        {generatedQuestions.length > 0 && (
+          <div className="space-y-3 mb-4">
+            <h3 className="font-serif text-lg text-[#173B2D]">Generated Draft Questions ({generatedQuestions.length})</h3>
+            {generatedQuestions.map((q, i) => (
+              <div key={q.id || i} className="bg-white rounded-lg shadow border border-[#E8DCC3] p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#C8A24A]">{q.type} · {q.difficulty}</span>
+                  <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">DRAFT</span>
+                </div>
+                <p className="text-sm text-[#173B2D] font-medium mb-3">Q{i+1}. {q.question}</p>
+                <div className="grid grid-cols-1 gap-1 mb-3">
+                  {q.options?.map((opt: any) => (
+                    <div key={opt.id} className={`text-xs px-2 py-1.5 rounded ${opt.isCorrect ? 'bg-emerald-50 border border-emerald-300 text-emerald-800 font-semibold' : 'bg-stone-50 border border-stone-200 text-stone-600'}`}>
+                      {opt.id}. {opt.text} {opt.isCorrect && '✓'}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-[#7C8F6E] italic">{q.explanation}</p>
+                <p className="text-xs text-[#7C8F6E] mt-1">Source: {q.sourceReference}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
       <Footer />
     </div>

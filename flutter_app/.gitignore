@@ -1,0 +1,48 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Android
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/**/GeneratedPluginRegistrant.java
+android/key.properties
+**/android/**/gradle-wrapper.jar
+
+# iOS (not used but ignored just in case)
+ios/Pods/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Generated code
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Secrets — NEVER commit
+.env
+.env.local
+.env.production
+*.keystore
+*.jks
+google-services.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+**/*.g.dart

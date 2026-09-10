@@ -7,3 +7,9 @@ worklog.md
 *.bak-*
 data/sources/
 data/remedies.json.bak-*
+data/remedies_backup_*
+
+# Derived indexes — rebuilt at runtime from remedies.json, not needed in git
+data/remedies-by-id.json
+data/remedies-index.json
+

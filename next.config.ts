@@ -2,23 +2,26 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Exclude large source PDFs from the standalone build output.
-  // They are dev-only inputs for OCR pipelines, NOT runtime assets.
+  // Exclude only dev-only / source PDF files from build trace.
+  // Runtime data files (remedies.json, rubrics.json, etc.) MUST be included
+  // so Vercel can serve them at runtime.
   outputFileTracingExcludes: {
     '*': [
       './data/sources/**/*',
       './data/remedies.json.bak-*',
-      './data/remedies-by-id.json',
+      './data/remedies_backup_*',
       './scripts/**/*',
       './upload/**/*',
       './tool-results/**/*',
       './skills/**/*',
     ],
+  },
+  images: {
+    unoptimized: true,
   },
 };
 
