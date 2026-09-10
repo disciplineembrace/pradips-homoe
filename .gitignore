@@ -13,3 +13,11 @@ data/remedies_backup_*
 data/remedies-by-id.json
 data/remedies-index.json
 
+# Local backups (preserved on disk for recovery, not in git)
+data/remedies.json.backup-*
+
+# Vercel CLI local config
+.vercel
+
+# Dev server log
+dev.log
