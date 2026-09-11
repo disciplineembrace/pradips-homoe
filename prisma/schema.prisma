@@ -26,9 +26,10 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  loginLogs LoginLog[]
-  pinLogs   PinLog[]
-  auditLogs AuditLog[]
+  loginLogs      LoginLog[]
+  pinLogs        PinLog[]
+  auditLogs      AuditLog[]
+  webAuthnCreds  WebAuthnCredential[]
 
   @@index([email])
   @@index([role])
@@ -83,4 +84,23 @@ model AuditLog {
   @@index([targetId])
   @@index([action])
   @@index([createdAt])
+}
+
+/// WebAuthn (biometric) credentials for admin login.
+/// Used by /api/auth/webauthn/* routes.
+model WebAuthnCredential {
+  id            String   @id @default(cuid())
+  userId        String                            // owner (admin) of this credential
+  credentialId  String   @unique                  // base64url-encoded credential ID
+  publicKey     String                             // base64url-encoded public key (COSE)
+  counter       Int      @default(0)              // signature counter for replay protection
+  transports    String?                           // JSON array of transports (usb, nfc, etc.)
+  deviceType    String?                           // browser/platform info (e.g., "Chrome on macOS")
+  createdAt     DateTime @default(now())
+  lastUsedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([credentialId])
 }

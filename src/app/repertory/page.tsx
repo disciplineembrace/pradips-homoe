@@ -432,14 +432,14 @@ export default function RepertoryPage() {
                 <div className="px-4 py-2 border-b border-[#DEDACF] bg-[#FBFAF6]">
                   <button
                     onClick={() => {
-                      const prev = crossRefHistory[crossRefHistory.length - 1];
+                      const prevRubric = crossRefHistory[crossRefHistory.length - 1];
                       setCrossRefHistory(crossRefHistory.slice(0, -1));
-                      setSelectedRubric(prev);
+                      setSelectedRubric(prevRubric);
                       setCrossRefStatus('resolved');
                     }}
                     className="text-xs text-[#124C3B] hover:text-[#0B392D] font-medium"
                   >
-                    ← Back to {prev?.rubricText || 'previous rubric'}
+                    ← Back to {crossRefHistory[crossRefHistory.length - 1]?.rubricText || 'previous rubric'}
                   </button>
                 </div>
               )}

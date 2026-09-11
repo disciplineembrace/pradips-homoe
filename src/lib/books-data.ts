@@ -38,7 +38,7 @@ export async function getBook(id: string): Promise<any> {
 export async function getAllBooks(): Promise<any[]> {
   // List of available book IDs (add more as they're added to /data/books/)
   const bookIds = ['farokh-master'];
-  const books = [];
+  const books: any[] = [];
   for (const id of bookIds) {
     const book = await getBook(id);
     if (book) {

@@ -436,7 +436,7 @@ export function RemedyReader({
   const showConstitution = hasContent(remedy.constitution) && !isDuplicateOf(remedy.keynote, remedy.constitution);
   const showFull = hasContent(remedy.full) && !isDuplicateOf(remedy.keynote, remedy.full);
   const showModalities = hasContent(remedy.modalities);
-  const showRelationships = hasContent(remedy.relationships) && remedy.relationships.trim() !== '—';
+  const showRelationships = hasContent(remedy.relationships) && (remedy.relationships || '').trim() !== '—';
   const showDose = hasContent(remedy.dose);
 
   function handleNoteSubmit() {

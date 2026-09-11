@@ -29,3 +29,10 @@ download/*.aab
 
 # Dev server log
 dev.log
+
+# Environment files (secrets — never commit)
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
