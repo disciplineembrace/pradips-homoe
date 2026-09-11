@@ -227,12 +227,13 @@ def parse_boger(text):
     """Parse Boger's Synoptic Key."""
     lines = text.split('\n')
 
-    # Find "Materia medica" section start
+    # Find "Materia medica" section start — must be the LAST occurrence
+    # (the first is in the Table of Contents)
     start_idx = 0
     for i, line in enumerate(lines):
-        if line.strip().lower() == 'materia medica':
-            start_idx = i + 1
-            break
+        if line.strip() == 'Materia medica':
+            start_idx = i + 1  # keep searching to find the last one
+    # start_idx is now the line AFTER the last "Materia medica"
 
     # Remedy names are Title Case, single or multi-word, no punctuation
     REMEDY_TITLE = re.compile(r'^([A-Z][a-z]+(?:\s+[a-z]+)?(?:\s+[a-z]+)?)\s*$')
@@ -303,49 +304,61 @@ def parse_boger(text):
             continue
 
         ln = line.rstrip()
-        if not ln.strip():
+        stripped = ln.strip()
+        if not stripped:
             continue
 
-        # Check for remedy title (Title Case, no punctuation, standalone)
-        # Must be at start of line, no leading spaces
-        m = REMEDY_TITLE.match(ln.strip())
+        # CHECK 1: Is this line a known section heading?
+        # (must check BEFORE remedy title — "Region" is Title Case and
+        # would otherwise be matched as a remedy name)
+        if stripped in BOGER_SECTIONS:
+            if started and current_name:
+                current_section = {'title': stripped, 'parts': []}
+                current_sections.append(current_section)
+            continue
+
+        # CHECK 2: Is this a remedy title?
+        # Must be Title Case, NOT a known section name, AND the next
+        # non-empty line must be either:
+        # - "Region" (Boger's universal first section), OR
+        # - ALL CAPS (alternate/short name like "ACONITE"), OR
+        # - another known Boger section (Worse, Better, Description, etc.)
+        m = REMEDY_TITLE.match(stripped)
         if m and not any(c.isdigit() for c in m.group(1)):
             title = m.group(1).strip()
             # Must start with uppercase, contain only letters/spaces
             if title[0].isupper() and re.match(r'^[A-Z][a-z]+(?:\s+[a-z]+)?$', title):
-                # Skip if this is actually a section name we know
-                if title not in BOGER_SECTIONS and len(title) >= 3:
-                    # Check if next non-empty line is a known section
-                    next_section_found = False
-                    for j in range(i+1, min(i+10, len(lines))):
-                        next_ln = lines[j].strip()
-                        if next_ln in BOGER_SECTIONS:
-                            next_section_found = True
-                            break
-                        if next_ln and next_ln not in BOGER_SECTIONS:
-                            break
-                    if next_section_found:
-                        if not started:
-                            started = True
-                        save_current()
-                        current_name = title
+                # Skip known section names
+                if title in BOGER_SECTIONS or len(title) < 3:
+                    continue
+                # Check if next non-empty line indicates a remedy start
+                next_is_remedy_start = False
+                for j in range(i+1, min(i+10, len(lines))):
+                    next_ln = lines[j].strip()
+                    if not next_ln:
                         continue
+                    # Acceptable next lines: "Region" (most common section),
+                    # ALL CAPS alternate name (e.g., "ACONITE" or "ACTEA SPICATA"),
+                    # or another known Boger section
+                    if (next_ln == 'Region' or
+                        next_ln in BOGER_SECTIONS or
+                        (next_ln.isupper() and len(next_ln) >= 3 and
+                         all(w.isalpha() for w in next_ln.split()))):
+                        next_is_remedy_start = True
+                    break
+                if next_is_remedy_start:
+                    if not started:
+                        started = True
+                    save_current()
+                    current_name = title
+                    continue
 
         if not started or not current_name:
             continue
 
-        # Check if line is a section heading
-        if ln.strip() in BOGER_SECTIONS:
-            current_section = {'title': ln.strip(), 'parts': []}
-            current_sections.append(current_section)
-            continue
-
-        # Plain text
-        if current_section is None:
-            # Skip — Boger doesn't have intro between name and first section
-            continue
-        else:
-            current_section['parts'].append(ln.strip())
+        # Plain text — append to current section
+        if current_section is not None:
+            current_section['parts'].append(stripped)
 
     save_current()
     return remedies
