@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { useReaderFeatures, HIGHLIGHT_COLORS } from '@/hooks/use-reader-features';
 
 const SETTINGS_KEY = 'ph_settings';
 
@@ -371,6 +371,56 @@ export default function SettingsPage() {
               </div>
               <span className="text-[#6E2A3A] font-semibold text-sm">Clear →</span>
             </button>
+          </div>
+        </section>
+
+        {/* Highlight Settings — choose default highlight color */}
+        <section className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="font-serif text-xl text-[#173B2D] mb-1">Highlight Settings</h2>
+          <p className="text-xs text-[#7C8F6E] mb-5">
+            Choose the default color used when highlighting text in Materia Medica remedies.
+            Existing highlights keep their original color until you change them individually.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#173B2D] mb-3">
+                Default Highlight Color
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {HIGHLIGHT_COLORS.map(color => (
+                  <button
+                    key={color.id}
+                    onClick={() => reader.setHighlightColor(color.id)}
+                    className={`flex flex-col items-center gap-1.5 p-3 border-2 rounded-lg transition-all min-w-[80px] ${
+                      reader.highlightColor === color.id
+                        ? 'border-[#173B2D] bg-[#F5EFE0] shadow'
+                        : 'border-[#E8DCC3] hover:border-[#173B2D]/50'
+                    }`}
+                    aria-label={`Set default highlight color to ${color.name}`}
+                    aria-pressed={reader.highlightColor === color.id}
+                  >
+                    <span
+                      className="inline-block w-8 h-8 rounded border border-stone-400"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                    <span className="text-xs font-medium text-[#173B2D]">{color.name}</span>
+                    {reader.highlightColor === color.id && (
+                      <span className="text-[10px] text-[#173B2D] font-semibold">✓ Selected</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-[#F5EFE0] rounded-lg p-4 border border-[#E8DCC3]">
+              <p className="text-xs text-[#7C8F6E] leading-relaxed">
+                <strong className="text-[#173B2D]">How to use:</strong> When reading a Materia Medica
+                remedy, select any text with your mouse or by long-pressing on mobile. A small toolbar
+                will appear with <em>Copy</em> and <em>Highlight</em> options. The Highlight button uses
+                the color selected above. To change or remove an existing highlight, simply tap on it.
+              </p>
+            </div>
           </div>
         </section>
 

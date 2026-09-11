@@ -1,10 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { TextSelectionToolbar } from '@/components/TextSelectionToolbar';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
@@ -29,6 +30,7 @@ export default function RemedyDetailPage() {
 
   // --- Reader features (must be before any early return) ---
   const reader = useReaderFeatures();
+  const articleRef = useRef<HTMLElement>(null);
   const [isFav, setIsFav] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -301,7 +303,7 @@ export default function RemedyDetailPage() {
         </div>
       </header>
 
-      <article className="max-w-4xl mx-auto px-4 py-6">
+      <article ref={articleRef} className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
           {/* REMEDY MAIN TITLE — RED + BOLD per spec */}
           <div className="border-b border-stone-200 pb-4 mb-6">
@@ -538,6 +540,15 @@ export default function RemedyDetailPage() {
           )}
         </div>
       </article>
+
+      {/* TEXT SELECTION TOOLBAR — contextual Copy/Highlight on selected text */}
+      {remedy && (
+        <TextSelectionToolbar
+          containerRef={articleRef}
+          itemId={remedy.id}
+          itemType="remedy"
+        />
+      )}
     </div>
     </ErrorBoundary>
   );

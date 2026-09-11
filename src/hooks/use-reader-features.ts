@@ -12,6 +12,18 @@ const FAVORITES_KEY = `${KEY_PREFIX}favorites`;
 const NOTES_KEY = `${KEY_PREFIX}notes`;
 const HISTORY_KEY = `${KEY_PREFIX}history`;
 const HIGHLIGHTS_KEY = `${KEY_PREFIX}highlights`;
+const HIGHLIGHT_COLOR_KEY = `${KEY_PREFIX}highlight_color`;
+
+// Available highlight colors — accessible, readable combinations
+export const HIGHLIGHT_COLORS = [
+  { id: 'yellow', name: 'Yellow', className: 'bg-yellow-200 text-stone-900', hex: '#fef08a' },
+  { id: 'green',  name: 'Green',  className: 'bg-green-200 text-stone-900',  hex: '#bbf7d0' },
+  { id: 'blue',   name: 'Blue',   className: 'bg-blue-200 text-stone-900',   hex: '#bfdbfe' },
+  { id: 'pink',   name: 'Pink',   className: 'bg-pink-200 text-stone-900',   hex: '#fbcfe8' },
+  { id: 'orange', name: 'Orange', className: 'bg-orange-200 text-stone-900', hex: '#fed7aa' },
+] as const;
+
+export const DEFAULT_HIGHLIGHT_COLOR = 'yellow';
 
 export type Bookmark = {
   id: string;        // unique id of item (e.g. remedy id, chapter id)
@@ -219,6 +231,31 @@ export function useReaderFeatures() {
     });
   }, []);
 
+  // --- Highlight color preference ---
+  const [highlightColor, setHighlightColorState] = useState<string>(DEFAULT_HIGHLIGHT_COLOR);
+
+  useEffect(() => {
+    setHighlightColorState(readJson<string>(HIGHLIGHT_COLOR_KEY, DEFAULT_HIGHLIGHT_COLOR));
+    const handler = (e: StorageEvent) => {
+      if (e.key === HIGHLIGHT_COLOR_KEY) setHighlightColorState(readJson<string>(HIGHLIGHT_COLOR_KEY, DEFAULT_HIGHLIGHT_COLOR));
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
+  const setHighlightColor = useCallback((color: string) => {
+    setHighlightColorState(color);
+    writeJson(HIGHLIGHT_COLOR_KEY, color);
+  }, []);
+
+  const updateHighlightColor = useCallback((id: string, color: string) => {
+    setHighlights(prev => {
+      const next = prev.map(h => h.id === id ? { ...h, color } : h);
+      writeJson(HIGHLIGHTS_KEY, next);
+      return next;
+    });
+  }, []);
+
   return {
     hydrated,
     bookmarks,
@@ -226,6 +263,7 @@ export function useReaderFeatures() {
     notes,
     history,
     highlights,
+    highlightColor,
     // bookmarks
     isBookmarked,
     toggleBookmark,
@@ -246,5 +284,8 @@ export function useReaderFeatures() {
     getHighlights,
     addHighlight,
     removeHighlight,
+    // highlight color preference
+    setHighlightColor,
+    updateHighlightColor,
   };
 }
