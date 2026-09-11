@@ -81,7 +81,7 @@ export interface RemedyRecord extends RemediesListItem {
   /** Source book ID (for traceability) */
   source_book?: string;
   /** Source page numbers (for traceability) */
-  source_pages?: number[];
+  source_pages?: number[] | string;
 }
 
 // ============================================================

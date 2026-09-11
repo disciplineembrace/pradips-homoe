@@ -20,7 +20,24 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+// ============================================================
+// CANONICAL URL CONFIGURATION
+// ============================================================
+// The official/original public production website URL.
+// All other Vercel deployment URLs (preview, dev, duplicate projects)
+// are NOT canonical and should not be indexed as the primary site.
+//
+// Production branch: main → deploys to this URL
+// Development branch: master → preview deployments only
+//
+// Per Production Engineering Mode:
+// - main = Production (this canonical URL)
+// - master = Development (preview URLs only, never official)
+// ============================================================
+const CANONICAL_URL = "https://pradips-homoe.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(CANONICAL_URL),
   title: "Pradip's Homoe — Personal Digital Homoeopathy Library",
   description:
     "A secure, private collection of homoeopathic materia medica, repertories, therapeutics, and predictive homeopathy — accessible only to authorized users.",
@@ -35,6 +52,14 @@ export const metadata: Metadata = {
     "Pradip's Homoe",
   ],
   authors: [{ name: "Pradip's Homoe" }],
+  creator: "Pradip's Homoe",
+  publisher: "Pradip's Homoe",
+  applicationName: "Pradip's Homoe",
+  // Canonical URL — prevents duplicate-content SEO issues from
+  // preview/deployment URLs. Only the official production URL is canonical.
+  alternates: {
+    canonical: CANONICAL_URL,
+  },
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
@@ -44,6 +69,7 @@ export const metadata: Metadata = {
     title: "Pradip's Homoe",
     description:
       "Personal Digital Homoeopathy Library — Materia Medica, Repertory, Therapeutics, Predictive & more.",
+    url: CANONICAL_URL,
     siteName: "Pradip's Homoe",
     type: "website",
   },
@@ -52,6 +78,16 @@ export const metadata: Metadata = {
     title: "Pradip's Homoe",
     description:
       "Personal Digital Homoeopathy Library — Materia Medica, Repertory, Therapeutics, Predictive & more.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

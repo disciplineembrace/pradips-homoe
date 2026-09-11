@@ -143,7 +143,7 @@ async function buildIndex(): Promise<void> {
       const full = r.full || '';
       const combinedText = `${name} ${keynote} ${full}`.toLowerCase();
       // Normalize source_pages (number[] | string | undefined) to string
-      const rawPages = (r as any).source_pages;
+      const rawPages = r.source_pages;
       const sourcePages: string = Array.isArray(rawPages)
         ? rawPages.join(',')
         : (typeof rawPages === 'string' ? rawPages : '');
@@ -153,7 +153,7 @@ async function buildIndex(): Promise<void> {
         name,
         displayName: name,
         author: r.author || '',
-        source: (r as any).source_book || r.author || '',
+        source: r.source_book || r.author || '',
         keynote,
         full,
         combinedText,
