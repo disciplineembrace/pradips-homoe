@@ -66,8 +66,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-actea-spicata",
-    "name": "Actea Spicata",
+    "id": "phatak-actaea-spicata",
+    "name": "Actaea Spicata",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Eyes",
@@ -4631,17 +4631,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "murphy-mm-abies-canadensis-references",
-    "name": "Abies Canadensis References",
-    "author": "Murphy",
-    "letter": "A",
-    "chapter": "Homeopathic",
-    "organ": "Temperature, Female, Rectum",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
     "id": "murphy-mm-abies-nigra",
     "name": "Abies Nigra",
     "author": "Murphy",
@@ -4818,8 +4807,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "murphy-mm-actea-spicata",
-    "name": "Actea Spicata",
+    "id": "murphy-actaea-spicata",
+    "name": "Actaea Spicata",
     "author": "Murphy",
     "letter": "A",
     "chapter": "Homeopathic",
@@ -5962,8 +5951,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "murphy-mm-apomorphinum",
-    "name": "Apomorphinum ...",
+    "id": "murphy-apomorphinum",
+    "name": "Apomorphinum",
     "author": "Murphy",
     "letter": "A",
     "chapter": "Homeopathic",
@@ -6908,8 +6897,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "murphy-mm-b-c-g",
-    "name": "B.c.g.",
+    "id": "murphy-b-c-g",
+    "name": "B.c.g",
     "author": "Murphy",
     "letter": "B",
     "chapter": "Homeopathic",
@@ -16544,17 +16533,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "murphy-mm-rescue-remedy",
-    "name": "Rescue Remedy",
-    "author": "Murphy",
-    "letter": "R",
-    "chapter": "Homeopathic",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
     "id": "murphy-mm-reserpinum",
     "name": "Reserpinum",
     "author": "Murphy",
@@ -19833,8 +19811,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-acetic-acid--aconite",
-    "name": "Acetic Acid — Aconite",
+    "id": "phatak-acetic-acid",
+    "name": "Acetic Acid",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19844,8 +19822,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-adonis-vernalis--aesculus-hippocastanum",
-    "name": "Adonis Vernalis — Aesculus Hippocastanum",
+    "id": "phatak-adonis-vernalis",
+    "name": "Adonis Vernalis",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19866,8 +19844,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-agnus-castus--agraphis-nutans",
-    "name": "Agnus Castus — Agraphis Nutans",
+    "id": "phatak-agnus-castus",
+    "name": "Agnus Castus",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19877,8 +19855,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ailanthus-glandulosa--aleteris-farinosa",
-    "name": "Ailanthus Glandulosa — Aleteris Farinosa",
+    "id": "phatak-ailanthus-glandulosa",
+    "name": "Ailanthus Glandulosa",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19888,8 +19866,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-allium-sativum--aloe",
-    "name": "Allium Sativum — Aloe",
+    "id": "phatak-allium-sativum",
+    "name": "Allium Sativum",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19899,8 +19877,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-aloe--alumen",
-    "name": "Aloe ~— Alumen",
+    "id": "phatak-aloe",
+    "name": "Aloe",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19910,19 +19888,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--alumen--alumina",
-    "name": ", Alumen — Alumina",
-    "author": "Phatak",
-    "letter": ",",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-alumina---alumina-silicata",
-    "name": "Alumina -— Alumina Silicata",
+    "id": "phatak-alumina",
+    "name": "Alumina",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19943,8 +19910,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ambra-grisea--ammonium-carbonicum",
-    "name": "Ambra Grisea — Ammonium Carbonicum",
+    "id": "phatak-ambra-grisea",
+    "name": "Ambra Grisea",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19954,8 +19921,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ammonium-carbonicum--ammonium-muriaticum-",
-    "name": "Ammonium Carbonicum — Ammonium Muriaticum »",
+    "id": "phatak-ammonium-carbonicum",
+    "name": "Ammonium Carbonicum",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19965,8 +19932,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ammonium-muriaticum--amyl-nitrosum",
-    "name": "Ammonium Muriaticum — Amyl Nitrosum",
+    "id": "phatak-ammonium-muriaticum",
+    "name": "Ammonium Muriaticum",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19976,8 +19943,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-apis-mellifica--apocynum-cannabinum",
-    "name": "Apis Mellifica ~ Apocynum Cannabinum",
+    "id": "phatak-apis-mellifica",
+    "name": "Apis Mellifica",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19987,8 +19954,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-apocynum-cannabinum--aralia-racemosa",
-    "name": "Apocynum Cannabinum — Aralia Racemosa",
+    "id": "phatak-apocynum-cannabinum",
+    "name": "Apocynum Cannabinum",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -19998,8 +19965,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-aranea-diadema--argentum-metallicum",
-    "name": "Aranea Diadema — Argentum Metallicum",
+    "id": "phatak-aranea-diadema",
+    "name": "Aranea Diadema",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -20009,8 +19976,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-arsenicum-album--arsenicum-iodatum",
-    "name": "Arsenicum Album — Arsenicum Iodatum",
+    "id": "phatak-arsenicum-album",
+    "name": "Arsenicum Album",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -20020,8 +19987,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-arsenicum-iodatum--artemisia-vulgaris",
-    "name": "Arsenicum Iodatum — Artemisia Vulgaris",
+    "id": "phatak-arsenicum-iodatum",
+    "name": "Arsenicum Iodatum",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -20031,8 +19998,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-artemisia-vulgaris--arum-triphyllum",
-    "name": "Artemisia Vulgaris — Arum Triphyllum",
+    "id": "phatak-artemisia-vulgaris",
+    "name": "Artemisia Vulgaris",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -20042,8 +20009,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-arum-triphyllum--asafoetida",
-    "name": "Arum Triphyllum — Asafoetida",
+    "id": "phatak-arum-triphyllum",
+    "name": "Arum Triphyllum",
     "author": "Phatak",
     "letter": "A",
     "chapter": "Phatak MM",
@@ -20053,19 +20020,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm---baptisia-tinctoria",
-    "name": "- Baptisia Tinctoria",
-    "author": "Phatak",
-    "letter": "-",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-baryta-carbonica-",
-    "name": "Baryta Carbonica .",
+    "id": "phatak-baryta-carbonica",
+    "name": "Baryta Carbonica",
     "author": "Phatak",
     "letter": "B",
     "chapter": "Phatak MM",
@@ -20075,8 +20031,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-baryta-carbonica--baryta-iodata",
-    "name": "Baryta Carbonica — Baryta Iodata",
+    "id": "phatak-baryta-muriatica",
+    "name": "Baryta Muriatica",
     "author": "Phatak",
     "letter": "B",
     "chapter": "Phatak MM",
@@ -20086,8 +20042,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-baryta-muriatica--belladonna-",
-    "name": "Baryta Muriatica — Belladonna °",
+    "id": "phatak-benzoicum-acidum",
+    "name": "Benzoicum Acidum",
     "author": "Phatak",
     "letter": "B",
     "chapter": "Phatak MM",
@@ -20097,8 +20053,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-benzoicum-acidum--berberis-vulgaris",
-    "name": "Benzoicum Acidum — Berberis Vulgaris",
+    "id": "phatak-berberis-vulgaris",
+    "name": "Berberis Vulgaris",
     "author": "Phatak",
     "letter": "B",
     "chapter": "Phatak MM",
@@ -20108,8 +20064,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-berberis-vulgaris--bismuthum",
-    "name": "Berberis Vulgaris — Bismuthum",
+    "id": "phatak-bismuthum",
+    "name": "Bismuthum",
     "author": "Phatak",
     "letter": "B",
     "chapter": "Phatak MM",
@@ -20119,8 +20075,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-bismuthum--borax",
-    "name": "Bismuthum ~ Borax",
+    "id": "phatak-bryonia-alba",
+    "name": "Bryonia Alba",
     "author": "Phatak",
     "letter": "B",
     "chapter": "Phatak MM",
@@ -20130,41 +20086,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm---borax",
-    "name": ": ‘ Borax",
-    "author": "Phatak",
-    "letter": ":",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-bryonia-alba--bufo",
-    "name": "Bryonia Alba — Bufo",
-    "author": "Phatak",
-    "letter": "B",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm--bufo",
-    "name": ": Bufo",
-    "author": "Phatak",
-    "letter": ":",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-cactus-grandiflorus----cadmium-sulphuratum",
-    "name": "Cactus Grandiflorus -- Cadmium Sulphuratum",
+    "id": "phatak-cactus-grandiflorus",
+    "name": "Cactus Grandiflorus",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20174,8 +20097,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-camphora--cancer-fluviatilis",
-    "name": "Camphora ~— Cancer Fluviatilis",
+    "id": "phatak-camphora",
+    "name": "Camphora",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20185,8 +20108,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-cannabis-indica--sativa--cantharis",
-    "name": "Cannabis Indica & Sativa — Cantharis",
+    "id": "phatak-cannabis-indica-sativa",
+    "name": "Cannabis Indica & Sativa",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20196,19 +20119,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--capsicum",
-    "name": ": Capsicum",
-    "author": "Phatak",
-    "letter": ":",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-carbo-animalis--carbo-vegetabilis",
-    "name": "Carbo Animalis ~ Carbo Vegetabilis",
+    "id": "phatak-carbo-animalis",
+    "name": "Carbo Animalis",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20218,8 +20130,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-chininum-sulphuricum--chionanthus",
-    "name": "Chininum Sulphuricum — Chionanthus",
+    "id": "phatak-chininum-sulphuricum",
+    "name": "Chininum Sulphuricum",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20229,8 +20141,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-cicuta-virosa--cimicifuga",
-    "name": "Cicuta Virosa — Cimicifuga",
+    "id": "phatak-cicuta-virosa",
+    "name": "Cicuta Virosa",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20240,8 +20152,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-cistus-canadensis--clematis-erecta",
-    "name": "Cistus Canadensis — Clematis Erecta",
+    "id": "phatak-cistus-canadensis",
+    "name": "Cistus Canadensis",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20251,8 +20163,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-clematis-erecta--cobaltum",
-    "name": "Clematis Erecta — Cobaltum",
+    "id": "phatak-clematis-erecta",
+    "name": "Clematis Erecta",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20262,8 +20174,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-coca--cocculus-indicus-",
-    "name": "Coca — Cocculus Indicus .",
+    "id": "phatak-coca",
+    "name": "Coca",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20273,8 +20185,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-cocculus-indicus--coccus-cacti",
-    "name": "Cocculus Indicus — Coccus Cacti",
+    "id": "phatak-cocculus-indicus",
+    "name": "Cocculus Indicus",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20284,19 +20196,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--coccus-cacti",
-    "name": ": Coccus Cacti",
-    "author": "Phatak",
-    "letter": ":",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-colchicum-autumnale--collinsonia",
-    "name": "Colchicum Autumnale — Collinsonia",
+    "id": "phatak-colchicum-autumnale",
+    "name": "Colchicum Autumnale",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20306,8 +20207,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-colocynthis--comocladia",
-    "name": "Colocynthis ~ Comocladia",
+    "id": "phatak-colocynthis",
+    "name": "Colocynthis",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20317,8 +20218,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-conium-maculatum--copaiva",
-    "name": "Conium Maculatum — Copaiva",
+    "id": "phatak-conium-maculatum",
+    "name": "Conium Maculatum",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20328,19 +20229,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--copaiva",
-    "name": "-Copaiva",
-    "author": "Phatak",
-    "letter": "-",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-crocus-sativa--crotalus-horridus",
-    "name": "Crocus Sativa — Crotalus Horridus",
+    "id": "phatak-crocus-sativa",
+    "name": "Crocus Sativa",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20350,8 +20240,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-crotalus-horridus--croton-tiglium",
-    "name": "Crotalus Horridus — Croton Tiglium",
+    "id": "phatak-crotalus-horridus",
+    "name": "Crotalus Horridus",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20361,8 +20251,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-croton-tiglium--cubeba",
-    "name": "Croton Tiglium — Cubeba",
+    "id": "phatak-croton-tiglium",
+    "name": "Croton Tiglium",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20372,8 +20262,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-cuprum-metallicum--",
-    "name": "Cuprum Metallicum -",
+    "id": "phatak-cuprum-metallicum",
+    "name": "Cuprum Metallicum",
     "author": "Phatak",
     "letter": "C",
     "chapter": "Phatak MM",
@@ -20394,8 +20284,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-elaps-corallinus--epiphegus",
-    "name": "Elaps Corallinus — Epiphegus",
+    "id": "phatak-elaps-corallinus",
+    "name": "Elaps Corallinus",
     "author": "Phatak",
     "letter": "E",
     "chapter": "Phatak MM",
@@ -20405,8 +20295,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-helonias--hepar-sulphuris-calcareum",
-    "name": "Helonias — Hepar Sulphuris Calcareum",
+    "id": "phatak-helonias",
+    "name": "Helonias",
     "author": "Phatak",
     "letter": "H",
     "chapter": "Phatak MM",
@@ -20416,8 +20306,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-hepar-sulphuris-calcareum--hydrastis",
-    "name": "Hepar Sulphuris Calcareum — Hydrastis",
+    "id": "phatak-hepar-sulphuris-calcareum",
+    "name": "Hepar Sulphuris Calcareum",
     "author": "Phatak",
     "letter": "H",
     "chapter": "Phatak MM",
@@ -20427,8 +20317,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-hydrocyanic-acid--hyoscyamus-",
-    "name": "Hydrocyanic Acid — Hyoscyamus °",
+    "id": "phatak-hydrocyanic-acid",
+    "name": "Hydrocyanic Acid",
     "author": "Phatak",
     "letter": "H",
     "chapter": "Phatak MM",
@@ -20449,8 +20339,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-hypericum----ignatia",
-    "name": "Hypericum -- Ignatia",
+    "id": "phatak-hypericum",
+    "name": "Hypericum",
     "author": "Phatak",
     "letter": "H",
     "chapter": "Phatak MM",
@@ -20460,8 +20350,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-iris-versicolor--jaborandi",
-    "name": "Iris Versicolor — Jaborandi",
+    "id": "phatak-iris-versicolor",
+    "name": "Iris Versicolor",
     "author": "Phatak",
     "letter": "I",
     "chapter": "Phatak MM",
@@ -20471,8 +20361,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-jalapa--jatropha--justicia",
-    "name": "Jalapa — Jatropha — Justicia",
+    "id": "phatak-jalapa",
+    "name": "Jalapa",
     "author": "Phatak",
     "letter": "J",
     "chapter": "Phatak MM",
@@ -20482,8 +20372,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-kali-bichromicum--kali-bromatum",
-    "name": "Kali Bichromicum — Kali Bromatum",
+    "id": "phatak-kali-bichromicum",
+    "name": "Kali Bichromicum",
     "author": "Phatak",
     "letter": "K",
     "chapter": "Phatak MM",
@@ -20493,21 +20383,10 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-kali-bromatum--kali-carbonicum",
-    "name": "Kali Bromatum — Kali] Carbonicum",
+    "id": "phatak-kali-bromatum",
+    "name": "Kali Bromatum",
     "author": "Phatak",
     "letter": "K",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm--kali-carbonicum",
-    "name": ". Kali Carbonicum",
-    "author": "Phatak",
-    "letter": ".",
     "chapter": "Phatak MM",
     "organ": "",
     "common": "",
@@ -20526,19 +20405,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--kali-muriaticum",
-    "name": ": Kali Muriaticum",
-    "author": "Phatak",
-    "letter": ":",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-kal-sulphuricum---kalmia-latifolia",
-    "name": "Kal] Sulphuricum -— Kalmia Latifolia",
+    "id": "phatak-kal-sulphuricum",
+    "name": "Kal] Sulphuricum",
     "author": "Phatak",
     "letter": "K",
     "chapter": "Phatak MM",
@@ -20548,8 +20416,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-kalmia-latifolia----kreosotum",
-    "name": "Kalmia Latifolia -- Kreosotum",
+    "id": "phatak-kalmia-latifolia",
+    "name": "Kalmia Latifolia",
     "author": "Phatak",
     "letter": "K",
     "chapter": "Phatak MM",
@@ -20559,8 +20427,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-kreosotum-",
-    "name": "Kreosotum .",
+    "id": "phatak-kreosotum",
+    "name": "Kreosotum",
     "author": "Phatak",
     "letter": "K",
     "chapter": "Phatak MM",
@@ -20581,8 +20449,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-latrodectus-mactans--laurocerasus",
-    "name": "Latrodectus Mactans — Laurocerasus",
+    "id": "phatak-latrodectus-mactans",
+    "name": "Latrodectus Mactans",
     "author": "Phatak",
     "letter": "L",
     "chapter": "Phatak MM",
@@ -20603,8 +20471,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ledum-palustre--leptandra",
-    "name": "Ledum Palustre — Leptandra",
+    "id": "phatak-ledum-palustre",
+    "name": "Ledum Palustre",
     "author": "Phatak",
     "letter": "L",
     "chapter": "Phatak MM",
@@ -20614,8 +20482,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-lobelia-inflata--lolium-temulentum",
-    "name": "Lobelia Inflata — Lolium Temulentum",
+    "id": "phatak-lobelia-inflata",
+    "name": "Lobelia Inflata",
     "author": "Phatak",
     "letter": "L",
     "chapter": "Phatak MM",
@@ -20625,8 +20493,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-lycopus-virginicus--lyssin",
-    "name": "Lycopus Virginicus — Lyssin",
+    "id": "phatak-lycopus-virginicus",
+    "name": "Lycopus Virginicus",
     "author": "Phatak",
     "letter": "L",
     "chapter": "Phatak MM",
@@ -20636,8 +20504,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-magnesia-carbonica--magnesia-muriatica",
-    "name": "Magnesia Carbonica — Magnesia Muriatica",
+    "id": "phatak-magnesia-carbonica",
+    "name": "Magnesia Carbonica",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20647,8 +20515,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-magnesia-muriatica--magnesia-phosphorica",
-    "name": "Magnesia Muriatica — Magnesia Phosphorica",
+    "id": "phatak-magnesia-muriatica",
+    "name": "Magnesia Muriatica",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20658,8 +20526,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-magnesia-phosphorica--magnesia-sulphurica",
-    "name": "Magnesia Phosphorica — Magnesia Sulphurica",
+    "id": "phatak-magnesia-phosphorica",
+    "name": "Magnesia Phosphorica",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20691,8 +20559,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-melilotus-",
-    "name": "Melilotus .",
+    "id": "phatak-melilotus",
+    "name": "Melilotus",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20702,8 +20570,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-mercurius-corrosivus--mercurius-cyanatus",
-    "name": "Mercurius Corrosivus ~ Mercurius Cyanatus",
+    "id": "phatak-mercurius-corrosivus",
+    "name": "Mercurius Corrosivus",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20713,8 +20581,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-mercurius-iodatus-flavum--mercurius-iodatus-ruber",
-    "name": "Mercurius Iodatus Flavum — Mercurius Iodatus Ruber",
+    "id": "phatak-mercurius-iodatus-flavum",
+    "name": "Mercurius Iodatus Flavum",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20724,8 +20592,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-mercurius-iodatus-ruber--mezereum",
-    "name": "Mercurius Iodatus Ruber — Mezereum",
+    "id": "phatak-mercurius-iodatus-ruber",
+    "name": "Mercurius Iodatus Ruber",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20735,8 +20603,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-mezereum--millefolium--",
-    "name": "Mezereum — Millefolium -",
+    "id": "phatak-mezereum",
+    "name": "Mezereum",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20746,8 +20614,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-muriatic-acid--mygale-lasiodora",
-    "name": "Muriatic Acid — Mygale Lasiodora",
+    "id": "phatak-muriatic-acid",
+    "name": "Muriatic Acid",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20757,8 +20625,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-myrica-cerifera--naja",
-    "name": "Myrica Cerifera — Naja",
+    "id": "phatak-myrica-cerifera",
+    "name": "Myrica Cerifera",
     "author": "Phatak",
     "letter": "M",
     "chapter": "Phatak MM",
@@ -20768,8 +20636,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-naja--naphthalin--natrum-carbonicum",
-    "name": "Naja — Naphthalin ~ Natrum Carbonicum",
+    "id": "phatak-naja",
+    "name": "Naja",
     "author": "Phatak",
     "letter": "N",
     "chapter": "Phatak MM",
@@ -20779,19 +20647,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-0-natrum-muriaticum",
-    "name": "0 Natrum Muriaticum",
-    "author": "Phatak",
-    "letter": "0",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-natrum-muriaticum--natrum-phosphoricum",
-    "name": "Natrum Muriaticum — Natrum Phosphoricum",
+    "id": "phatak-natrum-muriaticum",
+    "name": "Natrum Muriaticum",
     "author": "Phatak",
     "letter": "N",
     "chapter": "Phatak MM",
@@ -20801,8 +20658,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-natrum-sulphuricum--niccolum",
-    "name": "Natrum Sulphuricum — Niccolum",
+    "id": "phatak-natrum-sulphuricum",
+    "name": "Natrum Sulphuricum",
     "author": "Phatak",
     "letter": "N",
     "chapter": "Phatak MM",
@@ -20812,19 +20669,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--nux-vomica",
-    "name": ": Nux Vomica",
-    "author": "Phatak",
-    "letter": ":",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-nux-vomica--ocimum-canum",
-    "name": "Nux Vomica ~ Ocimum Canum",
+    "id": "phatak-nux-vomica",
+    "name": "Nux Vomica",
     "author": "Phatak",
     "letter": "N",
     "chapter": "Phatak MM",
@@ -20834,19 +20680,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-nux-vomica--oenanthe-crocata--oleander",
-    "name": "‘Nux Vomica — Oenanthe Crocata — Oleander",
-    "author": "Phatak",
-    "letter": "‘",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-oleum-animale--oleum-jecoris",
-    "name": "Oleum Animale — Oleum Jecoris",
+    "id": "phatak-oleum-animale",
+    "name": "Oleum Animale",
     "author": "Phatak",
     "letter": "O",
     "chapter": "Phatak MM",
@@ -20856,8 +20691,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-oleum-jecoris--onosmodium",
-    "name": "Oleum Jecoris — Onosmodium",
+    "id": "phatak-oleum-jecoris",
+    "name": "Oleum Jecoris",
     "author": "Phatak",
     "letter": "O",
     "chapter": "Phatak MM",
@@ -20867,8 +20702,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-oleum-jecoris--opium",
-    "name": "Oleum Jecoris — Opium",
+    "id": "phatak-oleum-jecoris-2",
+    "name": "Oleum Jecoris",
     "author": "Phatak",
     "letter": "O",
     "chapter": "Phatak MM",
@@ -20878,8 +20713,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-oxalicum-acidum--oxytropis",
-    "name": "Oxalicum Acidum — Oxytropis",
+    "id": "phatak-oxalicum-acidum",
+    "name": "Oxalicum Acidum",
     "author": "Phatak",
     "letter": "O",
     "chapter": "Phatak MM",
@@ -20889,8 +20724,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-paris-quadrifolia--passiflora-incarnata",
-    "name": "Paris Quadrifolia — Passiflora Incarnata",
+    "id": "phatak-paris-quadrifolia",
+    "name": "Paris Quadrifolia",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20900,8 +20735,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-paris-quadrifolia--petroleum",
-    "name": "Paris Quadrifolia — Petroleum",
+    "id": "phatak-paris-quadrifolia-2",
+    "name": "Paris Quadrifolia",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20911,8 +20746,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-petroleum--petroselinum--phellandrium",
-    "name": "Petroleum ~~ Petroselinum — Phellandrium",
+    "id": "phatak-petroleum",
+    "name": "Petroleum",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20922,8 +20757,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-phosphoricum-acidum--phosphorus",
-    "name": "Phosphoricum Acidum — Phosphorus",
+    "id": "phatak-phosphoricum-acidum",
+    "name": "Phosphoricum Acidum",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20933,8 +20768,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-picric-acid--piper-methysticum",
-    "name": "Picric Acid — Piper Methysticum",
+    "id": "phatak-picric-acid",
+    "name": "Picric Acid",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20944,8 +20779,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-plantago-major--platinum",
-    "name": "Plantago Major — Platinum",
+    "id": "phatak-plantago-major",
+    "name": "Plantago Major",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20955,8 +20790,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-plumbum-metallicum--podophyllum",
-    "name": "Plumbum Metallicum — Podophyllum",
+    "id": "phatak-plumbum-metallicum",
+    "name": "Plumbum Metallicum",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20977,8 +20812,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-prunus-spinosa--psorinum",
-    "name": "Prunus Spinosa — Psorinum",
+    "id": "phatak-prunus-spinosa",
+    "name": "Prunus Spinosa",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -20988,8 +20823,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-psorinum--ptelea--pulex",
-    "name": "Psorinum — Ptelea ~— Pulex",
+    "id": "phatak-psorinum",
+    "name": "Psorinum",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -21010,8 +20845,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-pulsatilla--",
-    "name": "Pulsatilla . —=_",
+    "id": "phatak-pulsatilla",
+    "name": "Pulsatilla",
     "author": "Phatak",
     "letter": "P",
     "chapter": "Phatak MM",
@@ -21021,8 +20856,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-radium---ranunculus-bulbosus",
-    "name": "Radium ~- Ranunculus Bulbosus",
+    "id": "phatak-radium",
+    "name": "Radium",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21043,8 +20878,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-rhus-toxicodendron--rumex-crispus",
-    "name": "Rhus Toxicodendron — Rumex Crispus",
+    "id": "phatak-rhus-toxicodendron",
+    "name": "Rhus Toxicodendron",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21054,8 +20889,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ranunculus-bulbosus---ranunculus-scleratus",
-    "name": "Ranunculus Bulbosus ~- Ranunculus Scleratus",
+    "id": "phatak-ranunculus-bulbosus",
+    "name": "Ranunculus Bulbosus",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21065,8 +20900,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ranunculus-scleratus--ratanhia",
-    "name": "Ranunculus Scleratus ~ Ratanhia",
+    "id": "phatak-ranunculus-scleratus",
+    "name": "Ranunculus Scleratus",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21087,8 +20922,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-rumex-crispus--ruta-graveolens",
-    "name": "Rumex Crispus — Ruta Graveolens",
+    "id": "phatak-rumex-crispus",
+    "name": "Rumex Crispus",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21098,8 +20933,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-rhus-toxicodendron--robinia",
-    "name": "Rhus Toxicodendron — Robinia",
+    "id": "phatak-rhus-toxicodendron-2",
+    "name": "Rhus Toxicodendron",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21109,8 +20944,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ruta-graveolens--sabadilla",
-    "name": "Ruta Graveolens — Sabadilla",
+    "id": "phatak-ruta-graveolens",
+    "name": "Ruta Graveolens",
     "author": "Phatak",
     "letter": "R",
     "chapter": "Phatak MM",
@@ -21120,19 +20955,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-5-sabadilla",
-    "name": "5 Sabadilla",
-    "author": "Phatak",
-    "letter": "5",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-sambucus-nigra--sanguinaria-canadensis",
-    "name": "Sambucus Nigra — Sanguinaria Canadensis",
+    "id": "phatak-sambucus-nigra",
+    "name": "Sambucus Nigra",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21142,8 +20966,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-sanguinaria-canadensis--sanicula",
-    "name": "Sanguinaria Canadensis — Sanicula",
+    "id": "phatak-sanguinaria-canadensis",
+    "name": "Sanguinaria Canadensis",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21153,19 +20977,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--sanicula",
-    "name": ", Sanicula",
-    "author": "Phatak",
-    "letter": ",",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-scilla-maritima--scoparius",
-    "name": "Scilla Maritima — Scoparius",
+    "id": "phatak-scilla-maritima",
+    "name": "Scilla Maritima",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21175,8 +20988,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-secale-cornutum--selenium",
-    "name": "Secale Cornutum — Selenium",
+    "id": "phatak-secale-cornutum",
+    "name": "Secale Cornutum",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21186,8 +20999,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-sepia-",
-    "name": "Sepia .",
+    "id": "phatak-sepia",
+    "name": "Sepia",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21197,8 +21010,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-silicea-",
-    "name": "Silicea .",
+    "id": "phatak-silicea",
+    "name": "Silicea",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21208,8 +21021,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-silicea--solidago-virga-",
-    "name": "Silicea — Solidago Virga .",
+    "id": "phatak-strophanthus-hispidus",
+    "name": "Strophanthus Hispidus",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21219,19 +21032,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--stramonium",
-    "name": "° Stramonium",
-    "author": "Phatak",
-    "letter": "°",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-strophanthus-hispidus--succinum",
-    "name": "Strophanthus Hispidus ~ Succinum",
+    "id": "phatak-stramonium",
+    "name": "Stramonium",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21241,8 +21043,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-stramonium-",
-    "name": "Stramonium .",
+    "id": "phatak-sulphuricum-acidum",
+    "name": "Sulphuricum Acidum",
     "author": "Phatak",
     "letter": "S",
     "chapter": "Phatak MM",
@@ -21252,30 +21054,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--sulphuricum-acidum",
-    "name": ". Sulphuricum Acidum",
-    "author": "Phatak",
-    "letter": ".",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-sulphuricum-acidum--sulphur-iodatum",
-    "name": "Sulphuricum Acidum — Sulphur Iodatum",
-    "author": "Phatak",
-    "letter": "S",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
-    "id": "phatak-mm-theridion--thiosinaminum--thuja-occidentalis",
-    "name": "Theridion — Thiosinaminum — Thuja Occidentalis",
+    "id": "phatak-theridion",
+    "name": "Theridion",
     "author": "Phatak",
     "letter": "T",
     "chapter": "Phatak MM",
@@ -21285,8 +21065,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-tarentula-hispania--tellurium",
-    "name": "Tarentula Hispania — Tellurium",
+    "id": "phatak-tarentula-hispania",
+    "name": "Tarentula Hispania",
     "author": "Phatak",
     "letter": "T",
     "chapter": "Phatak MM",
@@ -21307,17 +21087,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm--thyroidinum",
-    "name": "' ‘Thyroidinum",
-    "author": "Phatak",
-    "letter": "'",
-    "chapter": "Phatak MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": false,
-    "sectionsCount": 0
-  },
-  {
     "id": "phatak-mm-tiliaeuropa",
     "name": "Tiliaeuropa",
     "author": "Phatak",
@@ -21329,8 +21098,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-tilia-europa--trifolium-pratense--trillium",
-    "name": "Tilia Europa — Trifolium Pratense — Trillium",
+    "id": "phatak-tilia-europa",
+    "name": "Tilia Europa",
     "author": "Phatak",
     "letter": "T",
     "chapter": "Phatak MM",
@@ -21340,8 +21109,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-trillium--trombidium--tuberculinum",
-    "name": "Trillium — Trombidium. ~ Tuberculinum",
+    "id": "phatak-trillium",
+    "name": "Trillium",
     "author": "Phatak",
     "letter": "T",
     "chapter": "Phatak MM",
@@ -21362,8 +21131,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-valeriana--vanadium--variolinum",
-    "name": "Valeriana — Vanadium — Variolinum",
+    "id": "phatak-valeriana",
+    "name": "Valeriana",
     "author": "Phatak",
     "letter": "V",
     "chapter": "Phatak MM",
@@ -21373,8 +21142,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-urtica-urens--ustilago-maydis",
-    "name": "Urtica Urens — Ustilago Maydis",
+    "id": "phatak-urtica-urens",
+    "name": "Urtica Urens",
     "author": "Phatak",
     "letter": "U",
     "chapter": "Phatak MM",
@@ -21384,8 +21153,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-ustilago-maydis--vaccininum",
-    "name": "Ustilago Maydis — Vaccininum",
+    "id": "phatak-ustilago-maydis",
+    "name": "Ustilago Maydis",
     "author": "Phatak",
     "letter": "U",
     "chapter": "Phatak MM",
@@ -21395,8 +21164,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-veratrum-album--veratrum-viride",
-    "name": "Veratrum Album — Veratrum Viride",
+    "id": "phatak-veratrum-album",
+    "name": "Veratrum Album",
     "author": "Phatak",
     "letter": "V",
     "chapter": "Phatak MM",
@@ -21406,8 +21175,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-veratrum-viride--verbascum",
-    "name": "Veratrum Viride — Verbascum",
+    "id": "phatak-veratrum-viride",
+    "name": "Veratrum Viride",
     "author": "Phatak",
     "letter": "V",
     "chapter": "Phatak MM",
@@ -21417,8 +21186,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-verbascum--vespa-crabro--viburnum-opulus",
-    "name": "Verbascum — Vespa Crabro — Viburnum Opulus",
+    "id": "phatak-verbascum",
+    "name": "Verbascum",
     "author": "Phatak",
     "letter": "V",
     "chapter": "Phatak MM",
@@ -21428,8 +21197,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-viola-odorata--viola-tricolor",
-    "name": "Viola Odorata ~— Viola Tricolor",
+    "id": "phatak-viola-odorata",
+    "name": "Viola Odorata",
     "author": "Phatak",
     "letter": "V",
     "chapter": "Phatak MM",
@@ -21439,8 +21208,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-viburnum-opulus--vinca-minor",
-    "name": "Viburnum Opulus — Vinca Minor",
+    "id": "phatak-viburnum-opulus",
+    "name": "Viburnum Opulus",
     "author": "Phatak",
     "letter": "V",
     "chapter": "Phatak MM",
@@ -21461,8 +21230,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "phatak-mm-zincum-metallicum--zinc-arsenite",
-    "name": "Zincum Metallicum — Zinc Arsenite",
+    "id": "phatak-zincum-metallicum",
+    "name": "Zincum Metallicum",
     "author": "Phatak",
     "letter": "Z",
     "chapter": "Phatak MM",
@@ -21582,8 +21351,8 @@
     "sectionsCount": 22
   },
   {
-    "id": "boericke-mm-actea-spicata",
-    "name": "Actea Spicata",
+    "id": "boericke-mm-actaea-spicata",
+    "name": "Actaea Spicata",
     "author": "Boericke",
     "letter": "A",
     "chapter": "Boericke MM",
@@ -22353,7 +22122,7 @@
   },
   {
     "id": "boericke-mm-arsenic-trisulph",
-    "name": "Arsenic Trisulph.",
+    "name": "Arsenic Trisulph",
     "author": "Boericke",
     "letter": "A",
     "chapter": "Boericke MM",
@@ -22936,7 +22705,7 @@
   },
   {
     "id": "boericke-mm-calcarea-arsenicosa",
-    "name": "Calcarea Arsenicosa                  .",
+    "name": "Calcarea Arsenicosa",
     "author": "Boericke",
     "letter": "C",
     "chapter": "Boericke MM",
@@ -23013,7 +22782,7 @@
   },
   {
     "id": "boericke-mm-calendula-officinalis",
-    "name": "Calendula Officinalis                                 .",
+    "name": "Calendula Officinalis",
     "author": "Boericke",
     "letter": "C",
     "chapter": "Boericke MM",
@@ -26203,7 +25972,7 @@
   },
   {
     "id": "boericke-mm-sulph",
-    "name": "Sulph.",
+    "name": "Sulph",
     "author": "Boericke",
     "letter": "S",
     "chapter": "Boericke MM",
@@ -28931,7 +28700,7 @@
   },
   {
     "id": "boericke-mm-sec",
-    "name": "Sec.",
+    "name": "Sec",
     "author": "Boericke",
     "letter": "S",
     "chapter": "Boericke MM",
@@ -29095,8 +28864,8 @@
     "sectionsCount": 15
   },
   {
-    "id": "boericke-mm-andersonia-or-amoora-rohitaka",
-    "name": "Andersonia          Or Amoora            Rohitaka",
+    "id": "boericke-mm-andersonia",
+    "name": "Andersonia",
     "author": "Boericke",
     "letter": "A",
     "chapter": "Boericke MM",
@@ -29107,7 +28876,7 @@
   },
   {
     "id": "boericke-mm-andrographis-paniculata",
-    "name": "Andrographis Paniculata.",
+    "name": "Andrographis Paniculata",
     "author": "Boericke",
     "letter": "A",
     "chapter": "Boericke MM",
@@ -29117,8 +28886,8 @@
     "sectionsCount": 12
   },
   {
-    "id": "boericke-mm-atista-indica-or-glycosmis-pentaphylla",
-    "name": "Atista Indica Or Glycosmis Pentaphylla",
+    "id": "boericke-mm-atista-indica",
+    "name": "Atista Indica",
     "author": "Boericke",
     "letter": "A",
     "chapter": "Boericke MM",
@@ -29282,8 +29051,8 @@
     "sectionsCount": 11
   },
   {
-    "id": "boericke-mm-ficus-indica-or-bengalensis",
-    "name": "Ficus Indica Or Bengalensis",
+    "id": "boericke-mm-ficus-indica",
+    "name": "Ficus Indica",
     "author": "Boericke",
     "letter": "F",
     "chapter": "Boericke MM",
@@ -29304,8 +29073,8 @@
     "sectionsCount": 12
   },
   {
-    "id": "boericke-mm-gentiana-chirata-or-swertia-chirata",
-    "name": "Gentiana Chirata Or Swertia Chirata",
+    "id": "boericke-mm-gentiana-chirata",
+    "name": "Gentiana Chirata",
     "author": "Boericke",
     "letter": "G",
     "chapter": "Boericke MM",
@@ -29359,8 +29128,8 @@
     "sectionsCount": 8
   },
   {
-    "id": "boericke-mm-janosia-or-joanesia-asoca-or-saraca",
-    "name": "Janosia          Or Joanesia Asoca               Or Saraca",
+    "id": "boericke-mm-janosia",
+    "name": "Janosia",
     "author": "Boericke",
     "letter": "J",
     "chapter": "Boericke MM",
@@ -29568,17 +29337,6 @@
     "sectionsCount": 4
   },
   {
-    "id": "boericke-mm-nosodes",
-    "name": "Nosodes",
-    "author": "Boericke",
-    "letter": "N",
-    "chapter": "Boericke MM",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "boericke-mm-aviaire",
     "name": "Aviaire",
     "author": "Boericke",
@@ -29624,7 +29382,7 @@
   },
   {
     "id": "boericke-mm-d-t-t-a-b",
-    "name": "D.T.T.A.B.",
+    "name": "D.T.T.A.B",
     "author": "Boericke",
     "letter": "D",
     "chapter": "Boericke MM",
@@ -29877,7 +29635,7 @@
   },
   {
     "id": "boericke-mm-v-a-b",
-    "name": "V.A.B.",
+    "name": "V.A.B",
     "author": "Boericke",
     "letter": "V",
     "chapter": "Boericke MM",
@@ -30228,7 +29986,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-ammonium-valerianicum-b",
+    "id": "boericke-mm-ammonium-valerianicum-b-2",
     "name": "Ammonium Valerianicum",
     "author": "Boericke",
     "letter": "A",
@@ -30272,7 +30030,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-amphisbaena-vermicularis-b",
+    "id": "boericke-mm-amphisbaena-vermicularis-b-2",
     "name": "Amphisbaena Vermicularis",
     "author": "Boericke",
     "letter": "A",
@@ -30328,7 +30086,7 @@
   },
   {
     "id": "boericke-mm-angelica-atropurpurea",
-    "name": "Angelica Atropurpurea.",
+    "name": "Angelica Atropurpurea",
     "author": "Boericke",
     "letter": "A",
     "chapter": "Boericke MM",
@@ -31615,7 +31373,7 @@
   },
   {
     "id": "boericke-mm-colchicinum",
-    "name": "Colchicinum .",
+    "name": "Colchicinum",
     "author": "Boericke",
     "letter": "C",
     "chapter": "Boericke MM",
@@ -32670,7 +32428,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-hedera-helix-b",
+    "id": "boericke-mm-hedera-helix-b-2",
     "name": "Hedera Helix",
     "author": "Boericke",
     "letter": "H",
@@ -33550,7 +33308,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-magnetis-polus-arcticus-b",
+    "id": "boericke-mm-magnetis-polus-arcticus-b-2",
     "name": "Magnetis Polus Arcticus",
     "author": "Boericke",
     "letter": "M",
@@ -33572,7 +33330,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-magnetis-polus-australis-b",
+    "id": "boericke-mm-magnetis-polus-australis-b-2",
     "name": "Magnetis Polus Australis",
     "author": "Boericke",
     "letter": "M",
@@ -34815,7 +34573,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-plumbum-iodatum-b",
+    "id": "boericke-mm-plumbum-iodatum-b-2",
     "name": "Plumbum Iodatum",
     "author": "Boericke",
     "letter": "P",
@@ -35354,7 +35112,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "boericke-mm-sanguisuga-officinalis-b",
+    "id": "boericke-mm-sanguisuga-officinalis-b-2",
     "name": "Sanguisuga Officinalis",
     "author": "Boericke",
     "letter": "S",
@@ -36488,7 +36246,7 @@
   },
   {
     "id": "allen-aceticum-acidum",
-    "name": "Aceticum acidum",
+    "name": "Aceticum Acidum",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36499,7 +36257,7 @@
   },
   {
     "id": "allen-aconitum-napellus",
-    "name": "Aconitum napellus",
+    "name": "Aconitum Napellus",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36510,7 +36268,7 @@
   },
   {
     "id": "allen-actaea-racemosa",
-    "name": "Actaea racemosa",
+    "name": "Actaea Racemosa",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36521,7 +36279,7 @@
   },
   {
     "id": "allen-aesculus-hippocastanum",
-    "name": "Aesculus hippocastanum",
+    "name": "Aesculus Hippocastanum",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36532,7 +36290,7 @@
   },
   {
     "id": "allen-aethusa-cynapium",
-    "name": "Aethusa cynapium",
+    "name": "Aethusa Cynapium",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36543,7 +36301,7 @@
   },
   {
     "id": "allen-agaricus-muscarius",
-    "name": "Agaricus muscarius",
+    "name": "Agaricus Muscarius",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36554,7 +36312,7 @@
   },
   {
     "id": "allen-agnus-castus",
-    "name": "Agnus castus",
+    "name": "Agnus Castus",
     "author": "Allen",
     "letter": "A",
     "chapter": "Allen's Keynotes",
@@ -36829,7 +36587,7 @@
   },
   {
     "id": "allen-benzoicum-acidum",
-    "name": "Benzoicum acidum",
+    "name": "Benzoicum Acidum",
     "author": "Allen",
     "letter": "B",
     "chapter": "Allen's Keynotes",
@@ -37049,7 +36807,7 @@
   },
   {
     "id": "allen-carbolicum-acidum",
-    "name": "Carbolicum acidum",
+    "name": "Carbolicum Acidum",
     "author": "Allen",
     "letter": "C",
     "chapter": "Allen's Keynotes",
@@ -37357,7 +37115,7 @@
   },
   {
     "id": "allen-fluoricum-acidum",
-    "name": "Fluoricum acidum",
+    "name": "Fluoricum Acidum",
     "author": "Allen",
     "letter": "F",
     "chapter": "Allen's Keynotes",
@@ -37830,7 +37588,7 @@
   },
   {
     "id": "allen-muriaticum-acidum",
-    "name": "Muriaticum acidum",
+    "name": "Muriaticum Acidum",
     "author": "Allen",
     "letter": "M",
     "chapter": "Allen's Keynotes",
@@ -37885,7 +37643,7 @@
   },
   {
     "id": "allen-nitricum-acidum",
-    "name": "Nitricum acidum",
+    "name": "Nitricum Acidum",
     "author": "Allen",
     "letter": "N",
     "chapter": "Allen's Keynotes",
@@ -37951,7 +37709,7 @@
   },
   {
     "id": "allen-phosphoricum-acidum",
-    "name": "Phosphoricum acidum",
+    "name": "Phosphoricum Acidum",
     "author": "Allen",
     "letter": "P",
     "chapter": "Allen's Keynotes",
@@ -37995,7 +37753,7 @@
   },
   {
     "id": "allen-picricum-acidum",
-    "name": "Picricum acidum",
+    "name": "Picricum Acidum",
     "author": "Allen",
     "letter": "P",
     "chapter": "Allen's Keynotes",
@@ -38325,7 +38083,7 @@
   },
   {
     "id": "allen-sulphuricum-acidum",
-    "name": "Sulphuricum acidum",
+    "name": "Sulphuricum Acidum",
     "author": "Allen",
     "letter": "S",
     "chapter": "Allen's Keynotes",
@@ -38775,7 +38533,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-bacillus-morgan-bach",
+    "id": "allen-bacillus-morgan-bach-2",
     "name": "Bacillus Morgan (bach)",
     "author": "Allen",
     "letter": "B",
@@ -38786,7 +38544,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-bacillus-proteus-bach",
+    "id": "allen-bacillus-proteus-bach-2",
     "name": "Bacillus Proteus (bach)",
     "author": "Allen",
     "letter": "B",
@@ -38797,7 +38555,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-bacillus-gaertner-bach",
+    "id": "allen-bacillus-gaertner-bach-2",
     "name": "Bacillus Gaertner (bach)",
     "author": "Allen",
     "letter": "B",
@@ -38808,7 +38566,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-introduction",
+    "id": "allen-introduction-2",
     "name": "Introduction",
     "author": "Allen",
     "letter": "I",
@@ -39369,7 +39127,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-pain",
+    "id": "allen-pain-2",
     "name": "Pain",
     "author": "Allen",
     "letter": "P",
@@ -39480,7 +39238,7 @@
   },
   {
     "id": "allen-important-symp",
-    "name": "Important Symp.",
+    "name": "Important Symp",
     "author": "Allen",
     "letter": "I",
     "chapter": "Allen's Keynotes",
@@ -39534,7 +39292,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-urine",
+    "id": "allen-urine-2",
     "name": "Urine",
     "author": "Allen",
     "letter": "U",
@@ -40084,17 +39842,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-fainting",
-    "name": "Fainting",
-    "author": "Allen",
-    "letter": "F",
-    "chapter": "Allen's Keynotes",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "allen-haemorrhage",
     "name": "Haemorrhage",
     "author": "Allen",
@@ -40117,17 +39864,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-pain",
-    "name": "Pain",
-    "author": "Allen",
-    "letter": "P",
-    "chapter": "Allen's Keynotes",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "allen-character-of-pain",
     "name": "Character Of Pain",
     "author": "Allen",
@@ -40139,7 +39875,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-modalities",
+    "id": "allen-modalities-2",
     "name": "Modalities",
     "author": "Allen",
     "letter": "M",
@@ -40150,7 +39886,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "allen-concomitants",
+    "id": "allen-concomitants-2",
     "name": "Concomitants",
     "author": "Allen",
     "letter": "C",
@@ -40866,7 +40602,7 @@
   },
   {
     "id": "sankaran-manganum-act",
-    "name": "Manganum Act.",
+    "name": "Manganum Act",
     "author": "Sankaran",
     "letter": "M",
     "chapter": "Soul of Remedies",
@@ -40943,7 +40679,7 @@
   },
   {
     "id": "sankaran-niccolum-met",
-    "name": "Niccolum Met.",
+    "name": "Niccolum Met",
     "author": "Sankaran",
     "letter": "N",
     "chapter": "Soul of Remedies",
@@ -44044,17 +43780,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-arachnida",
-    "name": "Arachnida",
-    "author": "Farrington",
-    "letter": "A",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "farrington-mygale-lasiodora",
     "name": "Mygale lasiodora",
     "author": "Farrington",
@@ -44077,8 +43802,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-tarentuea-cubensis",
-    "name": "Tarentuea Cubensis",
+    "id": "farrington-tarentula-cubensis",
+    "name": "Tarentula Cubensis",
     "author": "Farrington",
     "letter": "T",
     "chapter": "Clinical Materia Medica",
@@ -44099,8 +43824,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-thkridion-curassavicum",
-    "name": "Thkridion Curassavicum",
+    "id": "farrington-theridion-curassavicum",
+    "name": "Theridion Curassavicum",
     "author": "Farrington",
     "letter": "T",
     "chapter": "Clinical Materia Medica",
@@ -44114,17 +43839,6 @@
     "name": "Cantharis",
     "author": "Farrington",
     "letter": "C",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-hymenoptera",
-    "name": "Hymenoptera",
-    "author": "Farrington",
-    "letter": "H",
     "chapter": "Clinical Materia Medica",
     "organ": "",
     "common": "",
@@ -44158,17 +43872,6 @@
     "name": "Sepia",
     "author": "Farrington",
     "letter": "S",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-nosodes",
-    "name": "Nosodes",
-    "author": "Farrington",
-    "letter": "N",
     "chapter": "Clinical Materia Medica",
     "organ": "",
     "common": "",
@@ -44352,8 +44055,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-pothos-fcetida",
-    "name": "Pothos Fcetida",
+    "id": "farrington-pothos-foetida",
+    "name": "Pothos Foetida",
     "author": "Farrington",
     "letter": "P",
     "chapter": "Clinical Materia Medica",
@@ -44572,7 +44275,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-colchicum",
+    "id": "farrington-colchicum-2",
     "name": "Colchicum",
     "author": "Farrington",
     "letter": "C",
@@ -44583,7 +44286,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-veratrum-album",
+    "id": "farrington-veratrum-album-2",
     "name": "Veratrum Album",
     "author": "Farrington",
     "letter": "V",
@@ -44605,7 +44308,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-sabadilla",
+    "id": "farrington-sabadilla-2",
     "name": "Sabadilla",
     "author": "Farrington",
     "letter": "S",
@@ -44715,8 +44418,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-chedidonium-majus",
-    "name": "Chedidonium Majus",
+    "id": "farrington-chelidonium-majus",
+    "name": "Chelidonium Majus",
     "author": "Farrington",
     "letter": "C",
     "chapter": "Clinical Materia Medica",
@@ -44814,7 +44517,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-marasmus",
+    "id": "farrington-marasmus-2",
     "name": "Marasmus",
     "author": "Farrington",
     "letter": "M",
@@ -44946,8 +44649,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-actea-racemosa",
-    "name": "Actea Racemosa",
+    "id": "farrington-actaea-racemosa",
+    "name": "Actaea Racemosa",
     "author": "Farrington",
     "letter": "A",
     "chapter": "Clinical Materia Medica",
@@ -44968,7 +44671,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-ranunculus-sceleratus",
+    "id": "farrington-ranunculus-sceleratus-2",
     "name": "Ranunculus Sceleratus",
     "author": "Farrington",
     "letter": "R",
@@ -45001,7 +44704,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-opium",
+    "id": "farrington-opium-2",
     "name": "Opium",
     "author": "Farrington",
     "letter": "O",
@@ -45089,7 +44792,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-spigelia",
+    "id": "farrington-spigelia-2",
     "name": "Spigelia",
     "author": "Farrington",
     "letter": "S",
@@ -45221,7 +44924,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-belladonna",
+    "id": "farrington-belladonna-2",
     "name": "Belladonna",
     "author": "Farrington",
     "letter": "B",
@@ -45320,17 +45023,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-spigelia",
-    "name": "Spigelia",
-    "author": "Farrington",
-    "letter": "S",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "farrington-ammoniacum-gummi",
     "name": "Ammoniacum gummi",
     "author": "Farrington",
@@ -45353,7 +45045,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-ammoniacum-gummi",
+    "id": "farrington-ammoniacum-gummi-2",
     "name": "Ammoniacum Gummi",
     "author": "Farrington",
     "letter": "A",
@@ -45375,8 +45067,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-berberis-vuegaris",
-    "name": "Berberis Vuegaris",
+    "id": "farrington-berberis-vulgaris",
+    "name": "Berberis Vulgaris",
     "author": "Farrington",
     "letter": "B",
     "chapter": "Clinical Materia Medica",
@@ -45441,7 +45133,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-psorinum",
+    "id": "farrington-psorinum-2",
     "name": "Psorinum",
     "author": "Farrington",
     "letter": "P",
@@ -45518,7 +45210,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-bromine",
+    "id": "farrington-bromine-2",
     "name": "Bromine",
     "author": "Farrington",
     "letter": "B",
@@ -45650,7 +45342,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-lachesis",
+    "id": "farrington-lachesis-2",
     "name": "Lachesis",
     "author": "Farrington",
     "letter": "L",
@@ -45661,7 +45353,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-nitric-acid",
+    "id": "farrington-nitric-acid-2",
     "name": "Nitric Acid",
     "author": "Farrington",
     "letter": "N",
@@ -45760,7 +45452,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-osmium",
+    "id": "farrington-osmium-2",
     "name": "Osmium",
     "author": "Farrington",
     "letter": "O",
@@ -45782,7 +45474,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-chamomilla",
+    "id": "farrington-chamomilla-2",
     "name": "Chamomilla",
     "author": "Farrington",
     "letter": "C",
@@ -45793,7 +45485,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-ranunculus-bulbosus",
+    "id": "farrington-ranunculus-bulbosus-2",
     "name": "Ranunculus bulbosus",
     "author": "Farrington",
     "letter": "R",
@@ -46299,7 +45991,7 @@
     "sectionsCount": 0
   },
   {
-    "id": "farrington-index-of-remedies",
+    "id": "farrington-index-of-remedies-2",
     "name": "Index Of Remedies",
     "author": "Farrington",
     "letter": "I",
@@ -46314,61 +46006,6 @@
     "name": "Therapeutic Index",
     "author": "Farrington",
     "letter": "T",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-fainting",
-    "name": "Fainting",
-    "author": "Farrington",
-    "letter": "F",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-gastro-enteric-symptoms",
-    "name": "Gastro Enteric Symptoms",
-    "author": "Farrington",
-    "letter": "G",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-impetigo",
-    "name": "Impetigo",
-    "author": "Farrington",
-    "letter": "I",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-periostitis",
-    "name": "Periostitis",
-    "author": "Farrington",
-    "letter": "P",
-    "chapter": "Clinical Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "farrington-waxy-liver",
-    "name": "Waxy Liver",
-    "author": "Farrington",
-    "letter": "W",
     "chapter": "Clinical Materia Medica",
     "organ": "",
     "common": "",
@@ -48554,43 +48191,10 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-troublesome-hemorrhoids",
-    "name": "Troublesome             hemorrhoids",
-    "author": "Kent",
-    "letter": "T",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-troubles-brought-on-in",
-    "name": "Troubles        brought       on     in",
-    "author": "Kent",
-    "letter": "T",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-apocynum-cannabinum",
-    "name": "Apocynum cannabinum",
+    "name": "Apocynum Cannabinum",
     "author": "Kent",
     "letter": "A",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-this-state-of-excitement",
-    "name": "This     state      of    excitement",
-    "author": "Kent",
-    "letter": "T",
     "chapter": "Lectures on Homoeopathic Materia Medica",
     "organ": "",
     "common": "",
@@ -48610,7 +48214,7 @@
   },
   {
     "id": "kent-mm-baryta-muriatica",
-    "name": "Baryta muriatica",
+    "name": "Baryta Muriatica",
     "author": "Kent",
     "letter": "B",
     "chapter": "Lectures on Homoeopathic Materia Medica",
@@ -48624,17 +48228,6 @@
     "name": "Belladonna",
     "author": "Kent",
     "letter": "B",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-materia",
-    "name": "Materia",
-    "author": "Kent",
-    "letter": "M",
     "chapter": "Lectures on Homoeopathic Materia Medica",
     "organ": "",
     "common": "",
@@ -48675,17 +48268,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-membranous-formations",
-    "name": "Membranous            formations",
-    "author": "Kent",
-    "letter": "M",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-bufo",
     "name": "Bufo",
     "author": "Kent",
@@ -48709,18 +48291,7 @@
   },
   {
     "id": "kent-mm-calcarea-carbonica",
-    "name": "Calcarea carbonica",
-    "author": "Kent",
-    "letter": "C",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-calcarea-that-covers-the",
-    "name": "Calcarea       that      covers      the",
+    "name": "Calcarea Carbonica",
     "author": "Kent",
     "letter": "C",
     "chapter": "Lectures on Homoeopathic Materia Medica",
@@ -48763,17 +48334,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-heaviness-in-the",
-    "name": "Heaviness          in     the",
-    "author": "Kent",
-    "letter": "H",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-causticum",
     "name": "Causticum",
     "author": "Kent",
@@ -48800,17 +48360,6 @@
     "name": "Chelidonium",
     "author": "Kent",
     "letter": "C",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-these-are-all-aggravated",
-    "name": "These       are      all    aggravated",
-    "author": "Kent",
-    "letter": "T",
     "chapter": "Lectures on Homoeopathic Materia Medica",
     "organ": "",
     "common": "",
@@ -48895,17 +48444,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-inflammation-of-bronchial",
-    "name": "Inflammation           of    bronchial",
-    "author": "Kent",
-    "letter": "I",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-gelsemium",
     "name": "Gelsemium",
     "author": "Kent",
@@ -48961,30 +48499,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-hellebore-has-a",
-    "name": "Hellebore         has       a",
-    "author": "Kent",
-    "letter": "H",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-hyoscyamus",
     "name": "Hyoscyamus",
-    "author": "Kent",
-    "letter": "H",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-hydrophobinum-has-cured",
-    "name": "Hydrophobinum has cured",
     "author": "Kent",
     "letter": "H",
     "chapter": "Lectures on Homoeopathic Materia Medica",
@@ -49031,17 +48547,6 @@
     "name": "Ignatia",
     "author": "Kent",
     "letter": "I",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-when-she-has-great",
-    "name": "When        she      has      great",
-    "author": "Kent",
-    "letter": "W",
     "chapter": "Lectures on Homoeopathic Materia Medica",
     "organ": "",
     "common": "",
@@ -49160,7 +48665,7 @@
   },
   {
     "id": "kent-mm-muriaticum-acidum",
-    "name": "Muriaticum acidum",
+    "name": "Muriaticum Acidum",
     "author": "Kent",
     "letter": "M",
     "chapter": "Lectures on Homoeopathic Materia Medica",
@@ -49181,19 +48686,8 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-there-is-intense",
-    "name": "There       is    intense",
-    "author": "Kent",
-    "letter": "T",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-natrum-sulfuricum",
-    "name": "Natrum sulfuricum",
+    "name": "Natrum Sulfuricum",
     "author": "Kent",
     "letter": "N",
     "chapter": "Lectures on Homoeopathic Materia Medica",
@@ -49227,17 +48721,6 @@
   {
     "id": "kent-mm-phosphorus",
     "name": "Phosphorus",
-    "author": "Kent",
-    "letter": "P",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-phosphorus-has-been",
-    "name": "Phosphorus          has      been",
     "author": "Kent",
     "letter": "P",
     "chapter": "Lectures on Homoeopathic Materia Medica",
@@ -49295,17 +48778,6 @@
     "name": "Pulsatilla",
     "author": "Kent",
     "letter": "P",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-there-is-much",
-    "name": "There       is     much",
-    "author": "Kent",
-    "letter": "T",
     "chapter": "Lectures on Homoeopathic Materia Medica",
     "organ": "",
     "common": "",
@@ -49467,17 +48939,6 @@
     "sectionsCount": 0
   },
   {
-    "id": "kent-mm-this-remedy-is-useful",
-    "name": "This     remedy         is    useful",
-    "author": "Kent",
-    "letter": "T",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
     "id": "kent-mm-syphilinum",
     "name": "Syphilinum",
     "author": "Kent",
@@ -49493,17 +48954,6 @@
     "name": "Theridion",
     "author": "Kent",
     "letter": "T",
-    "chapter": "Lectures on Homoeopathic Materia Medica",
-    "organ": "",
-    "common": "",
-    "hasIntro": true,
-    "sectionsCount": 0
-  },
-  {
-    "id": "kent-mm-relapsing-intermittents",
-    "name": "Relapsing intermittents",
-    "author": "Kent",
-    "letter": "R",
     "chapter": "Lectures on Homoeopathic Materia Medica",
     "organ": "",
     "common": "",
@@ -50260,7 +49710,7 @@
   },
   {
     "id": "dubey-mm-jaundice",
-    "name": "Jaundice.",
+    "name": "Jaundice",
     "author": "Dubey",
     "letter": "J",
     "chapter": "Dubey Text Book of Materia Medica",
