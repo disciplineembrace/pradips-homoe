@@ -196,10 +196,22 @@ export function Sidebar() {
         />
       )}
 
-      {/* Mobile drawer — slides from left */}
+      {/* Mobile drawer — slides from left.
+          CRITICAL: When closed (mobileOpen=false), the drawer is translated
+          off-screen with -translate-x-full. We MUST also set pointer-events-none
+          so the off-screen drawer cannot intercept clicks meant for page content.
+          Without this, the drawer's <Link> elements (which are still in the DOM)
+          would capture clicks on the left edge of the viewport, preventing
+          navigation from the desktop sidebar or page content.
+
+          This is the root cause of the reported bug:
+          'open sidebar → click another section → doesn't open'
+          The stale drawer was intercepting the click.
+
+          When open (mobileOpen=true), we re-enable pointer-events-auto. */}
       <aside
         className={`lg:hidden fixed top-0 left-0 h-full w-72 bg-[#173B2D] z-50 shadow-2xl transition-transform duration-300 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          mobileOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
         }`}
       >
         {/* Close button */}
