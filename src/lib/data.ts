@@ -66,6 +66,8 @@ export interface RemediesListItem {
 export interface RemedySection {
   title: string;
   content: string;
+  /** Source-preserved sub-sections (e.g., PARTICULARS > Stomach, Chest) */
+  subsections?: { heading: string; content: string }[];
 }
 
 export interface RemedyRecord extends RemediesListItem {
