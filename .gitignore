@@ -36,3 +36,4 @@ dev.log
 .env.development
 .env.production
 .env.*.local
+data/remedies.json.backup-*
