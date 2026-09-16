@@ -449,32 +449,30 @@ export default function RemedyDetailPage() {
             </div>
           )}
 
-          {/* SOURCE SECTIONS — each title RED+BOLD, content normal */}
+          {/* SOURCE SECTIONS — inline format matching Boericke source:
+              Head.-- Feels light-headed, tipsy. Irritable.
+              - Heading word bold+red inline (not separate h4)
+              - .-- delimiter kept
+              - Content on same line
+              - Vertical gap (mt-4) before each section */}
           {remedy.sections && remedy.sections.length > 0 && (
-            <div className="mb-6 space-y-3">
+            <div className="mb-6">
               {remedy.sections.map((sec, idx) => (
-                <div key={idx}>
-                  <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
-                    {sec.title}
-                  </h4>
-                  {/* If section has subsections, render each with RED+BOLD sub-heading */}
+                <div key={idx} className="mt-4">
                   {sec.subsections && sec.subsections.length > 0 ? (
                     <div className="space-y-3">
                       {sec.subsections.map((sub, subIdx) => (
-                        <div key={subIdx}>
-                          {sub.heading && (
-                            <h5 className="mm-subsection font-bold text-red-700 text-sm mt-3 mb-1 tracking-wide">
-                              {sub.heading}
-                            </h5>
-                          )}
-                          <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                        <div key={subIdx} className="mt-3">
+                          <p className="text-stone-700 leading-relaxed text-[0.95rem]">
+                            <span className="font-bold text-red-700">{sub.heading}.--</span>{' '}
                             {renderInline(sub.content)}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                    <p className="text-stone-700 leading-relaxed text-[0.95rem]">
+                      <span className="font-bold text-red-700">{sec.title}.--</span>{' '}
                       {renderInline(sec.content)}
                     </p>
                   )}
