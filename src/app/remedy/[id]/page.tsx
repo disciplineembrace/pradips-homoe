@@ -1,108 +1,315 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { formatRemedyText, parseInlineMarkers, type MMBlock, type InlineSpan } from '@/lib/mm-formatter';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useReaderFeatures } from '@/hooks/use-reader-features';
+import { TextSelectionToolbar } from '@/components/TextSelectionToolbar';
 
 type Remedy = {
   id: string; name: string; common?: string; author: string;
   chapter?: string; organ?: string; modalities?: string;
   constitution?: string; relationships?: string; dose?: string;
   keynote?: string; full?: string; letter?: string;
+  intro?: string; sections?: { title: string; content: string; subsections?: { heading: string; content: string }[] }[];
 };
 
 export default function RemedyDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURN — Rules of Hooks.
+  // If hooks are called after a conditional return, React crashes with
+  // "Rendered more hooks than during the previous render."
+
+  // --- Data state ---
   const [remedy, setRemedy] = useState<Remedy | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
+  // --- Reader features (must be before any early return) ---
+  const reader = useReaderFeatures();
+  const articleRef = useRef<HTMLElement>(null);
+  const [isFav, setIsFav] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [notesList, setNotesList] = useState<any[]>([]);
+  const [copyStatus, setCopyStatus] = useState('');
+
+  // --- Data fetch effect ---
   useEffect(() => {
+    if (!params?.id) {
+      setError('Invalid remedy ID');
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
     fetch('/api/auth/session').then(r => r.json()).then(d => {
-      if (!d.authenticated) router.push('/login');
+      if (cancelled) return;
+      if (!d.authenticated) { router.push('/login'); return; }
+    }).catch(() => {
+      // Session check failed — continue anyway, the remedy fetch will handle auth
     });
+
     fetch(`/api/remedies/${params.id}`).then(r => {
+      if (cancelled) return null;
       if (r.status === 401) { router.push('/login'); return null; }
       return r.json();
     }).then(d => {
-      if (d?.error) setError(d.error);
-      else setRemedy(d);
+      if (cancelled) return;
+      if (!d) { setLoading(false); return; }
+      if (d.error) { setError(d.error); setLoading(false); return; }
+      // Defensive: ensure all fields have safe defaults
+      const safeRemedy: Remedy = {
+        id: d.id || params.id,
+        name: d.name || 'Unknown Remedy',
+        common: d.common || '',
+        author: d.author || 'Unknown',
+        chapter: d.chapter || '',
+        organ: d.organ || '',
+        modalities: d.modalities || '',
+        constitution: d.constitution || '',
+        relationships: d.relationships || '',
+        dose: d.dose || '',
+        keynote: d.keynote || '',
+        full: d.full || '',
+        letter: d.letter || '',
+        intro: d.intro || '',
+        sections: Array.isArray(d.sections) ? d.sections : [],
+      };
+      setRemedy(safeRemedy);
+      setLoading(false);
+    }).catch((err) => {
+      if (cancelled) return;
+      console.error('Failed to load remedy:', err);
+      setError('Failed to load remedy. Please try again.');
       setLoading(false);
     });
-  }, [router, params.id]);
-  
+
+    return () => { cancelled = true; };
+  }, [router, params?.id]);
+
+  // --- Reader features sync effect ---
+  useEffect(() => {
+    if (remedy) {
+      setIsFav(reader.isFavorite(remedy.id));
+      setIsBookmarked(reader.isBookmarked(remedy.id));
+      setNotesList(reader.getNotes(remedy.id));
+    }
+  }, [reader, remedy?.id]);
+
+  // --- Action handlers ---
+  const handleFavourite = () => {
+    if (!remedy) return;
+    reader.toggleFavorite({
+      id: remedy.id, type: 'remedy', title: remedy.name,
+      href: `/remedy/${remedy.id}`, author: remedy.author,
+    });
+    setIsFav(!isFav);
+  };
+
+  const handleBookmark = () => {
+    if (!remedy) return;
+    reader.toggleBookmark({
+      id: remedy.id, type: 'remedy', title: remedy.name,
+      href: `/remedy/${remedy.id}`, author: remedy.author,
+    });
+    setIsBookmarked(!isBookmarked);
+  };
+
+  const handleSaveNote = () => {
+    if (!remedy || !noteText.trim()) {
+      setShowNoteInput(false);
+      return;
+    }
+    reader.addNote({
+      itemId: remedy.id, type: 'remedy', text: noteText.trim(),
+    });
+    setNoteText('');
+    setShowNoteInput(false);
+    setNotesList(reader.getNotes(remedy.id));
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    reader.removeNote(noteId);
+    if (remedy) setNotesList(reader.getNotes(remedy.id));
+  };
+
+  const handleCopy = async () => {
+    if (!remedy) return;
+    const textToCopy = `${remedy.name}\n${remedy.common || ''}\n\n${remedy.intro || ''}\n\n${(remedy.sections || []).map(s => `${s.title}: ${s.content}`).join('\n\n')}`;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopyStatus('✓ Copied!');
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        setCopyStatus('✓ Copied!');
+      } catch {
+        setCopyStatus('Copy failed');
+      }
+      document.body.removeChild(textarea);
+    }
+    setTimeout(() => setCopyStatus(''), 2000);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // --- Render helpers (defined as closures, not hooks) ---
+  function renderInline(text: string): React.ReactNode {
+    if (typeof text !== 'string') return String(text || '');
+    const spans = parseInlineMarkers(text);
+    return spans.map((span: InlineSpan, idx: number) => {
+      switch (span.kind) {
+        case 'bold':
+          return <strong key={idx} className="font-bold text-stone-900">{span.text}</strong>;
+        case 'italic':
+          return <em key={idx} className="italic">{span.text}</em>;
+        case 'underline':
+          return <u key={idx}>{span.text}</u>;
+        case 'emphasis':
+          return <span key={idx} className="font-semibold text-stone-900">{span.text}</span>;
+        case 'highlight-yellow':
+          return (
+            <mark key={idx} className="bg-yellow-100 text-stone-900 rounded px-0.5 border-l-2 border-yellow-400" title="Keynote / characteristic point">
+              {span.text}
+            </mark>
+          );
+        case 'highlight-green':
+          return (
+            <mark key={idx} className="bg-green-100 text-stone-900 rounded px-0.5 border-l-2 border-green-400" title="Important clinical point">
+              {span.text}
+            </mark>
+          );
+        case 'highlight-pink':
+          return (
+            <mark key={idx} className="bg-pink-100 text-stone-900 rounded px-0.5 border-l-2 border-pink-400" title="Striking / differentiating point">
+              {span.text}
+            </mark>
+          );
+        default:
+          return <span key={idx}>{span.text}</span>;
+      }
+    });
+  }
+
+  function renderBlocks(blocks: MMBlock[]): React.ReactNode {
+    if (!Array.isArray(blocks)) return null;
+    return blocks.map((block, idx) => {
+      if (!block || !block.text) return null;
+      switch (block.type) {
+        case 'remedy_title':
+          return null;
+        case 'subtitle':
+          return (
+            <h4 key={idx} className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+              {block.text}
+            </h4>
+          );
+        case 'paragraph':
+          return (
+            <p key={idx} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2 text-[0.95rem]">
+              {renderInline(block.text)}
+            </p>
+          );
+        case 'page_number':
+          return (
+            <span key={idx} className="mm-page-number inline-block text-[0.6rem] text-stone-400 mx-1 align-middle select-none" title="OCR page-number artifact">
+              [p. {block.text}]
+            </span>
+          );
+        case 'raw':
+          return (
+            <p key={idx} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
+              {block.text}
+            </p>
+          );
+        default:
+          return null;
+      }
+    });
+  }
+
+  // --- Format remedy text (safe — returns [] if remedy is null) ---
+  const blocks = remedy?.full
+    ? formatRemedyText({ name: remedy.name, author: remedy.author, full: remedy.full })
+    : [];
+
+  // --- Early returns (AFTER all hooks) ---
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300">Loading remedy...</div>;
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-emerald-950 text-stone-300 flex-col gap-4">
       <p>{error}</p>
-      <Link href="/dashboard" className="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded">← Back to Dashboard</Link>
+      <button
+        type="button"
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back();
+          } else {
+            router.push('/materia-medica');
+          }
+        }}
+        className="flex items-center gap-1.5 min-h-[44px] px-4 py-2 rounded-md bg-amber-700 hover:bg-amber-600 text-white font-semibold text-sm"
+      >
+        ← Back
+      </button>
     </div>
   );
   if (!remedy) return null;
 
-  // Parse Boericke-style section headings (e.g., "Mind.--", "Head.--")
-  // and render them as bold red subtitles within the full text.
-  function renderFullText(text: string) {
-    if (!text) return null;
-
-    // Split text by section heading pattern: "Word.--"
-    const parts = text.split(/(\n(?:[A-Z][a-z]+)\.--)/);
-    
-    // If no headings found, render as plain text
-    if (parts.length <= 1) {
-      return <p className="text-stone-700 whitespace-pre-line leading-relaxed">{text}</p>;
-    }
-
-    const elements: React.ReactNode[] = [];
-    let currentText = '';
-
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      const headingMatch = part.match(/^\n([A-Z][a-z]+)\.--$/);
-      
-      if (headingMatch) {
-        if (currentText.trim()) {
-          elements.push(
-            <p key={`text-${i}`} className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
-              {currentText.trim()}
-            </p>
-          );
-          currentText = '';
-        }
-        elements.push(
-          <h4 key={`heading-${i}`} className="font-bold text-red-700 text-base mt-4 mb-1">
-            {headingMatch[1]}
-          </h4>
-        );
-      } else {
-        currentText += part;
-      }
-    }
-
-    if (currentText.trim()) {
-      elements.push(
-        <p key="text-final" className="text-stone-700 whitespace-pre-line leading-relaxed mb-2">
-          {currentText.trim()}
-        </p>
-      );
-    }
-
-    return <div>{elements}</div>;
-  }
-
+  // --- Main render ---
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-stone-100">
-      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-10 shadow border-b-2 border-amber-700/60">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm bg-emerald-800 hover:bg-emerald-700 px-3 py-1.5 rounded">← Back</Link>
-          <h1 className="font-serif italic text-amber-200 tracking-wide">Pradip&apos;s Homoe</h1>
-          <span className="text-xs text-stone-400">{remedy.author}</span>
+      <header className="bg-emerald-950 text-stone-100 sticky top-0 z-20 shadow border-b-2 border-amber-700/60">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          {/* BACK BUTTON — fixed visibility, mobile touch target ≥44px, proper navigation
+              - Uses router.back() for history-aware nav (preserves search/scroll state)
+              - Falls back to /materia-medica if no history (safe fallback)
+              - min-h-[44px] ensures mobile touch target compliance
+              - bg-emerald-800 + border for visibility on dark-green header
+              - icon + text both inside the same button (single click area) */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push('/materia-medica');
+              }
+            }}
+            aria-label="Go back"
+            className="flex items-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 rounded-md bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-900 border border-emerald-600 text-amber-100 font-semibold text-sm transition-colors touch-manipulation select-none"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>Back</span>
+          </button>
+          <h1 className="font-serif italic text-amber-200 tracking-wide text-sm sm:text-base truncate flex-1 text-center">Pradip&apos;s Homoe</h1>
+          <span className="text-xs text-stone-400 flex-shrink-0">{remedy.author}</span>
         </div>
       </header>
-      <article className="max-w-4xl mx-auto px-4 py-6">
+
+      <article ref={articleRef} className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6 border-t-4 border-t-amber-700">
+          {/* REMEDY MAIN TITLE — RED + BOLD per spec */}
           <div className="border-b border-stone-200 pb-4 mb-6">
-            <h1 className="font-serif text-3xl text-emerald-900">{remedy.name}</h1>
+            <h1 className="mm-remedy-title font-serif text-3xl font-bold text-red-700 leading-tight">
+              {remedy.name}
+            </h1>
             {remedy.common && <p className="text-sm italic text-stone-500 mt-1">{remedy.common}</p>}
             <div className="flex flex-wrap gap-2 mt-3 text-xs">
               {remedy.author && <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded">{remedy.author}</span>}
@@ -110,50 +317,257 @@ export default function RemedyDetailPage() {
               {remedy.organ && <span className="bg-stone-200 text-stone-700 px-2 py-1 rounded">{remedy.organ}</span>}
             </div>
           </div>
-          
-          {remedy.keynote && (
+
+          {/* ACTION BAR — Favourite, Bookmark, Note, Copy, Print */}
+          <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-stone-50 rounded-lg border border-stone-200">
+            <button
+              onClick={handleFavourite}
+              title={isFav ? 'Remove from favourites' : 'Add to favourites'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                isFav ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-white text-stone-600 border border-stone-300 hover:bg-stone-100'
+              }`}
+            >
+              <span>{isFav ? '★' : '☆'}</span>
+              <span>{isFav ? 'Favourited' : 'Favourite'}</span>
+            </button>
+            <button
+              onClick={handleBookmark}
+              title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                isBookmarked ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-white text-stone-600 border border-stone-300 hover:bg-stone-100'
+              }`}
+            >
+              <span>🔖</span>
+              <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+            </button>
+            <button
+              onClick={() => setShowNoteInput(!showNoteInput)}
+              title="Add note"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition-colors"
+            >
+              <span>📝</span>
+              <span>Note</span>
+              {notesList.length > 0 && (
+                <span className="bg-amber-600 text-white text-xs px-1.5 rounded-full">{notesList.length}</span>
+              )}
+            </button>
+            <button
+              onClick={handleCopy}
+              title="Copy remedy text"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition-colors"
+            >
+              <span>📋</span>
+              <span>{copyStatus || 'Copy'}</span>
+            </button>
+            <button
+              onClick={handlePrint}
+              title="Print remedy"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition-colors"
+            >
+              <span>🖨️</span>
+              <span>Print</span>
+            </button>
+          </div>
+
+          {/* NOTE INPUT — collapsible */}
+          {showNoteInput && (
+            <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <h3 className="text-sm font-semibold text-amber-900 mb-2">Add a note for this remedy</h3>
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Type your note here..."
+                className="w-full p-2 border border-amber-300 rounded text-sm focus:outline-none focus:border-amber-600"
+                rows={3}
+                autoFocus
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={handleSaveNote}
+                  className="px-4 py-1.5 bg-amber-700 hover:bg-amber-600 text-white text-sm font-semibold rounded transition-colors"
+                >
+                  Save Note
+                </button>
+                <button
+                  onClick={() => { setShowNoteInput(false); setNoteText(''); }}
+                  className="px-4 py-1.5 bg-white text-stone-600 text-sm font-semibold rounded border border-stone-300 hover:bg-stone-100 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SAVED NOTES LIST */}
+          {notesList.length > 0 && (
+            <div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
+              <h3 className="text-sm font-semibold text-stone-700 mb-2">My Notes ({notesList.length})</h3>
+              <div className="space-y-2">
+                {notesList.map((note: any) => (
+                  <div key={note.id} className="p-2 bg-white rounded border border-stone-200 flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-stone-700 whitespace-pre-wrap">{note.text}</p>
+                      <p className="text-xs text-stone-400 mt-1">
+                        {new Date(note.updatedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded flex-shrink-0"
+                      title="Delete note"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===================================================
+              SOURCE-STRUCTURED CONTENT (v2 — no artificial duplication)
+
+              Renders:
+                1. Intro paragraph(s) — from source, NOT a "Keynote" wrapper
+                2. Source sections[] — each with title in RED+BOLD + content
+                3. Modalities / Relationships / Dose — ONLY if separately
+                   populated (these come from the parser when the source has
+                   them as standalone sections)
+
+              DOES NOT render:
+                - An artificial "Keynote" section that duplicates intro
+                - An artificial "Full Description" wrapper heading
+                - The `keynote` field if it duplicates `intro` or `full`
+          =================================================== */}
+
+          {/* INTRO — source introduction paragraph(s), no wrapper heading */}
+          {remedy.intro && remedy.intro.trim() && (
+            <div className="mb-6">
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed mb-2 text-[0.95rem]">
+                {renderInline(remedy.intro)}
+              </p>
+            </div>
+          )}
+
+          {/* SOURCE SECTIONS — each title RED+BOLD, content normal */}
+          {remedy.sections && remedy.sections.length > 0 && (
+            <div className="mb-6 space-y-3">
+              {remedy.sections.map((sec, idx) => (
+                <div key={idx}>
+                  <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                    {sec.title}
+                  </h4>
+                  {/* If section has subsections, render each with RED+BOLD sub-heading */}
+                  {sec.subsections && sec.subsections.length > 0 ? (
+                    <div className="space-y-3">
+                      {sec.subsections.map((sub, subIdx) => (
+                        <div key={subIdx}>
+                          {sub.heading && (
+                            <h5 className="mm-subsection font-bold text-red-700 text-sm mt-3 mb-1 tracking-wide">
+                              {sub.heading}
+                            </h5>
+                          )}
+                          <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                            {renderInline(sub.content)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                      {renderInline(sec.content)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* FALLBACK — if no structured sections, render `full` via block formatter.
+              This handles older authors whose parser hasn't been upgraded to v2 yet. */}
+          {(!remedy.sections || remedy.sections.length === 0) && remedy.full && (
+            <div className="mb-6">
+              {renderBlocks(blocks)}
+            </div>
+          )}
+
+          {/* LEGACY KEYNOTE — ONLY render if it does NOT duplicate intro or full.
+              This guards against the old parser's `keynote = first_para[:500]` bug. */}
+          {remedy.keynote && remedy.keynote.trim() &&
+           remedy.keynote.trim() !== (remedy.intro || '').trim() &&
+           !(remedy.full && remedy.keynote.trim() === remedy.full.trim().slice(0, remedy.keynote.trim().length)) && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Keynote</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.keynote}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Keynote
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.keynote)}
+              </p>
             </section>
           )}
-          
-          {remedy.constitution && (
+
+          {/* CONSTITUTION — only if populated (rare author-specific field) */}
+          {remedy.constitution && remedy.constitution.trim() && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Constitution</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.constitution}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Constitution
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.constitution)}
+              </p>
             </section>
           )}
-          
-          {remedy.full && (
+
+          {/* MODALITIES — only if separately populated (not already in sections[]) */}
+          {remedy.modalities && remedy.modalities.trim() &&
+           !(remedy.sections || []).some(s => s.title === 'Modalities') && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Full Description</h2>
-              {renderFullText(remedy.full)}
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Modalities
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.modalities)}
+              </p>
             </section>
           )}
-          
-          {remedy.modalities && remedy.modalities.trim() && (
+
+          {/* RELATIONSHIPS — only if separately populated */}
+          {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' &&
+           !(remedy.sections || []).some(s => s.title === 'Relationship' || s.title === 'Relationships') && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Modalities</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.modalities}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Relationships
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.relationships)}
+              </p>
             </section>
           )}
-          
-          {remedy.relationships && remedy.relationships.trim() && remedy.relationships !== '—' && (
+
+          {/* DOSE — only if separately populated (not already in sections[]) */}
+          {remedy.dose && remedy.dose.trim() &&
+           !(remedy.sections || []).some(s => s.title === 'Dose') && (
             <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Relationships</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.relationships}</p>
-            </section>
-          )}
-          
-          {remedy.dose && (
-            <section className="mb-6">
-              <h2 className="font-serif text-xl text-emerald-800 mb-2">Dose</h2>
-              <p className="text-stone-700 whitespace-pre-line leading-relaxed">{remedy.dose}</p>
+              <h4 className="mm-subtitle font-bold text-red-700 text-base mt-4 mb-1.5 uppercase tracking-wide">
+                Dose
+              </h4>
+              <p className="text-stone-700 whitespace-pre-line leading-relaxed text-[0.95rem]">
+                {renderInline(remedy.dose)}
+              </p>
             </section>
           )}
         </div>
       </article>
+
+      {/* TEXT SELECTION TOOLBAR — contextual Copy/Highlight on selected text */}
+      {remedy && (
+        <TextSelectionToolbar
+          containerRef={articleRef}
+          itemId={remedy.id}
+          itemType="remedy"
+        />
+      )}
     </div>
+    </ErrorBoundary>
   );
 }
