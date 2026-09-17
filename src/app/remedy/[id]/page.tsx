@@ -451,7 +451,7 @@ export default function RemedyDetailPage() {
 
           {/* SOURCE SECTIONS — inline format matching Boericke source:
               Head.-- Feels light-headed, tipsy. Irritable.
-              - Heading word bold+red inline (not separate h4)
+              - Heading word bold+red inline
               - .-- delimiter kept
               - Content on same line
               - Vertical gap (mt-4) before each section */}
