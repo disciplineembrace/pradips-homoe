@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/require-auth';
 import { isSupabaseServerConfigured, getSupabaseServerClient } from '@/database/supabase/client';
-import { isSchemaNotAppliedError } from '../../user/_helpers';
+import { isSchemaNotAppliedError } from '@/lib/supabase-helpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
