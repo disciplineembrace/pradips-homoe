@@ -201,6 +201,7 @@ export type InlineSpan =
   | { kind: 'italic'; text: string }
   | { kind: 'underline'; text: string }
   | { kind: 'emphasis'; text: string }
+  | { kind: 'caps_emphasis'; text: string }  // ALL-CAPS phrases in body text (source emphasis)
   | { kind: 'highlight-yellow'; text: string }
   | { kind: 'highlight-green'; text: string }
   | { kind: 'highlight-pink'; text: string };
@@ -270,7 +271,11 @@ export function parseInlineMarkers(text: string): InlineSpan[] {
     markdownPattern.lastIndex = 0;
     while ((m = markdownPattern.exec(text)) !== null) {
       if (m.index > lastIndex) {
-        spans.push({ kind: 'text', text: text.slice(lastIndex, m.index) });
+        // Process the text between markdown markers for CAPS emphasis
+        const textBetween = text.slice(lastIndex, m.index);
+        for (const s of detectCapsEmphasis(textBetween)) {
+          spans.push(s);
+        }
       }
       if (m[2]) {
         spans.push({ kind: 'bold', text: m[2] });
@@ -282,7 +287,10 @@ export function parseInlineMarkers(text: string): InlineSpan[] {
       lastIndex = m.index + m[0].length;
     }
     if (lastIndex < text.length) {
-      spans.push({ kind: 'text', text: text.slice(lastIndex) });
+      const textAfter = text.slice(lastIndex);
+      for (const s of detectCapsEmphasis(textAfter)) {
+        spans.push(s);
+      }
     }
     return spans.length === 0 ? [{ kind: 'text', text }] : spans;
   }
@@ -293,9 +301,13 @@ export function parseInlineMarkers(text: string): InlineSpan[] {
     // Single sentence — check if it warrants a highlight
     const hl = detectSystemHighlight(text);
     if (hl) {
+      // Even with a system highlight, we still want to detect CAPS phrases inside
+      // But for backward-compat, if system highlight triggers, return as a single span
       return [{ kind: hl, text }];
     }
-    return [{ kind: 'text', text }];
+    // No system highlight — detect CAPS emphasis inline
+    const capsSpans = detectCapsEmphasis(text);
+    return capsSpans.length > 1 ? capsSpans : [{ kind: 'text', text }];
   }
 
   // Multiple sentences — walk through and highlight qualifying ones
@@ -304,7 +316,11 @@ export function parseInlineMarkers(text: string): InlineSpan[] {
     if (hl) {
       spans.push({ kind: hl, text: sentence });
     } else {
-      spans.push({ kind: 'text', text: sentence });
+      // Detect CAPS emphasis within this sentence
+      const capsSpans = detectCapsEmphasis(sentence);
+      for (const s of capsSpans) {
+        spans.push(s);
+      }
     }
     // Re-add the space that was consumed by the split
     spans.push({ kind: 'text', text: ' ' });
@@ -316,6 +332,63 @@ export function parseInlineMarkers(text: string): InlineSpan[] {
   }
 
   return spans;
+}
+
+// ============================================================
+// CAPS EMPHASIS DETECTION
+// Phatak (and other authors) use ALL-CAPS for emphasized words/phrases
+// within running text. Examples from Phatak:
+//   "MENTALLY the patient is extremely nervous"
+//   "Mucous MEMBRANES are ACRID, THIN and Scanty"
+//   "BURNING LIKE FIRE, hot needles or wires"
+//   "FREQUENT, VIOLENT SNEEZING"
+// We detect these and render them as bold (without modifying text).
+//
+// Rules:
+//   - 2+ consecutive uppercase letters that are NOT at the start of a sentence
+//   - Skip common acronyms (AGG., AMEL., etc.) which are already short
+//   - Skip single-letter uppercase (could be variable)
+//   - Skip lines that are entirely uppercase (those are section headings, handled elsewhere)
+// ============================================================
+function detectCapsEmphasis(text: string): InlineSpan[] {
+  if (!text) return [{ kind: 'text', text }];
+
+  // Match sequences of 2+ uppercase letters, possibly with spaces/hyphens
+  // between words (e.g., "BURNING LIKE FIRE" is 3 words all caps)
+  // Stop at lowercase letter or punctuation other than space/hyphen
+  // Allow digits (e.g., "5 HTP")
+  const capsPattern = /\b([A-Z][A-Z]{1,}(?:[\s\-][A-Z][A-Z]+){0,5})\b/g;
+
+  // Don't apply if the entire text is uppercase (that's a heading)
+  const lowerChars = (text.match(/[a-z]/g) || []).length;
+  const upperChars = (text.match(/[A-Z]/g) || []).length;
+  if (lowerChars === 0 && upperChars > 5) {
+    // Entirely uppercase — likely a heading, don't bold individual words
+    return [{ kind: 'text', text }];
+  }
+
+  const spans: InlineSpan[] = [];
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+
+  while ((m = capsPattern.exec(text)) !== null) {
+    if (m.index > lastIndex) {
+      spans.push({ kind: 'text', text: text.slice(lastIndex, m.index) });
+    }
+    // Skip very short caps (2-letter) that aren't likely emphasis
+    const capsText = m[1];
+    if (capsText.length >= 3) {
+      spans.push({ kind: 'caps_emphasis', text: capsText });
+    } else {
+      // Keep as text but still split it out so we don't lose position
+      spans.push({ kind: 'text', text: capsText });
+    }
+    lastIndex = m.index + m[0].length;
+  }
+  if (lastIndex < text.length) {
+    spans.push({ kind: 'text', text: text.slice(lastIndex) });
+  }
+  return spans.length === 0 ? [{ kind: 'text', text }] : spans;
 }
 
 // ============================================================

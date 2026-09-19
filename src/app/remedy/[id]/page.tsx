@@ -181,6 +181,11 @@ export default function RemedyDetailPage() {
           return <u key={idx}>{span.text}</u>;
         case 'emphasis':
           return <span key={idx} className="font-semibold text-stone-900">{span.text}</span>;
+        case 'caps_emphasis':
+          // ALL-CAPS phrases from source (e.g., "MENTALLY", "ACRID", "BURNING LIKE FIRE")
+          // Rendered as bold + red to preserve the source emphasis visually.
+          // Text content is unchanged — only presentation.
+          return <strong key={idx} className="font-bold text-red-800">{span.text}</strong>;
         case 'highlight-yellow':
           return (
             <mark key={idx} className="bg-yellow-100 text-stone-900 rounded px-0.5 border-l-2 border-yellow-400" title="Keynote / characteristic point">
