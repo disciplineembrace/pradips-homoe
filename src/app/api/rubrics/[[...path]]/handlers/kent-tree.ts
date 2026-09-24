@@ -29,7 +29,7 @@ async function loadKentData(): Promise<any[]> {
   return _cache!;
 }
 
-export async function handler() {
+export async function handler(_req?: any) {
   const { errorResponse } = await requireAuth();
   if (errorResponse) return errorResponse;
 

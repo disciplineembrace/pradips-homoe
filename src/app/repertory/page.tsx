@@ -14,6 +14,7 @@
 ///   • Single Remedy Rubric badge
 ///   • Cross-reference support
 ///   • Source page reference
+///   • NEW: "Remedy" sub-tab — reverse lookup (Remedy → Rubrics)
 /// ============================================================
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,6 +23,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useReaderFeatures } from '@/hooks/use-reader-features';
 import { GRADE_DISPLAY_MAP } from '@/lib/repertory-grades';
+import { RemedyReverseLookup, type ReverseLookupRubric } from './remedy-lookup';
 
 type KentEntry = {
   id: string;
@@ -61,6 +63,11 @@ export default function RepertoryPage() {
   const [crossRefStatus, setCrossRefStatus] = useState<'resolved' | 'ambiguous' | 'unresolved' | null>(null);
   const reader = useReaderFeatures();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  // === NEW: Sub-tab navigation inside Repertory section ===
+  // Tabs: "Repertory Search" (existing tree view) | "Rubric" (alias) | "Remedy" (NEW reverse lookup) | "Cross Reference" (link to /synthesis)
+  type SubTab = 'search' | 'remedy';
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>('search');
 
   useEffect(() => {
     fetch('/api/auth/session').then(r => r.json()).then(d => {
@@ -254,6 +261,27 @@ export default function RepertoryPage() {
     </div>
   );
 
+  // === NEW: Handler for Remedy tab — convert reverse-lookup rubric → KentEntry shape ===
+  // so it can be opened in the existing rubric detail modal.
+  const handleRemedyResultClick = (rubric: ReverseLookupRubric) => {
+    const entry: KentEntry = {
+      id: rubric.id,
+      chapter: rubric.chapter,
+      level: rubric.level,
+      rubricText: rubric.rubricText,
+      fullPath: rubric.fullPath,
+      fullPathParts: rubric.fullPathParts,
+      entryType: rubric.entryType,
+      crossReference: rubric.crossReference,
+      remedies: rubric.remedies,
+      remediesGraded: rubric.remediesGraded,
+      remedyCount: rubric.remedyCount,
+      singleRemedy: rubric.singleRemedy,
+      pdfPage: rubric.pdfPage,
+    };
+    setSelectedRubric(entry);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F2]">
       <Navbar />
@@ -263,8 +291,10 @@ export default function RepertoryPage() {
         <header className="mb-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
-              <h1 className="font-serif text-2xl md:text-3xl text-[#124C3B]">Kent Repertory</h1>
-              <p className="text-xs text-[#7C8F6E] mt-0.5">Hierarchical Tree View</p>
+              <h1 className="font-serif text-2xl md:text-3xl text-[#124C3B]">Repertory</h1>
+              <p className="text-xs text-[#7C8F6E] mt-0.5">
+                {activeSubTab === 'search' ? 'Kent Repertory — Hierarchical Tree View' : 'Kent Repertory — Remedy Reverse Lookup'}
+              </p>
             </div>
             <div className="flex items-center gap-2 bg-[#FFF8E1] border border-[#C49A3A]/30 rounded-full px-3 py-1.5">
               <span className="text-xs text-[#C49A3A]">📊</span>
@@ -274,6 +304,64 @@ export default function RepertoryPage() {
           </div>
           <div className="w-16 h-0.5 bg-[#C49A3A] mt-2"></div>
         </header>
+
+        {/* === NEW: SUB-TAB NAVIGATION ===
+            Adds "Repertory Search" + "Rubric" + "Remedy" + "Cross Reference" tabs
+            WITHOUT changing existing architecture — existing features remain intact. */}
+        <nav className="flex flex-wrap gap-1 mb-3 bg-white rounded-lg border border-[#DEDACF] p-1 shadow-sm" aria-label="Repertory sub-navigation">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('search')}
+            className={`flex-1 min-w-[120px] px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
+              activeSubTab === 'search'
+                ? 'bg-[#124C3B] text-[#FAF8F2] shadow-sm'
+                : 'text-[#7C8F6E] hover:bg-[#EAF4EF] hover:text-[#124C3B]'
+            }`}
+            title="Browse Kent rubrics by chapter — Tree View"
+          >
+            📖 Repertory Search
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('search')}
+            className={`flex-1 min-w-[80px] px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
+              activeSubTab === 'search'
+                ? 'bg-[#124C3B] text-[#FAF8F2] shadow-sm'
+                : 'text-[#7C8F6E] hover:bg-[#EAF4EF] hover:text-[#124C3B]'
+            }`}
+            title="Browse rubric hierarchy"
+          >
+            🌳 Rubric
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('remedy')}
+            className={`flex-1 min-w-[100px] px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
+              activeSubTab === 'remedy'
+                ? 'bg-[#124C3B] text-[#FAF8F2] shadow-sm'
+                : 'text-[#7C8F6E] hover:bg-[#EAF4EF] hover:text-[#124C3B]'
+            }`}
+            title="Reverse lookup: search a remedy → see all Kent rubrics where it appears"
+          >
+            🔬 Remedy
+          </button>
+          <Link
+            href="/synthesis"
+            className="flex-1 min-w-[120px] px-3 py-2 text-xs font-semibold rounded-md text-[#C49A3A] hover:bg-[#FFF8E1] hover:text-[#124C3B] transition-colors text-center"
+            title="Cross-reference Synthesis repertory"
+          >
+            🔗 Cross Reference
+          </Link>
+        </nav>
+
+        {/* === NEW: REMEDY REVERSE LOOKUP TAB === */}
+        {activeSubTab === 'remedy' && (
+          <RemedyReverseLookup onSelectRubric={handleRemedyResultClick} />
+        )}
+
+        {/* === EXISTING: REPERTORY SEARCH TAB (Tree View) — preserved as-is === */}
+        {activeSubTab === 'search' && (
+          <>
 
         {/* SEARCH */}
         <div className="bg-white rounded-lg border border-[#DEDACF] p-3 mb-3 shadow-sm">
@@ -494,6 +582,8 @@ export default function RepertoryPage() {
           </div>
         )}
 
+        </>
+        )}
       </main>
       <Footer />
     </div>
